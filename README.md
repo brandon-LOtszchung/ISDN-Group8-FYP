@@ -11,15 +11,23 @@ Real-time grocery item identification using PyTorch + EfficientNetV2 on M4 GPU.
 - ✅ **81 Classes**: Fruits, vegetables, packaged goods
 - ✅ **Trained on**: 2,640 images
 
-## 🚀 Run Live Camera App
+## 🚀 Quick Setup & Run
 
 ```bash
-cd /Users/brandonlotc/Desktop/ISDN-Group8-FYP
+# Clone repository  
+git clone https://github.com/brandon-LOtszchung/ISDN-Group8-FYP.git
+cd ISDN-Group8-FYP
+
+# Setup environment
+python3 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
+
+# Run app
 python app/app.py
 ```
 
-**Then open**: http://localhost:5000
+**Open browser**: http://localhost:8080
 
 Click **"Start Camera"** and point at grocery items!
 
