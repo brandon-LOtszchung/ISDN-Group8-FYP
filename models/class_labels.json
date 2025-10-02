@@ -1,0 +1,464 @@
+{
+  "class_names": [
+    "Apple",
+    "Asparagus",
+    "Aubergine",
+    "Avocado",
+    "Banana",
+    "Cabbage",
+    "Carrots",
+    "Cucumber",
+    "Garlic",
+    "Ginger",
+    "Juice",
+    "Kiwi",
+    "Leek",
+    "Lemon",
+    "Lime",
+    "Mango",
+    "Melon",
+    "Milk",
+    "Mushroom",
+    "Nectarine",
+    "Oat-Milk",
+    "Oatghurt",
+    "Onion",
+    "Orange",
+    "Papaya",
+    "Passion-Fruit",
+    "Peach",
+    "Pear",
+    "Pepper",
+    "Pineapple",
+    "Plum",
+    "Pomegranate",
+    "Potato",
+    "Red-Beet",
+    "Red-Grapefruit",
+    "Satsumas",
+    "Sour-Cream",
+    "Sour-Milk",
+    "Soy-Milk",
+    "Soyghurt",
+    "Tomato",
+    "Yoghurt",
+    "Zucchini"
+  ],
+  "class_to_idx": {
+    "Apple": 0,
+    "Asparagus": 1,
+    "Aubergine": 2,
+    "Avocado": 3,
+    "Banana": 4,
+    "Cabbage": 5,
+    "Carrots": 6,
+    "Cucumber": 7,
+    "Garlic": 8,
+    "Ginger": 9,
+    "Juice": 10,
+    "Kiwi": 11,
+    "Leek": 12,
+    "Lemon": 13,
+    "Lime": 14,
+    "Mango": 15,
+    "Melon": 16,
+    "Milk": 17,
+    "Mushroom": 18,
+    "Nectarine": 19,
+    "Oat-Milk": 20,
+    "Oatghurt": 21,
+    "Onion": 22,
+    "Orange": 23,
+    "Papaya": 24,
+    "Passion-Fruit": 25,
+    "Peach": 26,
+    "Pear": 27,
+    "Pepper": 28,
+    "Pineapple": 29,
+    "Plum": 30,
+    "Pomegranate": 31,
+    "Potato": 32,
+    "Red-Beet": 33,
+    "Red-Grapefruit": 34,
+    "Satsumas": 35,
+    "Sour-Cream": 36,
+    "Sour-Milk": 37,
+    "Soy-Milk": 38,
+    "Soyghurt": 39,
+    "Tomato": 40,
+    "Yoghurt": 41,
+    "Zucchini": 42
+  },
+  "idx_to_class": {
+    "0": "Apple",
+    "1": "Asparagus",
+    "2": "Aubergine",
+    "3": "Avocado",
+    "4": "Banana",
+    "5": "Cabbage",
+    "6": "Carrots",
+    "7": "Cucumber",
+    "8": "Garlic",
+    "9": "Ginger",
+    "10": "Juice",
+    "11": "Kiwi",
+    "12": "Leek",
+    "13": "Lemon",
+    "14": "Lime",
+    "15": "Mango",
+    "16": "Melon",
+    "17": "Milk",
+    "18": "Mushroom",
+    "19": "Nectarine",
+    "20": "Oat-Milk",
+    "21": "Oatghurt",
+    "22": "Onion",
+    "23": "Orange",
+    "24": "Papaya",
+    "25": "Passion-Fruit",
+    "26": "Peach",
+    "27": "Pear",
+    "28": "Pepper",
+    "29": "Pineapple",
+    "30": "Plum",
+    "31": "Pomegranate",
+    "32": "Potato",
+    "33": "Red-Beet",
+    "34": "Red-Grapefruit",
+    "35": "Satsumas",
+    "36": "Sour-Cream",
+    "37": "Sour-Milk",
+    "38": "Soy-Milk",
+    "39": "Soyghurt",
+    "40": "Tomato",
+    "41": "Yoghurt",
+    "42": "Zucchini"
+  },
+  "num_classes": 43,
+  "coarse_classes": [
+    {
+      "Class Name (str)": "Golden-Delicious",
+      "Coarse Class Name (str)": "Apple"
+    },
+    {
+      "Class Name (str)": "Granny-Smith",
+      "Coarse Class Name (str)": "Apple"
+    },
+    {
+      "Class Name (str)": "Pink-Lady",
+      "Coarse Class Name (str)": "Apple"
+    },
+    {
+      "Class Name (str)": "Red-Delicious",
+      "Coarse Class Name (str)": "Apple"
+    },
+    {
+      "Class Name (str)": "Royal-Gala",
+      "Coarse Class Name (str)": "Apple"
+    },
+    {
+      "Class Name (str)": "Avocado",
+      "Coarse Class Name (str)": "Avocado"
+    },
+    {
+      "Class Name (str)": "Banana",
+      "Coarse Class Name (str)": "Banana"
+    },
+    {
+      "Class Name (str)": "Kiwi",
+      "Coarse Class Name (str)": "Kiwi"
+    },
+    {
+      "Class Name (str)": "Lemon",
+      "Coarse Class Name (str)": "Lemon"
+    },
+    {
+      "Class Name (str)": "Lime",
+      "Coarse Class Name (str)": "Lime"
+    },
+    {
+      "Class Name (str)": "Mango",
+      "Coarse Class Name (str)": "Mango"
+    },
+    {
+      "Class Name (str)": "Cantaloupe",
+      "Coarse Class Name (str)": "Melon"
+    },
+    {
+      "Class Name (str)": "Galia-Melon",
+      "Coarse Class Name (str)": "Melon"
+    },
+    {
+      "Class Name (str)": "Honeydew-Melon",
+      "Coarse Class Name (str)": "Melon"
+    },
+    {
+      "Class Name (str)": "Watermelon",
+      "Coarse Class Name (str)": "Melon"
+    },
+    {
+      "Class Name (str)": "Nectarine",
+      "Coarse Class Name (str)": "Nectarine"
+    },
+    {
+      "Class Name (str)": "Orange",
+      "Coarse Class Name (str)": "Orange"
+    },
+    {
+      "Class Name (str)": "Papaya",
+      "Coarse Class Name (str)": "Papaya"
+    },
+    {
+      "Class Name (str)": "Passion-Fruit",
+      "Coarse Class Name (str)": "Passion-Fruit"
+    },
+    {
+      "Class Name (str)": "Peach",
+      "Coarse Class Name (str)": "Peach"
+    },
+    {
+      "Class Name (str)": "Anjou",
+      "Coarse Class Name (str)": "Pear"
+    },
+    {
+      "Class Name (str)": "Conference",
+      "Coarse Class Name (str)": "Pear"
+    },
+    {
+      "Class Name (str)": "Kaiser",
+      "Coarse Class Name (str)": "Pear"
+    },
+    {
+      "Class Name (str)": "Pineapple",
+      "Coarse Class Name (str)": "Pineapple"
+    },
+    {
+      "Class Name (str)": "Plum",
+      "Coarse Class Name (str)": "Plum"
+    },
+    {
+      "Class Name (str)": "Pomegranate",
+      "Coarse Class Name (str)": "Pomegranate"
+    },
+    {
+      "Class Name (str)": "Red-Grapefruit",
+      "Coarse Class Name (str)": "Red-Grapefruit"
+    },
+    {
+      "Class Name (str)": "Satsumas",
+      "Coarse Class Name (str)": "Satsumas"
+    },
+    {
+      "Class Name (str)": "Bravo-Apple-Juice",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "Bravo-Orange-Juice",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "God-Morgon-Apple-Juice",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "God-Morgon-Orange-Juice",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "God-Morgon-Orange-Red-Grapefruit-Juice",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "God-Morgon-Red-Grapefruit-Juice",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "Tropicana-Apple-Juice",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "Tropicana-Golden-Grapefruit",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "Tropicana-Juice-Smooth",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "Tropicana-Mandarin-Morning",
+      "Coarse Class Name (str)": "Juice"
+    },
+    {
+      "Class Name (str)": "Arla-Ecological-Medium-Fat-Milk",
+      "Coarse Class Name (str)": "Milk"
+    },
+    {
+      "Class Name (str)": "Arla-Lactose-Medium-Fat-Milk",
+      "Coarse Class Name (str)": "Milk"
+    },
+    {
+      "Class Name (str)": "Arla-Medium-Fat-Milk",
+      "Coarse Class Name (str)": "Milk"
+    },
+    {
+      "Class Name (str)": "Arla-Standard-Milk",
+      "Coarse Class Name (str)": "Milk"
+    },
+    {
+      "Class Name (str)": "Garant-Ecological-Medium-Fat-Milk",
+      "Coarse Class Name (str)": "Milk"
+    },
+    {
+      "Class Name (str)": "Garant-Ecological-Standard-Milk",
+      "Coarse Class Name (str)": "Milk"
+    },
+    {
+      "Class Name (str)": "Oatly-Natural-Oatghurt",
+      "Coarse Class Name (str)": "Oatghurt"
+    },
+    {
+      "Class Name (str)": "Oatly-Oat-Milk",
+      "Coarse Class Name (str)": "Oat-Milk"
+    },
+    {
+      "Class Name (str)": "Arla-Ecological-Sour-Cream",
+      "Coarse Class Name (str)": "Sour-Cream"
+    },
+    {
+      "Class Name (str)": "Arla-Sour-Cream",
+      "Coarse Class Name (str)": "Sour-Cream"
+    },
+    {
+      "Class Name (str)": "Arla-Sour-Milk",
+      "Coarse Class Name (str)": "Sour-Milk"
+    },
+    {
+      "Class Name (str)": "Alpro-Blueberry-Soyghurt",
+      "Coarse Class Name (str)": "Soyghurt"
+    },
+    {
+      "Class Name (str)": "Alpro-Vanilla-Soyghurt",
+      "Coarse Class Name (str)": "Soyghurt"
+    },
+    {
+      "Class Name (str)": "Alpro-Fresh-Soy-Milk",
+      "Coarse Class Name (str)": "Soy-Milk"
+    },
+    {
+      "Class Name (str)": "Alpro-Shelf-Soy-Milk",
+      "Coarse Class Name (str)": "Soy-Milk"
+    },
+    {
+      "Class Name (str)": "Arla-Mild-Vanilla-Yoghurt",
+      "Coarse Class Name (str)": "Yoghurt"
+    },
+    {
+      "Class Name (str)": "Arla-Natural-Mild-Low-Fat-Yoghurt",
+      "Coarse Class Name (str)": "Yoghurt"
+    },
+    {
+      "Class Name (str)": "Arla-Natural-Yoghurt",
+      "Coarse Class Name (str)": "Yoghurt"
+    },
+    {
+      "Class Name (str)": "Valio-Vanilla-Yoghurt",
+      "Coarse Class Name (str)": "Yoghurt"
+    },
+    {
+      "Class Name (str)": "Yoggi-Strawberry-Yoghurt",
+      "Coarse Class Name (str)": "Yoghurt"
+    },
+    {
+      "Class Name (str)": "Yoggi-Vanilla-Yoghurt",
+      "Coarse Class Name (str)": "Yoghurt"
+    },
+    {
+      "Class Name (str)": "Asparagus",
+      "Coarse Class Name (str)": "Asparagus"
+    },
+    {
+      "Class Name (str)": "Aubergine",
+      "Coarse Class Name (str)": "Aubergine"
+    },
+    {
+      "Class Name (str)": "Cabbage",
+      "Coarse Class Name (str)": "Cabbage"
+    },
+    {
+      "Class Name (str)": "Carrots",
+      "Coarse Class Name (str)": "Carrots"
+    },
+    {
+      "Class Name (str)": "Cucumber",
+      "Coarse Class Name (str)": "Cucumber"
+    },
+    {
+      "Class Name (str)": "Garlic",
+      "Coarse Class Name (str)": "Garlic"
+    },
+    {
+      "Class Name (str)": "Ginger",
+      "Coarse Class Name (str)": "Ginger"
+    },
+    {
+      "Class Name (str)": "Leek",
+      "Coarse Class Name (str)": "Leek"
+    },
+    {
+      "Class Name (str)": "Brown-Cap-Mushroom",
+      "Coarse Class Name (str)": "Mushroom"
+    },
+    {
+      "Class Name (str)": "Yellow-Onion",
+      "Coarse Class Name (str)": "Onion"
+    },
+    {
+      "Class Name (str)": "Green-Bell-Pepper",
+      "Coarse Class Name (str)": "Pepper"
+    },
+    {
+      "Class Name (str)": "Orange-Bell-Pepper",
+      "Coarse Class Name (str)": "Pepper"
+    },
+    {
+      "Class Name (str)": "Red-Bell-Pepper",
+      "Coarse Class Name (str)": "Pepper"
+    },
+    {
+      "Class Name (str)": "Yellow-Bell-Pepper",
+      "Coarse Class Name (str)": "Pepper"
+    },
+    {
+      "Class Name (str)": "Floury-Potato",
+      "Coarse Class Name (str)": "Potato"
+    },
+    {
+      "Class Name (str)": "Solid-Potato",
+      "Coarse Class Name (str)": "Potato"
+    },
+    {
+      "Class Name (str)": "Sweet-Potato",
+      "Coarse Class Name (str)": "Potato"
+    },
+    {
+      "Class Name (str)": "Red-Beet",
+      "Coarse Class Name (str)": "Red-Beet"
+    },
+    {
+      "Class Name (str)": "Beef-Tomato",
+      "Coarse Class Name (str)": "Tomato"
+    },
+    {
+      "Class Name (str)": "Regular-Tomato",
+      "Coarse Class Name (str)": "Tomato"
+    },
+    {
+      "Class Name (str)": "Vine-Tomato",
+      "Coarse Class Name (str)": "Tomato"
+    },
+    {
+      "Class Name (str)": "Zucchini",
+      "Coarse Class Name (str)": "Zucchini"
+    }
+  ]
+}

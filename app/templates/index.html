@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Item Identifier</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛒 Live Grocery Identifier</h1>
+            <p>Real-time item recognition</p>
+        </header>
+
+        <div class="camera-view">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <div id="overlay" class="overlay"></div>
+        </div>
+
+        <div class="controls">
+            <button id="startBtn" class="btn btn-start">Start Camera</button>
+            <button id="stopBtn" class="btn btn-stop" style="display:none;">Stop Camera</button>
+        </div>
+
+        <div id="results" class="results">
+            <div class="result-item" id="result1">
+                <span class="rank">#1</span>
+                <span class="name">-</span>
+                <span class="confidence">-</span>
+            </div>
+            <div class="result-item" id="result2">
+                <span class="rank">#2</span>
+                <span class="name">-</span>
+                <span class="confidence">-</span>
+            </div>
+            <div class="result-item" id="result3">
+                <span class="rank">#3</span>
+                <span class="name">-</span>
+                <span class="confidence">-</span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <span id="fps">FPS: -</span>
+            <span id="status">Status: Ready</span>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
+
