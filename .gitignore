@@ -8,6 +8,11 @@ __pycache__/
 venv/
 *.egg-info/
 
+# Node
+node_modules/
+dist/
+build/
+
 # IDE
 .DS_Store
 .vscode/
