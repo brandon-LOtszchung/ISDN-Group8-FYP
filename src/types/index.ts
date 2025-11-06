@@ -1,3 +1,5 @@
+export type InterfaceLanguage = 'en' | 'zh-HK' | 'fil'
+
 export interface FamilyMember {
   id: string
   name: string
@@ -31,7 +33,7 @@ export interface FamilyPreferences {
     lunch: string
     dinner: string
   }
-  preferredLanguage: 'en' | 'zh-HK'
+  preferredLanguage: 'en' | 'zh-HK' | 'fil'
 }
 
 export interface InventoryItem {
@@ -161,6 +163,7 @@ export type ItemCategory =
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
 export interface AppState {
+  preferredLanguage: InterfaceLanguage
   family: Family | null
   inventory: InventoryItem[]
   currentRecipes: Recipe[]

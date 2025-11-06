@@ -4,7 +4,14 @@ import { useApp } from '@/contexts/AppContext'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import { Recipe } from '@/types'
-import { ArrowLeft, Clock, Users, ChefHat, CheckCircle, ShoppingCart } from 'lucide-react'
+import {
+  ArrowLeft,
+  Clock,
+  Users,
+  ChefHat,
+  CheckCircle,
+  ShoppingCart,
+} from 'lucide-react'
 
 export default function RecipeDetail() {
   const { id } = useParams<{ id: string }>()
@@ -13,7 +20,7 @@ export default function RecipeDetail() {
   const [activeStep, setActiveStep] = useState(0)
 
   useEffect(() => {
-    const foundRecipe = state.currentRecipes.find(r => r.id === id)
+    const foundRecipe = state.currentRecipes.find((r) => r.id === id)
     if (foundRecipe) {
       setRecipe(foundRecipe)
     }
@@ -32,15 +39,19 @@ export default function RecipeDetail() {
     )
   }
 
-  const availableIngredients = recipe.ingredients.filter(ing => ing.available)
-  const missingIngredients = recipe.ingredients.filter(ing => !ing.available)
+  const availableIngredients = recipe.ingredients.filter((ing) => ing.available)
+  const missingIngredients = recipe.ingredients.filter((ing) => !ing.available)
 
   const getDifficultyColor = (difficulty: Recipe['difficulty']) => {
     switch (difficulty) {
-      case 'easy': return 'text-success-600 bg-success-50'
-      case 'medium': return 'text-warning-600 bg-warning-50'
-      case 'hard': return 'text-error-600 bg-error-50'
-      default: return 'text-neutral-600 bg-neutral-50'
+      case 'easy':
+        return 'text-success-600 bg-success-50'
+      case 'medium':
+        return 'text-warning-600 bg-warning-50'
+      case 'hard':
+        return 'text-error-600 bg-error-50'
+      default:
+        return 'text-neutral-600 bg-neutral-50'
     }
   }
 
@@ -56,14 +67,16 @@ export default function RecipeDetail() {
           </Link>
           <div className="flex-1">
             <h1 className="text-xl font-medium">{recipe.title}</h1>
-            <p className="text-sm text-neutral-600 capitalize">{recipe.cuisine} cuisine</p>
+            <p className="text-sm text-neutral-600 capitalize">
+              {recipe.cuisine} cuisine
+            </p>
           </div>
         </div>
 
         {/* Recipe Info */}
         <Card className="p-6">
           <p className="text-neutral-700 mb-4">{recipe.description}</p>
-          
+
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-1">
@@ -75,8 +88,10 @@ export default function RecipeDetail() {
                 <span>{recipe.servings} servings</span>
               </div>
             </div>
-            
-            <span className={`px-3 py-1 rounded-full text-sm capitalize ${getDifficultyColor(recipe.difficulty)}`}>
+
+            <span
+              className={`px-3 py-1 rounded-full text-sm capitalize ${getDifficultyColor(recipe.difficulty)}`}
+            >
               {recipe.difficulty}
             </span>
           </div>
@@ -96,7 +111,7 @@ export default function RecipeDetail() {
         {/* Ingredients */}
         <Card className="p-6">
           <h2 className="section-title">Ingredients</h2>
-          
+
           {availableIngredients.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-success-700 mb-3">
@@ -104,7 +119,10 @@ export default function RecipeDetail() {
               </h3>
               <div className="space-y-2">
                 {availableIngredients.map((ingredient, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 px-3 bg-success-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-2 px-3 bg-success-50 rounded-lg"
+                  >
                     <span className="text-sm">{ingredient.name}</span>
                     <span className="text-sm text-neutral-600">
                       {ingredient.quantity} {ingredient.unit}
@@ -122,7 +140,10 @@ export default function RecipeDetail() {
               </h3>
               <div className="space-y-2">
                 {missingIngredients.map((ingredient, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 px-3 bg-neutral-50 rounded-lg">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-2 px-3 bg-neutral-50 rounded-lg"
+                  >
                     <span className="text-sm">{ingredient.name}</span>
                     <span className="text-sm text-neutral-600">
                       {ingredient.quantity} {ingredient.unit}
@@ -145,19 +166,25 @@ export default function RecipeDetail() {
                   index === activeStep
                     ? 'border-neutral-900 bg-neutral-50'
                     : index < activeStep
-                    ? 'border-success-200 bg-success-50'
-                    : 'border-neutral-200'
+                      ? 'border-success-200 bg-success-50'
+                      : 'border-neutral-200'
                 }`}
               >
                 <div className="flex items-start space-x-3">
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                    index < activeStep
-                      ? 'bg-success-600 text-white'
-                      : index === activeStep
-                      ? 'bg-neutral-900 text-white'
-                      : 'bg-neutral-200 text-neutral-600'
-                  }`}>
-                    {index < activeStep ? <CheckCircle className="w-4 h-4" /> : instruction.step}
+                  <div
+                    className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                      index < activeStep
+                        ? 'bg-success-600 text-white'
+                        : index === activeStep
+                          ? 'bg-neutral-900 text-white'
+                          : 'bg-neutral-200 text-neutral-600'
+                    }`}
+                  >
+                    {index < activeStep ? (
+                      <CheckCircle className="w-4 h-4" />
+                    ) : (
+                      instruction.step
+                    )}
                   </div>
                   <div className="flex-1">
                     <p className="text-sm">{instruction.instruction}</p>
@@ -187,11 +214,17 @@ export default function RecipeDetail() {
               Previous
             </Button>
             <Button
-              onClick={() => setActiveStep(Math.min(recipe.instructions.length - 1, activeStep + 1))}
+              onClick={() =>
+                setActiveStep(
+                  Math.min(recipe.instructions.length - 1, activeStep + 1)
+                )
+              }
               disabled={activeStep === recipe.instructions.length - 1}
               className="flex-1"
             >
-              {activeStep === recipe.instructions.length - 1 ? 'Complete' : 'Next Step'}
+              {activeStep === recipe.instructions.length - 1
+                ? 'Complete'
+                : 'Next Step'}
             </Button>
           </div>
         </Card>

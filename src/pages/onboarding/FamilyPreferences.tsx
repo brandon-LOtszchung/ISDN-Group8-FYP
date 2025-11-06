@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import { useApp } from '@/contexts/AppContext'
 import { useForm } from 'react-hook-form'
 import Button from '@/components/ui/Button'
-import { Family } from '@/types'
+import { Family, InterfaceLanguage } from '@/types'
 import { ArrowLeft } from 'lucide-react'
 
 interface FamilyPreferencesProps {
@@ -10,10 +11,29 @@ interface FamilyPreferencesProps {
   onBack: () => void
 }
 
-export default function FamilyPreferences({ preferences, onNext, onBack }: FamilyPreferencesProps) {
-  const [cookingSkill, setCookingSkill] = useState(preferences.cookingSkillLevel)
+export default function FamilyPreferences({
+  preferences,
+  onNext,
+  onBack,
+}: FamilyPreferencesProps) {
+  const { state } = useApp()
+
+  const [cookingSkill, setCookingSkill] = useState(
+    preferences.cookingSkillLevel
+  )
+
+  const [displayLanguage, setDisplayLanguage] = useState<InterfaceLanguage>(
+    state.preferredLanguage
+  )
   const [budget, setBudget] = useState(preferences.budgetRange)
   const [mealTimes, setMealTimes] = useState(preferences.mealTimes)
+
+  const handleLanguageChange = (item: string) => {
+    const selectedLocale =
+      item === 'Chinese' ? 'zh-HK' : item === 'Filipino' ? 'fil' : 'en'
+    state.preferredLanguage = selectedLocale
+    setDisplayLanguage(selectedLocale)
+  }
 
   // Simplified cooking skill options with emojis
   const skillOptions = [
@@ -79,8 +99,12 @@ export default function FamilyPreferences({ preferences, onNext, onBack }: Famil
                     }`}
                   >
                     <div className="text-2xl mb-2">{option.icon}</div>
-                    <div className="text-sm font-medium text-warm-800 font-chinese whitespace-nowrap">{option.label}</div>
-                    <div className="text-xs text-warm-600 font-chinese mt-1 whitespace-nowrap">{option.desc}</div>
+                    <div className="text-sm font-medium text-warm-800 font-chinese whitespace-nowrap">
+                      {option.label}
+                    </div>
+                    <div className="text-xs text-warm-600 font-chinese mt-1 whitespace-nowrap">
+                      {option.desc}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -104,15 +128,19 @@ export default function FamilyPreferences({ preferences, onNext, onBack }: Famil
                     }`}
                   >
                     <div className="text-2xl mb-2">{option.icon}</div>
-                    <div className="text-sm font-medium text-warm-800 font-chinese whitespace-nowrap">{option.label}</div>
-                    <div className="text-xs text-warm-600 font-chinese mt-1 whitespace-nowrap">{option.desc}</div>
+                    <div className="text-sm font-medium text-warm-800 font-chinese whitespace-nowrap">
+                      {option.label}
+                    </div>
+                    <div className="text-xs text-warm-600 font-chinese mt-1 whitespace-nowrap">
+                      {option.desc}
+                    </div>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Meal Times - Simplified */}
-            <div>
+            {/* <div>
               <label className="block text-sm font-medium text-warm-700 mb-3 font-chinese whitespace-nowrap">
                 用餐時間<span className="text-warm-400">（可調整）</span>
               </label>
@@ -150,9 +178,12 @@ export default function FamilyPreferences({ preferences, onNext, onBack }: Famil
                   </div>
                 </div>
               </div>
-            </div>
+              </div> */}
 
-            <Button type="submit" className="w-full font-chinese text-lg py-5 whitespace-nowrap">
+            <Button
+              type="submit"
+              className="w-full font-chinese text-lg py-5 whitespace-nowrap"
+            >
               完成家庭設定🎉
             </Button>
           </form>

@@ -25,44 +25,50 @@ type AppAction =
   | { type: 'CLEAR_ERROR' }
 
 const initialState: AppState = {
+  preferredLanguage: 'en',
   family: null,
   inventory: [],
   currentRecipes: [],
   isLoading: false,
   error: null,
-  onboardingCompleted: localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED) === 'true',
-  fridgeInitialized: localStorage.getItem(STORAGE_KEYS.FRIDGE_INITIALIZED) === 'true',
+  onboardingCompleted:
+    localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED) === 'true',
+  fridgeInitialized:
+    localStorage.getItem(STORAGE_KEYS.FRIDGE_INITIALIZED) === 'true',
 }
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'SET_FAMILY':
-      localStorage.setItem(STORAGE_KEYS.FAMILY_DATA, JSON.stringify(action.payload))
+      localStorage.setItem(
+        STORAGE_KEYS.FAMILY_DATA,
+        JSON.stringify(action.payload)
+      )
       return { ...state, family: action.payload }
-    
+
     case 'SET_INVENTORY':
       return { ...state, inventory: action.payload }
-    
+
     case 'SET_RECIPES':
       return { ...state, currentRecipes: action.payload }
-    
+
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload }
-    
+
     case 'SET_ERROR':
       return { ...state, error: action.payload, isLoading: false }
-    
+
     case 'COMPLETE_ONBOARDING':
       localStorage.setItem(STORAGE_KEYS.ONBOARDING_COMPLETED, 'true')
       return { ...state, onboardingCompleted: true }
-    
+
     case 'INITIALIZE_FRIDGE':
       localStorage.setItem(STORAGE_KEYS.FRIDGE_INITIALIZED, 'true')
       return { ...state, fridgeInitialized: true }
-    
+
     case 'CLEAR_ERROR':
       return { ...state, error: null }
-    
+
     default:
       return state
   }

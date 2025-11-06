@@ -1,10 +1,17 @@
 import { useState } from 'react'
+import { useApp } from '@/contexts/AppContext'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { FamilyMember, DietaryRestriction, Allergy } from '@/types'
+import { LOCALIZED_STRINGS } from '@/constants'
+import {
+  FamilyMember,
+  DietaryRestriction,
+  Allergy,
+  InterfaceLanguage,
+} from '@/types'
 import { ArrowLeft } from 'lucide-react'
 
 const schema = z.object({
@@ -21,15 +28,20 @@ interface FamilyMemberFormProps {
   onBack: () => void
 }
 
-export default function FamilyMemberForm({ 
-  member, 
-  memberIndex, 
-  totalMembers, 
-  onNext, 
-  onBack 
+export default function FamilyMemberForm({
+  member,
+  memberIndex,
+  totalMembers,
+  onNext,
+  onBack,
 }: FamilyMemberFormProps) {
+  const { state } = useApp()
+
+  const displayLanguage = state.preferredLanguage
   const [age, setAge] = useState(member?.age || 25)
-  const [selectedDietary, setSelectedDietary] = useState<DietaryRestriction[]>([])
+  const [selectedDietary, setSelectedDietary] = useState<DietaryRestriction[]>(
+    []
+  )
   const [selectedAllergies, setSelectedAllergies] = useState<Allergy[]>([])
   const [customDietary, setCustomDietary] = useState('')
   const [customAllergy, setCustomAllergy] = useState('')
@@ -88,14 +100,18 @@ export default function FamilyMemberForm({
   }
 
   const toggleDietary = (value: DietaryRestriction) => {
-    setSelectedDietary(prev => 
-      prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
+    setSelectedDietary((prev) =>
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value]
     )
   }
 
   const toggleAllergy = (value: Allergy) => {
-    setSelectedAllergies(prev => 
-      prev.includes(value) ? prev.filter(item => item !== value) : [...prev, value]
+    setSelectedAllergies((prev) =>
+      prev.includes(value)
+        ? prev.filter((item) => item !== value)
+        : [...prev, value]
     )
   }
 
@@ -108,7 +124,9 @@ export default function FamilyMemberForm({
             <ArrowLeft className="w-5 h-5 text-warm-600" />
           </button>
           <div className="flex-1 text-center">
-            <span className="text-sm text-warm-500 font-chinese">
+            <span
+              className={`text-sm text-warm-500 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
+            >
               {memberIndex + 1}/{totalMembers}
             </span>
           </div>
@@ -118,25 +136,77 @@ export default function FamilyMemberForm({
         <div className="floating-card">
           {/* Simple Title */}
           <div className="text-center mb-6">
-            <h1 className="text-xl font-bold gradient-text font-chinese whitespace-nowrap">
-              第{memberIndex + 1}位成員
+            <h1
+              className={`text-xl font-bold gradient-text ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} whitespace-nowrap`}
+            >
+              {memberIndex === 0
+                ? (LOCALIZED_STRINGS[displayLanguage || 'en'][
+                    'onboarding_familyMemberFirst'
+                  ] ?? LOCALIZED_STRINGS['en']['onboarding_familyMemberFirst'])
+                : memberIndex === 1
+                  ? (LOCALIZED_STRINGS[displayLanguage || 'en'][
+                      'onboarding_familyMemberSecond'
+                    ] ??
+                    LOCALIZED_STRINGS['en']['onboarding_familyMemberSecond'])
+                  : memberIndex === 2
+                    ? (LOCALIZED_STRINGS[displayLanguage || 'en'][
+                        'onboarding_familyMemberThird'
+                      ] ??
+                      LOCALIZED_STRINGS['en']['onboarding_familyMemberThird'])
+                    : memberIndex === 3
+                      ? (LOCALIZED_STRINGS[displayLanguage || 'en'][
+                          'onboarding_familyMemberFourth'
+                        ] ??
+                        LOCALIZED_STRINGS['en'][
+                          'onboarding_familyMemberFourth'
+                        ])
+                      : memberIndex === 4
+                        ? (LOCALIZED_STRINGS[displayLanguage || 'en'][
+                            'onboarding_familyMemberFifth'
+                          ] ??
+                          LOCALIZED_STRINGS['en'][
+                            'onboarding_familyMemberFifth'
+                          ])
+                        : (LOCALIZED_STRINGS[displayLanguage || 'en'][
+                            'onboarding_familyMemberSixth'
+                          ] ??
+                          LOCALIZED_STRINGS['en'][
+                            'onboarding_familyMemberSixth'
+                          ])}
             </h1>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Name */}
             <Input
-              label="姓名"
-              placeholder="例如：阿明、媽媽"
+              label={
+                LOCALIZED_STRINGS[displayLanguage || 'en'][
+                  'onboarding_familyMemberName'
+                ] ?? LOCALIZED_STRINGS['en']['onboarding_familyMemberName']
+              }
+              placeholder={
+                LOCALIZED_STRINGS[displayLanguage || 'en'][
+                  'onboarding_familyMemberExample'
+                ] ?? LOCALIZED_STRINGS['en']['onboarding_familyMemberExample']
+              }
               {...register('name')}
               error={errors.name?.message}
-              className="font-chinese"
+              className={`${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
             />
 
             {/* Age Slider - Compact */}
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-3 font-chinese whitespace-nowrap">
-                年齡：{age}歲
+              <label
+                className={`block text-sm font-medium text-warm-700 mb-3 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} whitespace-nowrap`}
+              >
+                {LOCALIZED_STRINGS[displayLanguage || 'en'][
+                  'onboarding_familyMemberAge'
+                ] ?? LOCALIZED_STRINGS['en']['onboarding_familyMemberAge']}
+                ：{age}
+                {displayLanguage !== 'zh-HK' ? ' ' : ''}
+                {LOCALIZED_STRINGS[displayLanguage || 'en'][
+                  'onboarding_familyMemberAgeSui'
+                ] ?? LOCALIZED_STRINGS['en']['onboarding_familyMemberAgeSui']}
               </label>
               <input
                 type="range"
@@ -150,8 +220,19 @@ export default function FamilyMemberForm({
 
             {/* Dietary - Compact Grid */}
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-3 font-chinese whitespace-nowrap">
-                飲食習慣<span className="text-warm-400">（可選）</span>
+              <label
+                className={`block text-sm font-medium text-warm-700 mb-3 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} whitespace-nowrap`}
+              >
+                {LOCALIZED_STRINGS[displayLanguage || 'en'][
+                  'onboarding_familyMemberHabit'
+                ] ?? LOCALIZED_STRINGS['en']['onboarding_familyMemberHabit']}
+                {displayLanguage !== 'zh-HK' ? ' ' : ''}
+                <span className="text-warm-400">
+                  {LOCALIZED_STRINGS[displayLanguage || 'en'][
+                    'onboarding_familyMemberOptional'
+                  ] ??
+                    LOCALIZED_STRINGS['en']['onboarding_familyMemberOptional']}
+                </span>
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {dietaryOptions.map((option) => (
@@ -166,7 +247,11 @@ export default function FamilyMemberForm({
                     }`}
                   >
                     <div className="text-lg mb-1">{option.icon}</div>
-                    <div className="text-xs font-medium text-warm-800 font-chinese whitespace-nowrap">{option.label}</div>
+                    <div
+                      className={`text-xs font-medium text-warm-800 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} whitespace-nowrap`}
+                    >
+                      {option.label}
+                    </div>
                   </button>
                 ))}
                 {/* Others Option */}
@@ -180,7 +265,13 @@ export default function FamilyMemberForm({
                   }`}
                 >
                   <div className="text-lg mb-1">✏️</div>
-                  <div className="text-xs font-medium text-warm-800 font-chinese">其他</div>
+                  <div
+                    className={`text-xs font-medium text-warm-800 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
+                  >
+                    {LOCALIZED_STRINGS[displayLanguage || 'en'][
+                      'onboarding_others'
+                    ] ?? LOCALIZED_STRINGS['en']['onboarding_others']}
+                  </div>
                 </button>
               </div>
               {showCustomDietary && (
@@ -190,7 +281,7 @@ export default function FamilyMemberForm({
                     placeholder="請輸入其他飲食習慣"
                     value={customDietary}
                     onChange={(e) => setCustomDietary(e.target.value)}
-                    className="input-field text-sm font-chinese"
+                    className={`input-field text-sm ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
                   />
                 </div>
               )}
@@ -198,8 +289,19 @@ export default function FamilyMemberForm({
 
             {/* Allergies - Compact Grid */}
             <div>
-              <label className="block text-sm font-medium text-warm-700 mb-3 font-chinese whitespace-nowrap">
-                食物敏感<span className="text-warm-400">（可選）</span>
+              <label
+                className={`block text-sm font-medium text-warm-700 mb-3 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} whitespace-nowrap`}
+              >
+                {LOCALIZED_STRINGS[displayLanguage || 'en'][
+                  'onboarding_familyMemberAllergy'
+                ] ?? LOCALIZED_STRINGS['en']['onboarding_familyMemberAllergy']}
+                {displayLanguage !== 'zh-HK' ? ' ' : ''}
+                <span className="text-warm-400">
+                  {LOCALIZED_STRINGS[displayLanguage || 'en'][
+                    'onboarding_familyMemberOptional'
+                  ] ??
+                    LOCALIZED_STRINGS['en']['onboarding_familyMemberOptional']}
+                </span>
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {allergyOptions.map((option) => (
@@ -214,7 +316,11 @@ export default function FamilyMemberForm({
                     }`}
                   >
                     <div className="text-lg mb-1">{option.icon}</div>
-                    <div className="text-xs font-medium text-warm-800 font-chinese whitespace-nowrap">{option.label}</div>
+                    <div
+                      className={`text-xs font-medium text-warm-800 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} whitespace-nowrap`}
+                    >
+                      {option.label}
+                    </div>
                   </button>
                 ))}
                 {/* Others Option */}
@@ -228,7 +334,13 @@ export default function FamilyMemberForm({
                   }`}
                 >
                   <div className="text-lg mb-1">✏️</div>
-                  <div className="text-xs font-medium text-warm-800 font-chinese">其他</div>
+                  <div
+                    className={`text-xs font-medium text-warm-800 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
+                  >
+                    {LOCALIZED_STRINGS[displayLanguage || 'en'][
+                      'onboarding_others'
+                    ] ?? LOCALIZED_STRINGS['en']['onboarding_others']}
+                  </div>
                 </button>
               </div>
               {showCustomAllergy && (
@@ -238,14 +350,27 @@ export default function FamilyMemberForm({
                     placeholder="請輸入其他食物敏感"
                     value={customAllergy}
                     onChange={(e) => setCustomAllergy(e.target.value)}
-                    className="input-field text-sm font-chinese"
+                    className={`input-field text-sm ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
                   />
                 </div>
               )}
             </div>
 
-            <Button type="submit" className="w-full font-chinese whitespace-nowrap">
-              {memberIndex < totalMembers - 1 ? '下一位→' : '完成✨'}
+            <Button
+              type="submit"
+              className={`w-full ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} whitespace-nowrap`}
+            >
+              {memberIndex < totalMembers - 1
+                ? `${
+                    LOCALIZED_STRINGS[displayLanguage || 'en'][
+                      'onboarding_familyMemberNext'
+                    ] ?? LOCALIZED_STRINGS['en']['onboarding_familyMemberNext']
+                  }${displayLanguage !== 'zh-HK' ? ' ' : ''}→`
+                : `${
+                    LOCALIZED_STRINGS[displayLanguage || 'en'][
+                      'OnboardingComplete'
+                    ] ?? LOCALIZED_STRINGS['en']['OnboardingComplete']
+                  }${displayLanguage !== 'zh-HK' ? ' ' : ''}✨`}
             </Button>
           </form>
         </div>
