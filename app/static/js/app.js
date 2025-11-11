@@ -4,6 +4,8 @@ let isRunning = false;
 let lastFrameTime = Date.now();
 let frameCount = 0;
 let fps = 0;
+let consecutiveErrors = 0;
+const MAX_CONSECUTIVE_ERRORS = 5;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,10 +15,49 @@ document.addEventListener('DOMContentLoaded', () => {
     
     document.getElementById('startBtn').addEventListener('click', startCamera);
     document.getElementById('stopBtn').addEventListener('click', stopCamera);
+    
+    // Check server health on load
+    checkServerHealth();
 });
+
+async function checkServerHealth() {
+    try {
+        const response = await fetch('/health');
+        const data = await response.json();
+        
+        if (data.status === 'healthy') {
+            updateStatus('Ready', 'success');
+            console.log('Server is healthy:', data);
+        } else {
+            updateStatus('Server unhealthy', 'error');
+            console.error('Server unhealthy:', data);
+        }
+    } catch (error) {
+        updateStatus('Cannot connect to server', 'error');
+        console.error('Health check failed:', error);
+    }
+}
+
+function updateStatus(message, type = 'info') {
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = `Status: ${message}`;
+    
+    // Update status color based on type
+    if (type === 'success') {
+        statusEl.style.color = '#4ade80';
+    } else if (type === 'error') {
+        statusEl.style.color = '#ef4444';
+    } else if (type === 'warning') {
+        statusEl.style.color = '#fbbf24';
+    } else {
+        statusEl.style.color = '#888';
+    }
+}
 
 async function startCamera() {
     try {
+        updateStatus('Starting camera...', 'info');
+        
         stream = await navigator.mediaDevices.getUserMedia({ 
             video: { 
                 facingMode: 'environment',
@@ -27,10 +68,11 @@ async function startCamera() {
         
         video.srcObject = stream;
         isRunning = true;
+        consecutiveErrors = 0;
         
         document.getElementById('startBtn').style.display = 'none';
         document.getElementById('stopBtn').style.display = 'inline-block';
-        document.getElementById('status').textContent = 'Status: Running';
+        updateStatus('Running', 'success');
         
         // Wait for video to be ready
         video.onloadedmetadata = () => {
@@ -40,13 +82,25 @@ async function startCamera() {
         };
         
     } catch (error) {
-        alert('Camera error: ' + error.message);
-        console.error(error);
+        updateStatus('Camera error', 'error');
+        
+        let errorMessage = 'Failed to access camera.';
+        if (error.name === 'NotAllowedError') {
+            errorMessage = 'Camera access denied. Please allow camera permissions.';
+        } else if (error.name === 'NotFoundError') {
+            errorMessage = 'No camera found. Please connect a camera.';
+        } else if (error.name === 'NotReadableError') {
+            errorMessage = 'Camera is already in use by another application.';
+        }
+        
+        alert(errorMessage);
+        console.error('Camera error:', error);
     }
 }
 
 function stopCamera() {
     isRunning = false;
+    consecutiveErrors = 0;
     
     if (stream) {
         stream.getTracks().forEach(track => track.stop());
@@ -56,7 +110,7 @@ function stopCamera() {
     
     document.getElementById('startBtn').style.display = 'inline-block';
     document.getElementById('stopBtn').style.display = 'none';
-    document.getElementById('status').textContent = 'Status: Stopped';
+    updateStatus('Stopped', 'info');
     
     clearResults();
 }
@@ -93,21 +147,54 @@ async function predictLoop() {
     
     // Send for prediction
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+        
         const response = await fetch('/predict', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ image: imageData })
+            body: JSON.stringify({ image: imageData }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`Server error: ${response.status}`);
+        }
         
         const data = await response.json();
         
         if (data.success) {
             displayResults(data.predictions);
             updateFPS();
+            consecutiveErrors = 0; // Reset error counter on success
+            
+            if (consecutiveErrors > 0) {
+                updateStatus('Running', 'success');
+            }
+        } else {
+            throw new Error(data.error || 'Prediction failed');
         }
         
     } catch (error) {
-        console.error('Prediction error:', error);
+        consecutiveErrors++;
+        
+        if (error.name === 'AbortError') {
+            console.error('Prediction timeout');
+            updateStatus('Prediction timeout', 'warning');
+        } else {
+            console.error('Prediction error:', error);
+            updateStatus('Connection error', 'warning');
+        }
+        
+        // Stop if too many consecutive errors
+        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+            updateStatus('Too many errors - stopped', 'error');
+            stopCamera();
+            alert('Too many consecutive errors. Please check your connection and try again.');
+            return;
+        }
     }
     
     // Continue loop (adjust delay for performance)
