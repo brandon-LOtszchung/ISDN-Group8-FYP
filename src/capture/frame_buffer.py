@@ -1,12 +1,12 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import numpy as np
 
 
 class FrameBuffer:
-    """Stores captured frames with their blur scores."""
+    """Stores captured frames with their blur scores and direction."""
     
     def __init__(self, capture_interval: int = 3, blur_threshold: float = 100.0):
-        self.frames: List[Tuple[np.ndarray, float]] = []
+        self.frames: List[Tuple[np.ndarray, float, str]] = []
         self.rejected_count = 0  # Track frames rejected due to blur
         self.frame_counter = 0
         self.capture_interval = capture_interval
@@ -20,14 +20,14 @@ class FrameBuffer:
             return True
         return False
     
-    def add_frame(self, frame: np.ndarray, blur_score: float):
-        """Add a frame with its blur score to the buffer if it meets threshold."""
+    def add_frame(self, frame: np.ndarray, blur_score: float, direction: str = "UNKNOWN"):
+        """Add a frame with its blur score and direction to the buffer if it meets threshold."""
         if blur_score >= self.blur_threshold:
-            self.frames.append((frame.copy(), blur_score))
+            self.frames.append((frame.copy(), blur_score, direction))
         else:
             self.rejected_count += 1
     
-    def get_best_frame(self) -> Tuple[np.ndarray, float, str]:
+    def get_best_frame(self) -> Tuple[Optional[np.ndarray], float, str]:
         """
         Returns:
             Tuple of (frame, blur_score, direction) for sharpest image

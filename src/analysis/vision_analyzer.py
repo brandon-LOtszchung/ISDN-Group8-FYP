@@ -1,20 +1,43 @@
 import cv2
 import base64
 import numpy as np
-from openai import OpenAI
-from typing import Dict, Tuple, List
+import time
+from openai import OpenAI, OpenAIError
+from typing import Dict, Tuple, List, Optional
+import logging
 
 
 class VisionAnalyzer:
     """Analyzes images using GPT-4o Vision to identify items and quantities."""
     
-    def __init__(self, api_key: str):
+    def __init__(
+        self, 
+        api_key: str,
+        model: str = "gpt-4o",
+        max_tokens: int = 300,
+        temperature: float = 0,
+        retry_attempts: int = 3,
+        retry_delay: float = 1.0
+    ):
         """
         Args:
-        
             api_key: OpenAI API key
+            model: Model name to use
+            max_tokens: Maximum tokens for response
+            temperature: Temperature for generation
+            retry_attempts: Number of retry attempts on failure
+            retry_delay: Delay between retries in seconds
         """
+        if not api_key:
+            raise ValueError("OpenAI API key is required")
+        
         self.client = OpenAI(api_key=api_key)
+        self.model = model
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.retry_attempts = retry_attempts
+        self.retry_delay = retry_delay
+        self.logger = logging.getLogger("FridgeTracker.VisionAnalyzer")
     
     def _encode_image(self, frame: np.ndarray) -> str:
         """
@@ -63,50 +86,90 @@ Examples:
 {{"empty": false, "items": ["egg"], "quantity": 3, "description": "Three eggs"}}
 """
         
-        try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": prompt},
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
+        import json
+        
+        for attempt in range(self.retry_attempts):
+            try:
+                response = self.client.chat.completions.create(
+                    model=self.model,
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:image/jpeg;base64,{base64_image}"
+                                    }
                                 }
-                            }
-                        ]
-                    }
-                ],
-                max_tokens=300,
-                temperature=0
-            )
+                            ]
+                        }
+                    ],
+                    max_tokens=self.max_tokens,
+                    temperature=self.temperature
+                )
+                
+                result_text = response.choices[0].message.content
+                
+                if not result_text:
+                    raise ValueError("Empty response from API")
+                
+                self.logger.debug(f"GPT Response: {result_text[:200]}")
+                
+                # Clean up markdown formatting if present
+                if "```json" in result_text:
+                    result_text = result_text.split("```json")[1].split("```")[0].strip()
+                elif "```" in result_text:
+                    result_text = result_text.split("```")[1].split("```")[0].strip()
+                
+                result_json = json.loads(result_text)
+                
+                # Validate response structure
+                required_keys = ['empty', 'items', 'quantity', 'description']
+                if not all(key in result_json for key in required_keys):
+                    raise ValueError(f"Invalid response structure. Missing keys: {set(required_keys) - set(result_json.keys())}")
+                
+                return result_json
+                
+            except OpenAIError as e:
+                self.logger.warning(f"OpenAI API error (attempt {attempt + 1}/{self.retry_attempts}): {e}")
+                if attempt < self.retry_attempts - 1:
+                    time.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
+                else:
+                    self.logger.error(f"All retry attempts failed: {e}")
+                    return self._get_error_response(f"API error: {str(e)[:50]}")
             
-            import json
-            result_text = response.choices[0].message.content
+            except json.JSONDecodeError as e:
+                self.logger.warning(f"JSON parsing error (attempt {attempt + 1}/{self.retry_attempts}): {e}")
+                self.logger.debug(f"Response was: {result_text if 'result_text' in locals() else 'No response'}")
+                if attempt < self.retry_attempts - 1:
+                    time.sleep(self.retry_delay)
+                else:
+                    return self._get_error_response("Failed to parse API response")
             
-            print(f"[GPT Response] {result_text[:200]}")
+            except Exception as e:
+                self.logger.error(f"Unexpected error in vision analysis: {e}")
+                return self._get_error_response(f"Error: {str(e)[:50]}")
+        
+        return self._get_error_response("Max retries exceeded")
+    
+    def _get_error_response(self, error_msg: str) -> Dict[str, any]:
+        """
+        Generate a standard error response.
+        
+        Args:
+            error_msg: Error message to include
             
-            if "```json" in result_text:
-                result_text = result_text.split("```json")[1].split("```")[0].strip()
-            elif "```" in result_text:
-                result_text = result_text.split("```")[1].split("```")[0].strip()
-            
-            result_json = json.loads(result_text)
-            
-            return result_json
-            
-        except Exception as e:
-            print(f"Vision API error: {e}")
-            print(f"Response was: {result_text if 'result_text' in locals() else 'No response'}")
-            return {
-                "empty": None,
-                "items": [],
-                "quantity": 0,
-                "description": f"Error: {str(e)[:50]}"
-            }
+        Returns:
+            Error response dictionary
+        """
+        return {
+            "empty": None,
+            "items": [],
+            "quantity": 0,
+            "description": error_msg
+        }
     
     def compare_and_determine_action(self, before: Dict, after: Dict) -> Dict:
         """

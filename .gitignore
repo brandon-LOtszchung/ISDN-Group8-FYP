@@ -1,23 +1,34 @@
-# Dataset
-captured_frames/
-GroceryStoreDataset/
-
 # Python
 __pycache__/
 *.py[cod]
-venv/
+*$py.class
+*.so
+.Python
 *.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
 
 # IDE
-.DS_Store
 .vscode/
 .idea/
+*.swp
+*.swo
 
-# Models
-*.pth
-*.h5
-*.pb
+# OS
+.DS_Store
+Thumbs.db
 
-# Data
-data/
+# Application specific
+captured_frames/
+logs/
+*.log
+inventory.json
+config.json
 
+# Keep example config
+!config.json
