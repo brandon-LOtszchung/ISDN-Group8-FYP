@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import FamilySetup from './FamilySetup'
 import FamilyMemberForm from './FamilyMemberForm'
 import FamilyPreferences from './FamilyPreferences'
@@ -10,7 +10,8 @@ import { mockDataService } from '@/services/mockData'
 type OnboardingStep = 'family-setup' | 'member-details' | 'preferences' | 'complete'
 
 export default function OnboardingFlow() {
-  const { setFamily, setLoading, setError, completeOnboarding } = useApp()
+  const { state, setFamily, setLoading, setError, completeOnboarding } =
+    useApp()
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('family-setup')
   const [familyData, setFamilyData] = useState<Partial<Family>>({
     name: '',
@@ -27,27 +28,43 @@ export default function OnboardingFlow() {
     },
   })
   const [currentMemberIndex, setCurrentMemberIndex] = useState(0)
+  const [didPrefill, setDidPrefill] = useState(false)
 
   const handleFamilySetup = (name: string, memberCount: number) => {
-    const members: Partial<FamilyMember>[] = Array.from({ length: memberCount }, (_, i) => ({
-      id: `member-${i + 1}`,
-      name: '',
-      age: 0,
-      dietaryRestrictions: [],
-      allergies: [],
-      healthConditions: [],
-      preferences: {
-        spiceLevel: 'mild',
-        favoriteCuisines: [],
-        dislikedIngredients: [],
-      },
-    }))
+    const existingMembers = familyData.members || []
 
-    setFamilyData(prev => ({
+    const members: FamilyMember[] = Array.from(
+      { length: memberCount },
+      (_, i) => {
+        const existing =
+          existingMembers[i] ||
+          ({
+            id: `member-${i + 1}`,
+            name: '',
+            age: 0,
+            dietaryRestrictions: [],
+            allergies: [],
+            healthConditions: [],
+            preferences: {
+              spiceLevel: 'mild',
+              favoriteCuisines: [],
+              dislikedIngredients: [],
+            },
+          } as FamilyMember)
+
+        return {
+          ...existing,
+          id: existing.id || `member-${i + 1}`,
+        }
+      }
+    )
+
+    setFamilyData((prev) => ({
       ...prev,
       name,
       members: members as FamilyMember[],
     }))
+    setCurrentMemberIndex(0)
     setCurrentStep('member-details')
   }
 
@@ -67,7 +84,7 @@ export default function OnboardingFlow() {
   }
 
   const handlePreferencesUpdate = (preferences: Family['preferences']) => {
-    setFamilyData(prev => ({
+    setFamilyData((prev) => ({
       ...prev,
       preferences,
     }))
@@ -87,10 +104,33 @@ export default function OnboardingFlow() {
     }
   }
 
+  const handleEdit = () => {
+    if (!familyData) return
+    setCurrentMemberIndex(0)
+    setCurrentStep('family-setup')
+  }
+
+  useEffect(() => {
+    if (state.family && !didPrefill) {
+      const clonedFamily = JSON.parse(JSON.stringify(state.family)) as Family
+      setFamilyData(clonedFamily)
+      setDidPrefill(true)
+      setCurrentStep('complete')
+    }
+  }, [state.family, didPrefill])
+
   const renderStep = () => {
     switch (currentStep) {
       case 'family-setup':
-        return <FamilySetup onNext={handleFamilySetup} />
+        return (
+          <FamilySetup
+            onNext={handleFamilySetup}
+            initialName={familyData.name || state.family?.name}
+            initialMemberCount={
+              familyData.members?.length || state.family?.members.length || 3
+            }
+          />
+        )
       
       case 'member-details':
         const currentMember = familyData.members?.[currentMemberIndex]
@@ -124,6 +164,7 @@ export default function OnboardingFlow() {
           <OnboardingComplete
             family={familyData as Family}
             onComplete={handleComplete}
+            onEdit={state.family ? handleEdit : undefined}
           />
         )
       

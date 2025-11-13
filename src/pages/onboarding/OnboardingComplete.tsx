@@ -7,9 +7,10 @@ import { useApp } from '@/contexts/AppContext'
 interface OnboardingCompleteProps {
   family: Family
   onComplete: () => void
+  onEdit?: () => void
 }
 
-export default function OnboardingComplete({ family, onComplete }: OnboardingCompleteProps) {
+export default function OnboardingComplete({ family, onComplete, onEdit }: OnboardingCompleteProps) {
   const { state } = useApp()
 
   return (
@@ -48,13 +49,24 @@ export default function OnboardingComplete({ family, onComplete }: OnboardingCom
             </div>
           </div>
 
-          <Button 
-            onClick={onComplete} 
-            className="w-full font-chinese text-lg py-5 whitespace-nowrap"
-            isLoading={state.isLoading}
-          >
-            {state.isLoading ? '儲存中...' : '開始使用🚀'}
-          </Button>
+          <div className="space-y-3">
+            <Button 
+              onClick={onComplete} 
+              className="w-full font-chinese text-lg py-5 whitespace-nowrap"
+              isLoading={state.isLoading}
+            >
+              {state.isLoading ? '儲存中...' : '開始使用🚀'}
+            </Button>
+            {onEdit && (
+              <Button 
+                variant="outline"
+                onClick={onEdit}
+                className="w-full font-chinese text-lg py-5 whitespace-nowrap"
+              >
+                重新設定家庭資料
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>

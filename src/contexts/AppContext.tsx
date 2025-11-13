@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, ReactNode } from 'react'
-import { AppState, Family, InventoryItem, Recipe } from '@/types'
+import { AppState, Family, InventoryItem, Recipe, RecipeIngredient } from '@/types'
 import { STORAGE_KEYS } from '@/constants'
 
 interface AppContextType {
@@ -12,6 +12,9 @@ interface AppContextType {
   completeOnboarding: () => void
   initializeFridge: () => void
   clearError: () => void
+  addToShoppingList: (items: RecipeIngredient[]) => void
+  removeFromShoppingList: (item: Pick<RecipeIngredient, 'name' | 'unit'>) => void
+  clearShoppingList: () => void
 }
 
 type AppAction =
@@ -23,12 +26,21 @@ type AppAction =
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'INITIALIZE_FRIDGE' }
   | { type: 'CLEAR_ERROR' }
+  | { type: 'ADD_TO_SHOPPING_LIST'; payload: RecipeIngredient[] }
+  | {
+      type: 'REMOVE_FROM_SHOPPING_LIST'
+      payload: Pick<RecipeIngredient, 'name' | 'unit'>
+    }
+  | { type: 'CLEAR_SHOPPING_LIST' }
 
 const initialState: AppState = {
   preferredLanguage: 'en',
   family: null,
   inventory: [],
   currentRecipes: [],
+  shoppingList: JSON.parse(
+    localStorage.getItem(STORAGE_KEYS.SHOPPING_LIST) || '[]'
+  ),
   isLoading: false,
   error: null,
   onboardingCompleted:
@@ -68,6 +80,58 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
     case 'CLEAR_ERROR':
       return { ...state, error: null }
+
+    case 'ADD_TO_SHOPPING_LIST': {
+      const updatedList = [...state.shoppingList]
+
+      action.payload.forEach((item) => {
+        const existingIndex = updatedList.findIndex(
+          (existing) =>
+            existing.name.toLowerCase() === item.name.toLowerCase() &&
+            existing.unit.toLowerCase() === item.unit.toLowerCase()
+        )
+
+        if (existingIndex >= 0) {
+          const existingItem = updatedList[existingIndex]
+          updatedList[existingIndex] = {
+            ...existingItem,
+            quantity: existingItem.quantity + item.quantity,
+            alternatives: item.alternatives || existingItem.alternatives,
+          }
+        } else {
+          updatedList.push({ ...item })
+        }
+      })
+
+      localStorage.setItem(
+        STORAGE_KEYS.SHOPPING_LIST,
+        JSON.stringify(updatedList)
+      )
+
+      return { ...state, shoppingList: updatedList }
+    }
+
+    case 'REMOVE_FROM_SHOPPING_LIST': {
+      const updatedList = state.shoppingList.filter(
+        (item) =>
+          !(
+            item.name.toLowerCase() === action.payload.name.toLowerCase() &&
+            item.unit.toLowerCase() === action.payload.unit.toLowerCase()
+          )
+      )
+
+      localStorage.setItem(
+        STORAGE_KEYS.SHOPPING_LIST,
+        JSON.stringify(updatedList)
+      )
+
+      return { ...state, shoppingList: updatedList }
+    }
+
+    case 'CLEAR_SHOPPING_LIST': {
+      localStorage.setItem(STORAGE_KEYS.SHOPPING_LIST, JSON.stringify([]))
+      return { ...state, shoppingList: [] }
+    }
 
     default:
       return state
@@ -111,6 +175,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CLEAR_ERROR' })
   }
 
+  const addToShoppingList = (items: RecipeIngredient[]) => {
+    if (!items || items.length === 0) return
+    dispatch({ type: 'ADD_TO_SHOPPING_LIST', payload: items })
+  }
+
+  const removeFromShoppingList = (
+    item: Pick<RecipeIngredient, 'name' | 'unit'>
+  ) => {
+    dispatch({ type: 'REMOVE_FROM_SHOPPING_LIST', payload: item })
+  }
+
+  const clearShoppingList = () => {
+    dispatch({ type: 'CLEAR_SHOPPING_LIST' })
+  }
+
   const value: AppContextType = {
     state,
     setFamily,
@@ -121,6 +200,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     completeOnboarding,
     initializeFridge,
     clearError,
+    addToShoppingList,
+    removeFromShoppingList,
+    clearShoppingList,
   }
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>

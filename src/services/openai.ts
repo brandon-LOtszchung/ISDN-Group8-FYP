@@ -133,6 +133,7 @@ Return only valid JSON with the recipe array.`
           instruction: typeof instruction === 'string' ? instruction : instruction.instruction || '',
           duration: instruction.duration,
           temperature: instruction.temperature,
+          imageUrl: instruction.imageUrl || instruction.photoUrl,
         })) || [],
         nutritionInfo: recipe.nutritionInfo,
         tags: recipe.tags || [],

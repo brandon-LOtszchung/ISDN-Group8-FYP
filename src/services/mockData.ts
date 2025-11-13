@@ -157,12 +157,42 @@ export const mockRecipes: Recipe[] = [
       { name: 'Rice', quantity: 1, unit: 'cup', available: true },
     ],
     instructions: [
-      { step: 1, instruction: 'Cut chicken into bite-sized pieces' },
-      { step: 2, instruction: 'Cut broccoli into florets' },
-      { step: 3, instruction: 'Heat oil in wok over high heat' },
-      { step: 4, instruction: 'Stir fry chicken until cooked through' },
-      { step: 5, instruction: 'Add broccoli and garlic, stir fry for 2 minutes' },
-      { step: 6, instruction: 'Add soy sauce and serve over rice' },
+      {
+        step: 1,
+        instruction: 'Cut chicken into bite-sized pieces',
+        imageUrl:
+          'https://images.unsplash.com/photo-1514516430032-7cce680f32a9?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 2,
+        instruction: 'Cut broccoli into florets',
+        imageUrl:
+          'https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 3,
+        instruction: 'Heat oil in wok over high heat',
+        imageUrl:
+          'https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 4,
+        instruction: 'Stir fry chicken until cooked through',
+        imageUrl:
+          'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 5,
+        instruction: 'Add broccoli and garlic, stir fry for 2 minutes',
+        imageUrl:
+          'https://images.unsplash.com/photo-1482049016688-2d3e1b311543?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 6,
+        instruction: 'Add soy sauce and serve over rice',
+        imageUrl:
+          'https://images.unsplash.com/photo-1475090169767-40ed8d18f67d?auto=format&fit=crop&w=800&q=80',
+      },
     ],
     tags: ['quick', 'healthy', 'family-friendly'],
     matchScore: 100,
@@ -185,12 +215,42 @@ export const mockRecipes: Recipe[] = [
       { name: 'Salt', quantity: 0.5, unit: 'tsp', available: false },
     ],
     instructions: [
-      { step: 1, instruction: 'Beat eggs with salt' },
-      { step: 2, instruction: 'Cut tomatoes into wedges' },
-      { step: 3, instruction: 'Dice onion finely' },
-      { step: 4, instruction: 'Scramble eggs until just set, remove from pan' },
-      { step: 5, instruction: 'Stir fry onion and tomatoes until soft' },
-      { step: 6, instruction: 'Add eggs back and gently combine' },
+      {
+        step: 1,
+        instruction: 'Beat eggs with salt',
+        imageUrl:
+          'https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 2,
+        instruction: 'Cut tomatoes into wedges',
+        imageUrl:
+          'https://images.unsplash.com/photo-1576402187878-974f70c890a5?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 3,
+        instruction: 'Dice onion finely',
+        imageUrl:
+          'https://images.unsplash.com/photo-1512058564366-18510be2db19?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 4,
+        instruction: 'Scramble eggs until just set, remove from pan',
+        imageUrl:
+          'https://images.unsplash.com/photo-1604908177522-4024aa3f27f8?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 5,
+        instruction: 'Stir fry onion and tomatoes until soft',
+        imageUrl:
+          'https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 6,
+        instruction: 'Add eggs back and gently combine',
+        imageUrl:
+          'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=800&q=80',
+      },
     ],
     tags: ['comfort-food', 'quick', 'cantonese'],
     matchScore: 60,
@@ -213,12 +273,42 @@ export const mockRecipes: Recipe[] = [
       { name: 'Green Onions', quantity: 2, unit: 'stalks', available: false },
     ],
     instructions: [
-      { step: 1, instruction: 'Heat oil in wok' },
-      { step: 2, instruction: 'Scramble eggs and set aside' },
-      { step: 3, instruction: 'Stir fry garlic until fragrant' },
-      { step: 4, instruction: 'Add rice and break up clumps' },
-      { step: 5, instruction: 'Add soy sauce and eggs' },
-      { step: 6, instruction: 'Garnish with green onions if available' },
+      {
+        step: 1,
+        instruction: 'Heat oil in wok',
+        imageUrl:
+          'https://images.unsplash.com/photo-1514500422055-8b4f36c7b5d4?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 2,
+        instruction: 'Scramble eggs and set aside',
+        imageUrl:
+          'https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 3,
+        instruction: 'Stir fry garlic until fragrant',
+        imageUrl:
+          'https://images.unsplash.com/photo-1534939561126-855b8675edd7?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 4,
+        instruction: 'Add rice and break up clumps',
+        imageUrl:
+          'https://images.unsplash.com/photo-1604908554100-23c3d2b64bea?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 5,
+        instruction: 'Add soy sauce and eggs',
+        imageUrl:
+          'https://images.unsplash.com/photo-1525755662778-989d0524087e?auto=format&fit=crop&w=800&q=80',
+      },
+      {
+        step: 6,
+        instruction: 'Garnish with green onions if available',
+        imageUrl:
+          'https://images.unsplash.com/photo-1534939561126-855b8675edd7?auto=format&fit=crop&w=800&q=80',
+      },
     ],
     tags: ['leftover-rice', 'quick', 'simple'],
     matchScore: 80,

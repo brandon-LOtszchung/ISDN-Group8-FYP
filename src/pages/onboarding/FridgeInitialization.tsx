@@ -7,6 +7,30 @@ import { Refrigerator, CheckCircle, AlertCircle } from 'lucide-react'
 
 type InitStep = 'instructions' | 'removing' | 'restocking' | 'complete'
 
+const TUTORIAL_STEPS = [
+  {
+    id: 'clear',
+    title: '全面清空雪櫃',
+    description: '取出所有食材與包裝，有助感應器重新校準基準值。',
+    image:
+      'https://images.unsplash.com/photo-1612872087720-bb876e3c469b?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'organize',
+    title: '按層整理分類',
+    description: '將常用、易壞的食材先放在前排，方便後續監察與補貨。',
+    image:
+      'https://images.unsplash.com/photo-1586201375761-83865001e31b?auto=format&fit=crop&w=600&q=80',
+  },
+  {
+    id: 'restock',
+    title: '逐件放回並記錄',
+    description: '每放回一件物品稍停一秒，讓系統偵測重量和位置。',
+    image:
+      'https://images.unsplash.com/photo-1606811841689-23dfddce3b03?auto=format&fit=crop&w=600&q=80',
+  },
+] as const
+
 export default function FridgeInitialization() {
   const { setLoading, setError, initializeFridge, setInventory } = useApp()
   const [currentStep, setCurrentStep] = useState<InitStep>('instructions')
@@ -75,6 +99,33 @@ export default function FridgeInitialization() {
               </div>
             </div>
 
+            <div className="bg-white/40 rounded-2xl p-6 mb-8 border border-white/60">
+              <div className="flex items-center justify-center gap-2 text-primary-600 mb-4">
+                <Refrigerator className="w-5 h-5" />
+                <span className="text-sm font-semibold font-chinese tracking-wide">快速教學 · 請跟住以下示範</span>
+              </div>
+              <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+                {TUTORIAL_STEPS.map((step) => (
+                  <Card
+                    key={step.id}
+                    padding="sm"
+                    className="min-w-[220px] bg-white/80 border border-white/70 rounded-2xl shadow-sm snap-center"
+                  >
+                    <div className="h-32 rounded-xl overflow-hidden mb-3">
+                      <img
+                        src={step.image}
+                        alt={step.title}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    </div>
+                    <h4 className="text-sm font-semibold text-warm-800 mb-2 font-chinese">{step.title}</h4>
+                    <p className="text-xs text-warm-600 font-chinese leading-relaxed">{step.description}</p>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
             <Button onClick={handleStartInitialization} className="w-full font-chinese whitespace-nowrap">
               開始設定
             </Button>
@@ -90,8 +141,9 @@ export default function FridgeInitialization() {
               請清空雪櫃所有物品，幫助系統建立基準
             </p>
             
-            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6">
-              <p className="text-sm text-orange-700 font-chinese">
+            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
+              <p className="text-sm text-orange-700 font-chinese text-left">
                 確保雪櫃完全清空才繼續
               </p>
             </div>
@@ -112,9 +164,12 @@ export default function FridgeInitialization() {
             </p>
             
             <div className="bg-primary-50 border border-primary-200 rounded-2xl p-4 mb-6">
-              <p className="text-sm text-primary-700 font-chinese">
-                慢慢來，系統需要清楚識別每件物品
-              </p>
+              <div className="flex items-start gap-3 text-left">
+                <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5" />
+                <p className="text-sm text-primary-700 font-chinese">
+                  慢慢來，系統需要清楚識別每件物品
+                </p>
+              </div>
             </div>
 
             <Button 

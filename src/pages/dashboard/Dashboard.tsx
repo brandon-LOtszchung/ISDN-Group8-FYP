@@ -4,14 +4,11 @@ import { useApp } from '@/contexts/AppContext'
 import { mockDataService } from '@/services/mockData'
 import Button from '@/components/ui/Button'
 import DropdownButton from '@/components/ui/DropdownButton'
-import { InterfaceLanguage, InventoryItem } from '@/types'
-import { getMealTimeGreeting, getCurrentMealType, formatTime } from '@/utils'
-import { Refrigerator, Clock, Users, ChefHat, Package } from 'lucide-react'
+import { InventoryItem } from '@/types'
+import { ChefHat, Check, Users } from 'lucide-react'
 
 export default function Dashboard() {
   const { state, setInventory, setLoading } = useApp()
-  const [displayLanguage, setDisplayLanguage] =
-    useState<InterfaceLanguage>('en')
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
 
   useEffect(() => {
@@ -38,12 +35,12 @@ export default function Dashboard() {
     )
   }
 
-  const currentMealType = getCurrentMealType()
-  const greeting = getMealTimeGreeting()
-  const mealTime =
-    state.family?.preferences?.mealTimes?.[
-      currentMealType as keyof typeof state.family.preferences.mealTimes
-    ]
+  // const currentMealType = getCurrentMealType()
+  // const greeting = getMealTimeGreeting()
+  // const mealTime =
+  //   state.family?.preferences?.mealTimes?.[
+  //     currentMealType as keyof typeof state.family.preferences.mealTimes
+  //   ]
 
   const groupedInventory = state.inventory.reduce(
     (acc, item) => {
@@ -61,7 +58,6 @@ export default function Dashboard() {
     if (preferences) {
       preferences.preferredLanguage = selectedLocale
     }
-    setDisplayLanguage(selectedLocale)
   }
 
   return (
@@ -118,7 +114,7 @@ export default function Dashboard() {
         </div>
 
         {/* Family Member Selection */}
-        <div className="floating-card animate-slide-up">
+        <div className="floating-card animate-slide-up space-y-6">
           <div className="flex items-center space-x-3 mb-6">
             <span className="text-xl">👨‍👩‍👧‍👦</span>
             <h2 className="section-title mb-0 font-chinese whitespace-nowrap">
@@ -146,14 +142,14 @@ export default function Dashboard() {
                     </p>
                   </div>
                   <div
-                    className={`w-6 h-6 rounded-full border-2 transition-all duration-300 ${
+                    className={`w-6 h-6 rounded-md border-2 transition-all duration-300 flex items-center justify-center ${
                       selectedMembers.includes(member.id)
-                        ? 'border-primary-500 bg-primary-500 shadow-lg'
-                        : 'border-warm-300'
+                        ? 'border-primary-500 bg-white shadow-lg'
+                        : 'border-warm-300 bg-transparent'
                     }`}
                   >
                     {selectedMembers.includes(member.id) && (
-                      <div className="w-full h-full rounded-full bg-white scale-50 animate-scale-in"></div>
+                      <Check className="w-4 h-4 text-primary-600" strokeWidth={3} />
                     )}
                   </div>
                 </div>
@@ -161,7 +157,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          <div className="flex space-x-3 mt-6">
+          <div className="flex space-x-3">
             <Button
               variant="outline"
               size="sm"
@@ -183,6 +179,13 @@ export default function Dashboard() {
               清除
             </Button>
           </div>
+
+          <Link to="/onboarding" className="block">
+            <Button variant="outline" className="w-full font-chinese whitespace-nowrap">
+              <Users className="w-5 h-5 mr-2" />
+              更新家庭成員資料
+            </Button>
+          </Link>
         </div>
 
         {/* Current Inventory */}
@@ -234,7 +237,7 @@ export default function Dashboard() {
         </div>
 
         {/* Action Button */}
-        <div className="animate-slide-up">
+        <div className="animate-slide-up space-y-4">
           <Link to="/recipes" className="block">
             <Button
               className="w-full text-lg py-4 font-chinese whitespace-nowrap"

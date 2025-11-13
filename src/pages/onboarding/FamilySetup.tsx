@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useApp } from '@/contexts/AppContext'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -18,23 +18,40 @@ type FormData = z.infer<typeof schema>
 
 interface FamilySetupProps {
   onNext: (name: string, memberCount: number) => void
+  initialName?: string
+  initialMemberCount?: number
 }
 
-export default function FamilySetup({ onNext }: FamilySetupProps) {
+export default function FamilySetup({
+  onNext,
+  initialName,
+  initialMemberCount,
+}: FamilySetupProps) {
   const { state } = useApp()
 
   const [displayLanguage, setDisplayLanguage] = useState<InterfaceLanguage>(
     state.preferredLanguage
   )
-  const [memberCount, setMemberCount] = useState(3)
+  const [memberCount, setMemberCount] = useState(initialMemberCount || 3)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      familyName: initialName || '',
+    },
   })
+
+  useEffect(() => {
+    reset({ familyName: initialName || '' })
+    if (initialMemberCount) {
+      setMemberCount(initialMemberCount)
+    }
+  }, [initialName, initialMemberCount, reset])
 
   const onSubmit = (data: FormData) => {
     onNext(data.familyName, memberCount)

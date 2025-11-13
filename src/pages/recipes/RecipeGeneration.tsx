@@ -56,6 +56,13 @@ export default function RecipeGeneration() {
     }
   }
 
+  const getAvailabilityBarColor = (available: number, total: number) => {
+    if (total <= 0) return 'bg-neutral-300'
+    if (available >= total) return 'bg-green-500'
+    if (available <= 1) return 'bg-red-500'
+    return 'bg-yellow-500'
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
       <div className="max-w-md mx-auto p-4 space-y-6">
@@ -120,7 +127,7 @@ export default function RecipeGeneration() {
             <h2 className="section-title font-chinese whitespace-nowrap">建議食譜</h2>
             {recipes.map((recipe) => (
               <Link key={recipe.id} to={`/recipes/${recipe.id}`}>
-                <Card interactive className="p-6">
+                <Card interactive className="p-6 overflow-hidden">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-medium text-lg">{recipe.title}</h3>
                     <div className="flex items-center space-x-1 text-sm text-neutral-600">
@@ -150,9 +157,15 @@ export default function RecipeGeneration() {
                       {recipe.availableIngredients}/{recipe.totalIngredients} ingredients
                     </div>
                   </div>
-                  
-                  <div className="mt-3 pt-3 border-t border-neutral-200">
-                    <div className="flex flex-wrap gap-2">
+
+                  <div className="mt-3">
+                    <div
+                      className={`h-2 rounded-full ${getAvailabilityBarColor(
+                        recipe.availableIngredients ?? 0,
+                        recipe.totalIngredients ?? 0
+                      )}`}
+                    />
+                    <div className="pt-3 flex flex-wrap gap-2">
                       {recipe.tags.slice(0, 3).map((tag) => (
                         <span
                           key={tag}

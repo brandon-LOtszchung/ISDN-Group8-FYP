@@ -115,6 +115,7 @@ export const STORAGE_KEYS = {
   ONBOARDING_COMPLETED: 'smart-fridge-onboarding',
   FRIDGE_INITIALIZED: 'smart-fridge-initialized',
   USER_PREFERENCES: 'smart-fridge-preferences',
+  SHOPPING_LIST: 'smart-fridge-shopping-list',
 } as const
 
 export const LOCALIZED_STRINGS = {

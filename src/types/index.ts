@@ -78,6 +78,7 @@ export interface RecipeStep {
   instruction: string
   duration?: number
   temperature?: number
+  imageUrl?: string
 }
 
 export interface NutritionInfo {
@@ -167,6 +168,7 @@ export interface AppState {
   family: Family | null
   inventory: InventoryItem[]
   currentRecipes: Recipe[]
+  shoppingList: RecipeIngredient[]
   isLoading: boolean
   error: string | null
   onboardingCompleted: boolean

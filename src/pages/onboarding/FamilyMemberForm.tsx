@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useApp } from '@/contexts/AppContext'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,7 +10,6 @@ import {
   FamilyMember,
   DietaryRestriction,
   Allergy,
-  InterfaceLanguage,
 } from '@/types'
 import { ArrowLeft } from 'lucide-react'
 
@@ -48,11 +47,7 @@ export default function FamilyMemberForm({
   const [showCustomDietary, setShowCustomDietary] = useState(false)
   const [showCustomAllergy, setShowCustomAllergy] = useState(false)
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: member?.name || '',
@@ -98,6 +93,24 @@ export default function FamilyMemberForm({
     }
     onNext(updatedMember)
   }
+
+  useEffect(() => {
+    reset({ name: member?.name || '' })
+    setAge(member?.age || 25)
+    setSelectedDietary(member?.dietaryRestrictions || [])
+    setSelectedAllergies(member?.allergies || [])
+    setCustomDietary('')
+    setCustomAllergy('')
+    setShowCustomDietary(false)
+    setShowCustomAllergy(false)
+  }, [
+    member?.name,
+    member?.age,
+    member?.dietaryRestrictions,
+    member?.allergies,
+    memberIndex,
+    reset,
+  ])
 
   const toggleDietary = (value: DietaryRestriction) => {
     setSelectedDietary((prev) =>
