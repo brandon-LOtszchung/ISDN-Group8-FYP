@@ -1,17 +1,16 @@
 import { useEffect, useState } from 'react'
-import { useApp } from '@/contexts/AppContext'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { getLanguageName } from '@/translations'
 import Button from '@/components/ui/Button'
-import DropdownButton from '@/components/ui/DropdownButton'
 import Input from '@/components/ui/Input'
-import { ChefHat, Plus, Minus } from 'lucide-react'
-import { LOCALIZED_STRINGS } from '@/constants'
+import { Plus, Minus, Languages, Users as UsersIcon } from 'lucide-react'
 import { InterfaceLanguage } from '@/types'
 
 const schema = z.object({
-  familyName: z.string().min(1, '請輸入家庭稱呼'),
+  familyName: z.string().min(1, 'Please enter family name'),
 })
 
 type FormData = z.infer<typeof schema>
@@ -27,12 +26,9 @@ export default function FamilySetup({
   initialName,
   initialMemberCount,
 }: FamilySetupProps) {
-  const { state } = useApp()
-
-  const [displayLanguage, setDisplayLanguage] = useState<InterfaceLanguage>(
-    state.preferredLanguage
-  )
+  const { language, setLanguage, t } = useLanguage()
   const [memberCount, setMemberCount] = useState(initialMemberCount || 3)
+  const [showLangMenu, setShowLangMenu] = useState(false)
 
   const {
     register,
@@ -61,117 +57,105 @@ export default function FamilySetup({
     setMemberCount((prev) => Math.max(1, Math.min(8, prev + delta)))
   }
 
-  const handleLanguageChange = (item: string) => {
-    const selectedLocale =
-      item === 'Chinese' ? 'zh-HK' : item === 'Filipino' ? 'fil' : 'en'
-    state.preferredLanguage = selectedLocale
-    setDisplayLanguage(selectedLocale)
-  }
+  const languages: InterfaceLanguage[] = ['en', 'zh-HK', 'fil', 'id']
 
   return (
-    <div className="floating-card animate-slide-up">
-      <DropdownButton
-        variant="ghost"
-        className="mx-auto mb-8 text-4xl"
-        items={['English', 'Chinese', 'Filipino']}
-        onSelect={(item) => handleLanguageChange(item)}
-      >
-        🌐
-      </DropdownButton>
-
-      <div className="text-center mb-8">
-        <div className="mx-auto mb-8 text-6xl animate-bounce-subtle">🍳</div>
-        <h1
-          className={`text-4xl font-bold gradient-text mb-3 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} leading-tight`}
-        >
-          {LOCALIZED_STRINGS[displayLanguage || 'en']['onboarding_tagline'] ??
-            LOCALIZED_STRINGS['en']['onboarding_tagline']}
-        </h1>
-        <h2
-          className={`text-2xl font-medium text-primary-600 mb-4 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
-        >
-          {LOCALIZED_STRINGS[displayLanguage || 'en']['onboarding_happy'] ??
-            LOCALIZED_STRINGS['en']['onboarding_happy']}
-        </h2>
-        <p
-          className={`text-warm-600 text-lg ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} leading-relaxed`}
-        >
-          {LOCALIZED_STRINGS[displayLanguage || 'en']['onboarding_help'] ??
-            LOCALIZED_STRINGS['en']['onboarding_help']}
-        </p>
-      </div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <Input
-          label={
-            LOCALIZED_STRINGS[displayLanguage || 'en'][
-              'onboarding_familyName'
-            ] ?? LOCALIZED_STRINGS['en']['onboarding_familyName']
-          }
-          placeholder={
-            LOCALIZED_STRINGS[displayLanguage || 'en'][
-              'onboarding_familyNameExample'
-            ] ?? LOCALIZED_STRINGS['en']['onboarding_familyNameExample']
-          }
-          {...register('familyName')}
-          error={errors.familyName?.message}
-          className={displayLanguage === 'zh-HK' ? 'font-chinese' : ''}
-        />
-
-        <div>
-          <label
-            className={`block text-sm font-semibold text-warm-700 mb-4 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
-          >
-            {LOCALIZED_STRINGS[displayLanguage || 'en'][
-              'onboarding_familyNumber'
-            ] ?? LOCALIZED_STRINGS['en']['onboarding_familyNumber']}
-          </label>
-          <div className="flex items-center justify-center space-x-6">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => adjustMemberCount(-1)}
-              disabled={memberCount <= 1}
-              className="w-12 h-12 rounded-full p-0 hover:bg-primary-50"
+    <div className="min-h-screen bg-warm-50 flex items-center justify-center p-5">
+      <div className="w-full max-w-md">
+        {/* Language Selector - Top Right, Aligned */}
+        <div className="flex justify-end mb-4">
+          <div className="relative">
+            <button
+              onClick={() => setShowLangMenu(!showLangMenu)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-warm-200 hover:border-warm-300 transition-all bg-white"
             >
-              <Minus className="w-5 h-5" />
-            </Button>
-            <div className="w-24 h-20 bg-gradient-to-br from-primary-100 to-orange-100 rounded-3xl flex items-center justify-center shadow-lg border border-primary-200/50 animate-gentle-pulse">
-              <span
-                className={`text-3xl font-bold text-primary-700 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
-              >
-                {memberCount}
+              <Languages className="w-4 h-4 text-warm-600" strokeWidth={2} />
+              <span className="text-warm-700 font-medium" style={{ fontSize: '13px' }}>
+                {language.toUpperCase()}
               </span>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => adjustMemberCount(1)}
-              disabled={memberCount >= 8}
-              className="w-12 h-12 rounded-full p-0 hover:bg-primary-50"
-            >
-              <Plus className="w-5 h-5" />
-            </Button>
+            </button>
+            
+            {showLangMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowLangMenu(false)} />
+                <div className="absolute top-full right-0 mt-1 bg-white rounded-lg shadow-lg border border-warm-200 overflow-hidden z-50 min-w-[160px]">
+                  {languages.map((lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => {
+                        setLanguage(lang)
+                        setShowLangMenu(false)
+                      }}
+                      className={`w-full px-4 py-2.5 text-left transition-all ${
+                        language === lang
+                          ? 'bg-primary-500 text-white font-semibold'
+                          : 'hover:bg-warm-50 text-warm-700'
+                      }`}
+                      style={{ fontSize: '14px' }}
+                    >
+                      {getLanguageName(lang)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
-          <p
-            className={`text-sm text-warm-500 text-center mt-4 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''}`}
-          >
-            {LOCALIZED_STRINGS[displayLanguage || 'en']['onboarding_include'] ??
-              LOCALIZED_STRINGS['en']['onboarding_include']}
-          </p>
         </div>
 
-        <Button
-          type="submit"
-          className={`w-full mt-8 ${displayLanguage === 'zh-HK' ? 'font-chinese' : ''} text-lg py-5`}
-        >
-          {LOCALIZED_STRINGS[displayLanguage || 'en'][
-            'onboarding_startSetting'
-          ] ?? LOCALIZED_STRINGS['en']['onboarding_startSetting']}{' '}
-          ✨
-        </Button>
-      </form>
+        <div className="bg-white rounded-2xl p-8 shadow-lg border border-warm-100">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <UsersIcon className="w-8 h-8 text-primary-600" strokeWidth={2} />
+            </div>
+            <h1 className="font-bold text-warm-900 mb-2" style={{ fontSize: '22px' }}>{t('welcome')}</h1>
+            <h2 className="font-semibold text-primary-600 mb-3" style={{ fontSize: '17px' }}>{t('subtitle')}</h2>
+            <p className="text-warm-600" style={{ fontSize: '14px', lineHeight: '1.6' }}>{t('setupMessage')}</p>
+          </div>
+          
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <Input
+              label={t('familyName')}
+              placeholder={t('familyNamePlaceholder')}
+              {...register('familyName')}
+              error={errors.familyName?.message}
+            />
+
+            <div>
+              <label className="block font-bold text-warm-700 mb-4 text-center" style={{ fontSize: '15px' }}>
+                {t('memberCount')}
+              </label>
+              <div className="flex items-center justify-center gap-5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => adjustMemberCount(-1)}
+                  disabled={memberCount <= 1}
+                  className="w-11 h-11 rounded-full p-0 flex items-center justify-center"
+                >
+                  <Minus className="w-5 h-5" strokeWidth={2} />
+                </Button>
+                <div className="w-20 h-20 bg-primary-100 rounded-2xl flex items-center justify-center border-2 border-primary-300">
+                  <span className="font-bold text-primary-700" style={{ fontSize: '32px' }}>{memberCount}</span>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => adjustMemberCount(1)}
+                  disabled={memberCount >= 8}
+                  className="w-11 h-11 rounded-full p-0 flex items-center justify-center"
+                >
+                  <Plus className="w-5 h-5" strokeWidth={2} />
+                </Button>
+              </div>
+              <p className="text-warm-500 text-center mt-3" style={{ fontSize: '13px' }}>{t('includeAll')}</p>
+            </div>
+
+            <Button type="submit" className="w-full">
+              {t('startSetup')}
+            </Button>
+          </form>
+        </div>
+      </div>
     </div>
   )
 }

@@ -12,7 +12,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-warm-700 mb-2 font-chinese">
+          <label className="block font-bold text-warm-700 mb-2" style={{ fontSize: '14px' }}>
             {label}
           </label>
         )}
@@ -26,10 +26,10 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           {...props}
         />
         {error && (
-          <p className="mt-1 text-sm text-coral-600 font-chinese">{error}</p>
+          <p className="mt-1 text-coral-600" style={{ fontSize: '13px' }}>{error}</p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-sm text-warm-500 font-chinese">{helperText}</p>
+          <p className="mt-1 text-warm-500" style={{ fontSize: '13px' }}>{helperText}</p>
         )}
       </div>
     )

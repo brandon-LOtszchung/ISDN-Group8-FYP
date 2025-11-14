@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '@/contexts/AppContext'
-import { mockDataService } from '@/services/mockData'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { translateInventoryItem, translateUnit } from '@/translations/inventory'
+import { dataService } from '@/services/dataService'
+import Layout from '@/components/Layout'
 import Button from '@/components/ui/Button'
-import DropdownButton from '@/components/ui/DropdownButton'
 import { InventoryItem } from '@/types'
-import { ChefHat, Check, Users } from 'lucide-react'
+import { ChevronDown, Package, X } from 'lucide-react'
 
 export default function Dashboard() {
   const { state, setInventory, setLoading } = useApp()
+  const { language, t } = useLanguage()
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+  const [showInventory, setShowInventory] = useState(false)
+  const [removingItemId, setRemovingItemId] = useState<string | null>(null)
 
   useEffect(() => {
     loadInventory()
@@ -18,7 +23,7 @@ export default function Dashboard() {
   const loadInventory = async () => {
     try {
       setLoading(true)
-      const inventory = await mockDataService.getInventory()
+      const inventory = await dataService.getInventory()
       setInventory(inventory)
     } catch (error) {
       console.error('Failed to load inventory:', error)
@@ -35,12 +40,22 @@ export default function Dashboard() {
     )
   }
 
-  // const currentMealType = getCurrentMealType()
-  // const greeting = getMealTimeGreeting()
-  // const mealTime =
-  //   state.family?.preferences?.mealTimes?.[
-  //     currentMealType as keyof typeof state.family.preferences.mealTimes
-  //   ]
+  const handleRemoveItem = async (itemId: string) => {
+    if (!confirm(t('removeConfirm') || 'Remove this item?')) return
+    
+    try {
+      setRemovingItemId(itemId)
+      await dataService.removeInventoryItem(itemId)
+      
+      // Reload inventory
+      const updatedInventory = await dataService.getInventory()
+      setInventory(updatedInventory)
+    } catch (error) {
+      console.error('Failed to remove item:', error)
+    } finally {
+      setRemovingItemId(null)
+    }
+  }
 
   const groupedInventory = state.inventory.reduce(
     (acc, item) => {
@@ -51,182 +66,107 @@ export default function Dashboard() {
     {} as Record<string, InventoryItem[]>
   )
 
-  const handleLanguageChange = (item: string) => {
-    const selectedLocale =
-      item === 'Chinese' ? 'zh-HK' : item === 'Filipino' ? 'fil' : 'en'
-    const preferences = state.family?.preferences
-    if (preferences) {
-      preferences.preferredLanguage = selectedLocale
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      <div className="max-w-md mx-auto p-4 space-y-8">
-        {/* Header */}
-        <DropdownButton
-          variant="ghost"
-          className="mx-auto mb-8 text-4xl"
-          items={['English', 'Chinese', 'Filipino']}
-          onSelect={(item) => handleLanguageChange(item)}
-        >
-          🌐
-        </DropdownButton>
-        <div className="text-center py-6 animate-fade-in">
-          <div className="text-4xl mb-4 animate-bounce-subtle">🏠</div>
-          <h1 className="text-3xl font-bold gradient-text mb-3 font-chinese whitespace-nowrap">
-            {state.family?.preferences?.preferredLanguage === 'zh-HK'
-              ? '你好！'
-              : 'Hello!'}
-            {/*{greeting === 'Good morning'
-              ? '早晨！'
-              : greeting === 'Good afternoon'
-                ? '午安！'
-                : '晚安！'} */}
-          </h1>
-          <p className="text-warm-600 text-lg font-medium font-chinese">
-            {state.family?.name}
-          </p>
-          {/*<div className="badge mt-3 font-chinese">
-            準備
-            {currentMealType === 'breakfast'
-              ? '早餐'
-              : currentMealType === 'lunch'
-                ? '午餐'
-                : '晚餐'}
-          </div>
-          {currentMealType && (
-            <div className="badge mt-3 font-chinese">
-              準備
-              {currentMealType === 'breakfast'
-                ? '早餐'
-                : currentMealType === 'lunch'
-                  ? '午餐'
-                  : '晚餐'}
-            </div>
-          )}
-          {mealTime && (
-            <div className="flex items-center justify-center space-x-2 mt-4 text-sm text-warm-500">
-              <Clock className="w-4 h-4" />
-              <span className="font-chinese">通常{formatTime(mealTime)}</span>
-            </div>
-          )} */}
-        </div>
-
-        {/* Family Member Selection */}
-        <div className="floating-card animate-slide-up space-y-6">
-          <div className="flex items-center space-x-3 mb-6">
-            <span className="text-xl">👨‍👩‍👧‍👦</span>
-            <h2 className="section-title mb-0 font-chinese whitespace-nowrap">
-              今晚邊個食飯？
-            </h2>
-          </div>
-          <div className="space-y-4">
+    <Layout title={state.family?.name}>
+      <div className="p-4 pb-6">
+        {/* Who's Eating - Horizontal Scroll */}
+        <section className="mb-5">
+          <h2 className="font-bold text-warm-900 mb-3" style={{ fontSize: '18px' }}>
+            {t('whoEating')}
+          </h2>
+          
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {state.family?.members?.map((member) => (
-              <div
+              <button
                 key={member.id}
                 onClick={() => toggleMember(member.id)}
-                className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
+                className={`flex-shrink-0 px-4 py-3 rounded-xl transition-all ${
                   selectedMembers.includes(member.id)
-                    ? 'border-primary-400 bg-gradient-to-r from-primary-50 to-orange-50 shadow-lg'
-                    : 'border-warm-200 bg-white/60 hover:border-warm-300 hover:shadow-md'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-white border border-warm-200 text-warm-900'
                 }`}
+                style={{ minWidth: '120px' }}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-warm-800 font-chinese">
-                      {member.name}
-                    </p>
-                    <p className="text-sm text-warm-600 font-chinese whitespace-nowrap">
-                      {member.age}歲
-                    </p>
-                  </div>
-                  <div
-                    className={`w-6 h-6 rounded-md border-2 transition-all duration-300 flex items-center justify-center ${
-                      selectedMembers.includes(member.id)
-                        ? 'border-primary-500 bg-white shadow-lg'
-                        : 'border-warm-300 bg-transparent'
-                    }`}
-                  >
-                    {selectedMembers.includes(member.id) && (
-                      <Check className="w-4 h-4 text-primary-600" strokeWidth={3} />
-                    )}
-                  </div>
+                <div className="text-center">
+                  <p className="font-semibold" style={{ fontSize: '15px' }}>
+                    {member.name}
+                  </p>
+                  <p className="opacity-70 mt-0.5" style={{ fontSize: '13px' }}>
+                    {member.age} {t('yearsOld')}
+                  </p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
-          <div className="flex space-x-3">
+          <div className="flex gap-2 mt-3">
             <Button
               variant="outline"
-              size="sm"
-              onClick={() =>
-                setSelectedMembers(
-                  state.family?.members?.map((m) => m.id) || []
-                )
-              }
-              className="flex-1 font-chinese whitespace-nowrap"
+              onClick={() => setSelectedMembers(state.family?.members?.map((m) => m.id) || [])}
+              className="flex-1"
+              style={{ fontSize: '13px', padding: '8px 12px' }}
             >
-              全選
+              {t('selectAll')}
             </Button>
             <Button
               variant="outline"
-              size="sm"
               onClick={() => setSelectedMembers([])}
-              className="flex-1 font-chinese whitespace-nowrap"
+              className="flex-1"
+              style={{ fontSize: '13px', padding: '8px 12px' }}
             >
-              清除
+              {t('clear')}
             </Button>
           </div>
+        </section>
 
-          <Link to="/onboarding" className="block">
-            <Button variant="outline" className="w-full font-chinese whitespace-nowrap">
-              <Users className="w-5 h-5 mr-2" />
-              更新家庭成員資料
-            </Button>
-          </Link>
-        </div>
-
-        {/* Current Inventory */}
-        <div className="floating-card animate-slide-up">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <span className="text-xl">📦</span>
-              <h2 className="section-title mb-0 font-chinese whitespace-nowrap">
-                雪櫃存貨
+        {/* Fridge Inventory - Collapsible */}
+        <section className="mb-5">
+          <button
+            onClick={() => setShowInventory(!showInventory)}
+            className="w-full flex items-center justify-between mb-3"
+          >
+            <div className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-primary-500" strokeWidth={2} />
+              <h2 className="font-bold text-warm-900" style={{ fontSize: '18px' }}>
+                {t('fridgeInventory')}
               </h2>
             </div>
-            <div className="badge font-chinese">
-              {state.inventory.length}樣物品
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 bg-primary-100 text-primary-700 rounded font-bold" style={{ fontSize: '12px' }}>
+                {state.inventory.length}
+              </span>
+              <ChevronDown className={`w-5 h-5 text-warm-500 transition-transform ${showInventory ? 'rotate-180' : ''}`} strokeWidth={2} />
             </div>
-          </div>
+          </button>
 
-          {state.isLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full mx-auto mb-4"></div>
-              <p className="text-warm-500 font-chinese">載入存貨中...</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
+          {showInventory && (
+            <div className="space-y-3 max-h-64 overflow-y-auto">
               {Object.entries(groupedInventory).map(([category, items]) => (
                 <div key={category}>
-                  <h3 className="text-sm font-semibold text-warm-700 mb-3 capitalize flex items-center">
-                    <span className="w-2 h-2 bg-gradient-to-r from-fresh-400 to-primary-500 rounded-full mr-2"></span>
-                    {category.replace('-', ' ')}
+                  <h3 className="font-bold text-warm-700 mb-1.5" style={{ fontSize: '13px' }}>
+                    {t(category as keyof typeof import('@/translations').translations.en)}
                   </h3>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
                     {items.map((item) => (
                       <div
                         key={item.id}
-                        className="bg-gradient-to-br from-white/90 to-orange-50/80 backdrop-blur-sm rounded-2xl p-4 border border-white/60 shadow-sm hover:shadow-md transition-all duration-300"
+                        className="bg-white rounded-lg px-3 py-2 border border-warm-200 flex items-center justify-between group"
                       >
-                        <p className="text-sm font-semibold text-warm-800">
-                          {item.name}
+                        <p className="font-semibold text-warm-900" style={{ fontSize: '14px' }}>
+                          {translateInventoryItem(item.name, language)}
                         </p>
-                        <p className="text-xs text-warm-600 mt-1">
-                          {item.quantity} {item.unit}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-warm-600 font-medium whitespace-nowrap" style={{ fontSize: '13px' }}>
+                            {item.quantity} {translateUnit(item.unit, language)}
+                          </p>
+                          <button
+                            onClick={() => handleRemoveItem(item.id)}
+                            disabled={removingItemId === item.id}
+                            className="opacity-0 group-hover:opacity-100 p-1 text-coral-500 hover:text-coral-700 transition-all disabled:opacity-50"
+                          >
+                            <X className="w-4 h-4" strokeWidth={2} />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -234,27 +174,26 @@ export default function Dashboard() {
               ))}
             </div>
           )}
-        </div>
+        </section>
 
         {/* Action Button */}
-        <div className="animate-slide-up space-y-4">
-          <Link to="/recipes" className="block">
+        <section>
+          <Link to="/recipes">
             <Button
-              className="w-full text-lg py-4 font-chinese whitespace-nowrap"
+              className="w-full"
               disabled={selectedMembers.length === 0}
             >
-              <ChefHat className="w-6 h-6 mr-3" />
-              獲取煮食建議
+              {t('getRecipes')}
             </Button>
           </Link>
 
           {selectedMembers.length === 0 && (
-            <p className="text-center text-sm text-warm-500 mt-4 animate-bounce-subtle font-chinese">
-              選擇家庭成員以獲得個人化食譜
+            <p className="text-center text-warm-500 mt-2" style={{ fontSize: '13px' }}>
+              {t('selectMembers')}
             </p>
           )}
-        </div>
+        </section>
       </div>
-    </div>
+    </Layout>
   )
 }

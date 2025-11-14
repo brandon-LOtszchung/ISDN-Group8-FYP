@@ -33,7 +33,7 @@ export const mockFamilyMembers: FamilyMember[] = [
     name: 'Emma',
     age: 8,
     dietaryRestrictions: [],
-    allergies: ['dairy'],
+    allergies: ['dairyAllergy'],
     healthConditions: [],
     preferences: {
       spiceLevel: 'none',
@@ -343,7 +343,7 @@ export const mockDataService = {
     return { success: true, message: 'Fridge initialized successfully' }
   },
 
-  async generateRecipes(availableIngredients: string[]): Promise<Recipe[]> {
+  async generateRecipes(_availableIngredients: string[]): Promise<Recipe[]> {
     await new Promise(resolve => setTimeout(resolve, 1500))
     return mockRecipes.map(recipe => ({
       ...recipe,

@@ -1,4 +1,4 @@
-export type InterfaceLanguage = 'en' | 'zh-HK' | 'fil'
+export type InterfaceLanguage = 'en' | 'zh-HK' | 'fil' | 'id'
 
 export interface FamilyMember {
   id: string
@@ -33,7 +33,7 @@ export interface FamilyPreferences {
     lunch: string
     dinner: string
   }
-  preferredLanguage: 'en' | 'zh-HK' | 'fil'
+  preferredLanguage: InterfaceLanguage
 }
 
 export interface InventoryItem {
@@ -131,7 +131,7 @@ export type DietaryRestriction =
 export type Allergy =
   | 'nuts'
   | 'peanuts'
-  | 'dairy'
+  | 'dairyAllergy'
   | 'eggs'
   | 'shellfish'
   | 'fish'

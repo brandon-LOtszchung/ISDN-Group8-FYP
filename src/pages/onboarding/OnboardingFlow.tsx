@@ -5,7 +5,7 @@ import FamilyPreferences from './FamilyPreferences'
 import OnboardingComplete from './OnboardingComplete'
 import { Family, FamilyMember } from '@/types'
 import { useApp } from '@/contexts/AppContext'
-import { mockDataService } from '@/services/mockData'
+import { dataService } from '@/services/dataService'
 
 type OnboardingStep = 'family-setup' | 'member-details' | 'preferences' | 'complete'
 
@@ -94,7 +94,7 @@ export default function OnboardingFlow() {
   const handleComplete = async () => {
     try {
       setLoading(true)
-      const newFamily = await mockDataService.createFamily(familyData as Omit<Family, 'id' | 'createdAt' | 'updatedAt'>)
+      const newFamily = await dataService.createFamily(familyData as Omit<Family, 'id' | 'createdAt' | 'updatedAt'>)
       setFamily(newFamily)
       completeOnboarding()
     } catch (error) {

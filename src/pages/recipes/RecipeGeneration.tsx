@@ -1,24 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '@/contexts/AppContext'
-import { mockDataService } from '@/services/mockData'
+import { useLanguage } from '@/contexts/LanguageContext'
+import { dataService } from '@/services/dataService'
+import Layout from '@/components/Layout'
 import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
-import { Recipe, CuisineType } from '@/types'
+import { CuisineType } from '@/types'
 import { CUISINE_OPTIONS } from '@/constants'
-import { ArrowLeft, Clock, Users, ChefHat, Star } from 'lucide-react'
+import { Clock, Users, TrendingUp, Package } from 'lucide-react'
 
 export default function RecipeGeneration() {
-  const { state, setRecipes, setLoading } = useApp()
+  const { state, setRecipes } = useApp()
+  const { t } = useLanguage()
   const [selectedCuisines, setSelectedCuisines] = useState<CuisineType[]>(['chinese'])
   const [isGenerating, setIsGenerating] = useState(false)
-  const [recipes, setLocalRecipes] = useState<Recipe[]>([])
-
-  useEffect(() => {
-    if (state.currentRecipes.length > 0) {
-      setLocalRecipes(state.currentRecipes)
-    }
-  }, [state.currentRecipes])
 
   const toggleCuisine = (cuisine: CuisineType) => {
     setSelectedCuisines(prev =>
@@ -32,14 +27,24 @@ export default function RecipeGeneration() {
     try {
       setIsGenerating(true)
       const availableIngredients = state.inventory.map(item => item.name)
-      const generatedRecipes = await mockDataService.generateRecipes(availableIngredients)
       
-      const filteredRecipes = generatedRecipes.filter(recipe =>
-        selectedCuisines.includes(recipe.cuisine)
+      // Collect all dietary restrictions and allergies from family members
+      const allDietaryRestrictions = Array.from(new Set(
+        state.family?.members.flatMap(m => m.dietaryRestrictions) || []
+      ))
+      const allAllergies = Array.from(new Set(
+        state.family?.members.flatMap(m => m.allergies) || []
+      ))
+      
+      const generatedRecipes = await dataService.generateRecipes(
+        availableIngredients,
+        selectedCuisines,
+        allDietaryRestrictions,
+        allAllergies,
+        state.family?.members.length || 4
       )
       
-      setLocalRecipes(filteredRecipes)
-      setRecipes(filteredRecipes)
+      setRecipes(generatedRecipes)
     } catch (error) {
       console.error('Failed to generate recipes:', error)
     } finally {
@@ -47,150 +52,126 @@ export default function RecipeGeneration() {
     }
   }
 
-  const getDifficultyColor = (difficulty: Recipe['difficulty']) => {
-    switch (difficulty) {
-      case 'easy': return 'text-success-600'
-      case 'medium': return 'text-warning-600'
-      case 'hard': return 'text-error-600'
-      default: return 'text-neutral-600'
-    }
-  }
-
   const getAvailabilityBarColor = (available: number, total: number) => {
-    if (total <= 0) return 'bg-neutral-300'
-    if (available >= total) return 'bg-green-500'
-    if (available <= 1) return 'bg-red-500'
-    return 'bg-yellow-500'
+    if (total <= 0) return 'bg-warm-300'
+    const percentage = (available / total) * 100
+    if (percentage >= 100) return 'bg-fresh-500'
+    if (percentage >= 60) return 'bg-primary-400'
+    return 'bg-coral-400'
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50">
-      <div className="max-w-md mx-auto p-4 space-y-6">
-        {/* Phone-style Header */}
-        <div className="flex items-center py-4">
-          <Link to="/" className="p-2 -ml-2">
-            <ArrowLeft className="w-5 h-5 text-warm-600" />
-          </Link>
-          <div className="flex-1 text-center">
-            <h1 className="text-xl font-bold gradient-text font-chinese whitespace-nowrap">煮食建議</h1>
-          </div>
-          <div className="w-9"></div>
-        </div>
-
-        {/* Cuisine Selection */}
-        <div className="floating-card">
-          <h2 className="section-title font-chinese whitespace-nowrap mb-4">選擇菜式風格</h2>
-          <div className="grid grid-cols-3 gap-3">
-            {CUISINE_OPTIONS.slice(0, 8).map((cuisine) => (
+    <Layout showBack={true}>
+      <div className="p-4 pb-6">
+        {/* Cuisine Selection - Horizontal Scroll */}
+        <section className="mb-4">
+          <h2 className="font-bold text-warm-900 mb-3" style={{ fontSize: '18px' }}>
+            {t('selectCuisine')}
+          </h2>
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+            {CUISINE_OPTIONS.map((cuisine) => (
               <button
                 key={cuisine.value}
                 onClick={() => toggleCuisine(cuisine.value)}
-                className={`p-3 rounded-xl border transition-all duration-200 text-center ${
+                className={`flex-shrink-0 px-4 py-2 rounded-lg transition-all ${
                   selectedCuisines.includes(cuisine.value)
-                    ? 'border-primary-400 bg-primary-50 shadow-md'
-                    : 'border-warm-200 bg-white/60 hover:border-warm-300'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-white border border-warm-200'
                 }`}
+                style={{ fontSize: '14px', fontWeight: 600 }}
               >
-                <div className="text-lg mb-1">{cuisine.emoji}</div>
-                <div className="text-xs font-medium text-warm-800 font-chinese whitespace-nowrap">{cuisine.label}</div>
+                {t(cuisine.value)}
               </button>
             ))}
-            {/* Others option */}
-            <button
-              onClick={() => setSelectedCuisines(['fusion'])}
-              className={`p-3 rounded-xl border transition-all duration-200 text-center ${
-                selectedCuisines.includes('fusion')
-                  ? 'border-primary-400 bg-primary-50 shadow-md'
-                  : 'border-warm-200 bg-white/60 hover:border-warm-300'
-              }`}
-            >
-              <div className="text-lg mb-1">🌍</div>
-              <div className="text-xs font-medium text-warm-800 font-chinese whitespace-nowrap">其他</div>
-            </button>
           </div>
-        </div>
+        </section>
 
         {/* Generate Button */}
-        <Button
-          onClick={generateRecipes}
-          className="w-full font-chinese text-lg py-4 whitespace-nowrap"
-          isLoading={isGenerating}
-          disabled={selectedCuisines.length === 0}
-        >
-          <ChefHat className="w-5 h-5 mr-2" />
-          {isGenerating ? '生成食譜中...' : '獲取煮食靈感'}
-        </Button>
+        <div className="flex gap-2 mb-4">
+          <Button
+            onClick={generateRecipes}
+            className="flex-1"
+            isLoading={isGenerating}
+            disabled={selectedCuisines.length === 0}
+          >
+            {isGenerating ? t('generating') : t('getRecipe')}
+          </Button>
+          
+          {state.currentRecipes.length > 0 && !isGenerating && (
+            <Button
+              onClick={generateRecipes}
+              variant="outline"
+              className="px-4"
+            >
+              {t('generateMore')}
+            </Button>
+          )}
+        </div>
 
-        {/* Recipe Results */}
-        {recipes.length > 0 && (
-          <div className="space-y-4">
-            <h2 className="section-title font-chinese whitespace-nowrap">建議食譜</h2>
-            {recipes.map((recipe) => (
-              <Link key={recipe.id} to={`/recipes/${recipe.id}`}>
-                <Card interactive className="p-6 overflow-hidden">
-                  <div className="flex justify-between items-start mb-3">
-                    <h3 className="font-medium text-lg">{recipe.title}</h3>
-                    <div className="flex items-center space-x-1 text-sm text-neutral-600">
-                      <Star className="w-4 h-4" />
-                      <span>{recipe.matchScore}%</span>
-                    </div>
-                  </div>
-                  
-                  <p className="text-neutral-600 text-sm mb-4">{recipe.description}</p>
-                  
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center space-x-4">
-                      <div className="flex items-center space-x-1">
-                        <Clock className="w-4 h-4 text-neutral-500" />
-                        <span>{recipe.cookingTime}min</span>
+        {/* Recipe Results - Scrollable List */}
+        {state.currentRecipes.length > 0 && (
+          <section>
+            <h2 className="font-bold text-warm-900 mb-3" style={{ fontSize: '18px' }}>
+              {t('suggestedRecipes')}
+            </h2>
+            <div className="space-y-2">
+              {state.currentRecipes.map((recipe) => (
+                <Link key={recipe.id} to={`/recipes/${recipe.id}`}>
+                  <div className="bg-white rounded-xl p-4 border border-warm-200 active:scale-[0.98] transition-all">
+                    <div className="flex justify-between items-start mb-2">
+                      <h3 className="font-bold text-warm-900 flex-1" style={{ fontSize: '16px', lineHeight: '1.3' }}>
+                        {recipe.title}
+                      </h3>
+                      <div className="flex items-center gap-1 text-primary-600 ml-3">
+                        <TrendingUp className="w-4 h-4" strokeWidth={2} />
+                        <span className="font-bold" style={{ fontSize: '13px' }}>{recipe.matchScore}%</span>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Users className="w-4 h-4 text-neutral-500" />
-                        <span>{recipe.servings}</span>
-                      </div>
-                      <span className={`capitalize ${getDifficultyColor(recipe.difficulty)}`}>
-                        {recipe.difficulty}
-                      </span>
                     </div>
                     
-                    <div className="text-neutral-600">
-                      {recipe.availableIngredients}/{recipe.totalIngredients} ingredients
+                    <p className="text-warm-600 mb-2 line-clamp-2" style={{ fontSize: '13px', lineHeight: '1.4' }}>
+                      {recipe.description}
+                    </p>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-warm-600" style={{ fontSize: '12px' }}>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" strokeWidth={2} />
+                          <span>{recipe.cookingTime}m</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" strokeWidth={2} />
+                          <span>{recipe.servings}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="text-warm-700 font-bold" style={{ fontSize: '12px' }}>
+                        {recipe.availableIngredients}/{recipe.totalIngredients}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="mt-3">
-                    <div
-                      className={`h-2 rounded-full ${getAvailabilityBarColor(
-                        recipe.availableIngredients ?? 0,
-                        recipe.totalIngredients ?? 0
-                      )}`}
-                    />
-                    <div className="pt-3 flex flex-wrap gap-2">
-                      {recipe.tags.slice(0, 3).map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2 py-1 bg-neutral-100 text-neutral-600 text-xs rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                    <div className="h-1 rounded-full bg-warm-200 overflow-hidden mt-2">
+                      <div
+                        className={`h-full transition-all ${getAvailabilityBarColor(
+                          recipe.availableIngredients ?? 0,
+                          recipe.totalIngredients ?? 0
+                        )}`}
+                        style={{ width: `${((recipe.availableIngredients ?? 0) / recipe.totalIngredients) * 100}%` }}
+                      />
                     </div>
                   </div>
-                </Card>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          </section>
         )}
 
-        {recipes.length === 0 && !isGenerating && (
-          <div className="floating-card text-center">
-            <div className="text-4xl mb-4">👨‍🍳</div>
-            <p className="text-warm-600 font-chinese">
-              選擇喜愛菜式風格，然後獲取煮食建議
-            </p>
+        {state.currentRecipes.length === 0 && !isGenerating && (
+          <div className="text-center py-12">
+            <Package className="w-12 h-12 text-warm-300 mx-auto mb-3" strokeWidth={1.5} />
+            <p className="text-warm-500" style={{ fontSize: '14px' }}>{t('selectThenGenerate')}</p>
           </div>
         )}
       </div>
-    </div>
+    </Layout>
   )
 }

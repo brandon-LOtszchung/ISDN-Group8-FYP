@@ -1,69 +1,77 @@
 import { useState } from 'react'
-import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
 import { useApp } from '@/contexts/AppContext'
-import { mockDataService } from '@/services/mockData'
-import { Refrigerator, CheckCircle, AlertCircle } from 'lucide-react'
+import { dataService } from '@/services/dataService'
+import { visionService } from '@/services/visionService'
+import { inventoryService } from '@/services/database'
+import Button from '@/components/ui/Button'
+import CameraCapture from '@/components/CameraCapture'
+import { InventoryItem } from '@/types'
+import { AlertCircle, CheckCircle, Refrigerator, Sparkles, Edit3, Camera, X, Check } from 'lucide-react'
 
-type InitStep = 'instructions' | 'removing' | 'restocking' | 'complete'
+type InitStep = 'instructions' | 'capture' | 'analyzing' | 'review' | 'complete'
 
-const TUTORIAL_STEPS = [
-  {
-    id: 'clear',
-    title: '全面清空雪櫃',
-    description: '取出所有食材與包裝，有助感應器重新校準基準值。',
-    image:
-      'https://images.unsplash.com/photo-1612872087720-bb876e3c469b?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'organize',
-    title: '按層整理分類',
-    description: '將常用、易壞的食材先放在前排，方便後續監察與補貨。',
-    image:
-      'https://images.unsplash.com/photo-1586201375761-83865001e31b?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'restock',
-    title: '逐件放回並記錄',
-    description: '每放回一件物品稍停一秒，讓系統偵測重量和位置。',
-    image:
-      'https://images.unsplash.com/photo-1606811841689-23dfddce3b03?auto=format&fit=crop&w=600&q=80',
-  },
-] as const
+const DEFAULT_FAMILY_ID = '00000000-0000-0000-0000-000000000001'
 
 export default function FridgeInitialization() {
   const { setLoading, setError, initializeFridge, setInventory } = useApp()
   const [currentStep, setCurrentStep] = useState<InitStep>('instructions')
+  const [detectedItems, setDetectedItems] = useState<InventoryItem[]>([])
   const [isProcessing, setIsProcessing] = useState(false)
 
-  const handleStartInitialization = async () => {
-    setCurrentStep('removing')
+  const handlePhotosCapture = async (photos: string[]) => {
+    setCurrentStep('analyzing')
+    setIsProcessing(true)
+
+    try {
+      // Analyze photos with OpenAI Vision
+      const items = await visionService.analyzeMultiplePhotos(photos)
+      setDetectedItems(items)
+      setCurrentStep('review')
+    } catch (error: any) {
+      console.error('Photo analysis failed:', error)
+      setError(error.message || 'Failed to analyze photos')
+      
+      // Fallback to mock data
+      const mockInventory = await dataService.getInventory()
+      setDetectedItems(mockInventory)
+      setCurrentStep('review')
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
-  const handleItemsRemoved = () => {
-    setCurrentStep('restocking')
-  }
-
-  const handleRestockingComplete = async () => {
+  const handleConfirmItems = async () => {
     try {
       setIsProcessing(true)
       setLoading(true)
-      
-      const result = await mockDataService.initializeFridge()
-      
-      if (result.success) {
-        const inventory = await mockDataService.getInventory()
-        setInventory(inventory)
-        setCurrentStep('complete')
-      } else {
-        setError('Failed to initialize fridge')
+
+      // Save all items to Supabase
+      for (const item of detectedItems) {
+        await inventoryService.addItem(DEFAULT_FAMILY_ID, item)
       }
+
+      // Reload inventory from database
+      const updatedInventory = await dataService.getInventory()
+      setInventory(updatedInventory)
+      
+      setCurrentStep('complete')
     } catch (error) {
-      setError('Failed to initialize fridge')
+      console.error('Failed to save inventory:', error)
+      setError('Failed to save inventory items')
     } finally {
       setIsProcessing(false)
       setLoading(false)
     }
+  }
+
+  const handleEditQuantity = (index: number, newQuantity: number) => {
+    setDetectedItems((prev) =>
+      prev.map((item, i) => (i === index ? { ...item, quantity: newQuantity } : item))
+    )
+  }
+
+  const handleRemoveItem = (index: number) => {
+    setDetectedItems((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleComplete = () => {
@@ -75,109 +83,148 @@ export default function FridgeInitialization() {
       case 'instructions':
         return (
           <div className="text-center">
-            <div className="text-5xl mb-6">🧊</div>
-            <h1 className="text-2xl font-bold gradient-text mb-4 font-chinese whitespace-nowrap">智能雪櫃設定</h1>
-            <p className="text-warm-600 mb-6 font-chinese">
-              需要校準系統，學習雪櫃內的物品
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <Refrigerator className="w-9 h-9 text-primary-600" strokeWidth={2} />
+            </div>
+            <h1 className="font-bold text-warm-900 mb-2" style={{ fontSize: '21px' }}>
+              Smart Fridge Setup
+            </h1>
+            <p className="text-warm-600 mb-6" style={{ fontSize: '14px', lineHeight: '1.6' }}>
+              Take photos of your fridge contents and let AI identify items automatically
             </p>
             
-            <div className="bg-white/60 rounded-2xl p-6 mb-6 text-left border border-white/50">
-              <h3 className="font-medium mb-4 font-chinese">設定步驟：</h3>
-              <div className="space-y-3 text-sm text-warm-700">
-                <div className="flex items-center space-x-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                  <span className="font-chinese">清空雪櫃所有物品</span>
+            <div className="bg-warm-50 rounded-xl p-5 mb-6 text-left">
+              <h3 className="font-bold text-warm-900 mb-3" style={{ fontSize: '15px' }}>
+                Tips for Best Results:
+              </h3>
+              <div className="space-y-2" style={{ fontSize: '14px' }}>
+                <div className="flex items-start gap-3 text-warm-700">
+                  <span className="flex-shrink-0 w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold" style={{ fontSize: '12px' }}>1</span>
+                  <span>Take clear, well-lit photos</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                  <span className="font-chinese">逐一放回物品（感應器會偵測）</span>
+                <div className="flex items-start gap-3 text-warm-700">
+                  <span className="flex-shrink-0 w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold" style={{ fontSize: '12px' }}>2</span>
+                  <span>Capture different shelves/sections</span>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                  <span className="font-chinese">系統建立初始清單</span>
+                <div className="flex items-start gap-3 text-warm-700">
+                  <span className="flex-shrink-0 w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold" style={{ fontSize: '12px' }}>3</span>
+                  <span>Make sure labels are visible</span>
+                </div>
+                <div className="flex items-start gap-3 text-warm-700">
+                  <span className="flex-shrink-0 w-6 h-6 bg-primary-500 text-white rounded-full flex items-center justify-center font-bold" style={{ fontSize: '12px' }}>4</span>
+                  <span>Take 3-5 photos from different angles</span>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white/40 rounded-2xl p-6 mb-8 border border-white/60">
-              <div className="flex items-center justify-center gap-2 text-primary-600 mb-4">
-                <Refrigerator className="w-5 h-5" />
-                <span className="text-sm font-semibold font-chinese tracking-wide">快速教學 · 請跟住以下示範</span>
-              </div>
-              <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
-                {TUTORIAL_STEPS.map((step) => (
-                  <Card
-                    key={step.id}
-                    padding="sm"
-                    className="min-w-[220px] bg-white/80 border border-white/70 rounded-2xl shadow-sm snap-center"
-                  >
-                    <div className="h-32 rounded-xl overflow-hidden mb-3">
-                      <img
-                        src={step.image}
-                        alt={step.title}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                    </div>
-                    <h4 className="text-sm font-semibold text-warm-800 mb-2 font-chinese">{step.title}</h4>
-                    <p className="text-xs text-warm-600 font-chinese leading-relaxed">{step.description}</p>
-                  </Card>
-                ))}
-              </div>
-            </div>
-
-            <Button onClick={handleStartInitialization} className="w-full font-chinese whitespace-nowrap">
-              開始設定
+            <Button onClick={() => setCurrentStep('capture')} className="w-full">
+              Start Photo Capture
             </Button>
           </div>
         )
 
-      case 'removing':
+      case 'capture':
         return (
-          <div className="text-center">
-            <div className="text-5xl mb-6">📤</div>
-            <h1 className="text-2xl font-bold gradient-text mb-4 font-chinese whitespace-nowrap">清空雪櫃</h1>
-            <p className="text-warm-600 mb-6 font-chinese">
-              請清空雪櫃所有物品，幫助系統建立基準
-            </p>
-            
-            <div className="bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-orange-500 mt-0.5" />
-              <p className="text-sm text-orange-700 font-chinese text-left">
-                確保雪櫃完全清空才繼續
+          <div>
+            <div className="text-center mb-5">
+              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Camera className="w-9 h-9 text-primary-600" strokeWidth={2} />
+              </div>
+              <h1 className="font-bold text-warm-900 mb-2" style={{ fontSize: '21px' }}>
+                Capture Fridge Photos
+              </h1>
+              <p className="text-warm-600" style={{ fontSize: '14px' }}>
+                Take photos of your fridge contents
               </p>
             </div>
 
-            <Button onClick={handleItemsRemoved} className="w-full font-chinese whitespace-nowrap">
-              已清空所有物品
-            </Button>
+            <CameraCapture onPhotosCapture={handlePhotosCapture} maxPhotos={5} />
           </div>
         )
 
-      case 'restocking':
+      case 'analyzing':
         return (
-          <div className="text-center">
-            <div className="text-5xl mb-6">📥</div>
-            <h1 className="text-2xl font-bold gradient-text mb-4 font-chinese whitespace-nowrap">重新入貨</h1>
-            <p className="text-warm-600 mb-6 font-chinese">
-              現在逐一放回物品，感應器會偵測每件物品
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-5 animate-pulse">
+              <Sparkles className="w-9 h-9 text-primary-600" strokeWidth={2} />
+            </div>
+            <h1 className="font-bold text-warm-900 mb-2" style={{ fontSize: '21px' }}>
+              Analyzing Photos...
+            </h1>
+            <p className="text-warm-600 mb-6" style={{ fontSize: '14px' }}>
+              AI is identifying items in your fridge
             </p>
             
-            <div className="bg-primary-50 border border-primary-200 rounded-2xl p-4 mb-6">
-              <div className="flex items-start gap-3 text-left">
-                <CheckCircle className="w-5 h-5 text-primary-500 mt-0.5" />
-                <p className="text-sm text-primary-700 font-chinese">
-                  慢慢來，系統需要清楚識別每件物品
-                </p>
+            <div className="animate-spin w-10 h-10 border-3 border-primary-200 border-t-primary-500 rounded-full mx-auto"></div>
+          </div>
+        )
+
+      case 'review':
+        return (
+          <div>
+            <div className="text-center mb-5">
+              <div className="w-16 h-16 bg-fresh-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Edit3 className="w-9 h-9 text-fresh-600" strokeWidth={2} />
               </div>
+              <h1 className="font-bold text-warm-900 mb-2" style={{ fontSize: '21px' }}>
+                Review Detected Items
+              </h1>
+              <p className="text-warm-600" style={{ fontSize: '14px' }}>
+                {detectedItems.length} items found. Review and adjust quantities.
+              </p>
             </div>
 
-            <Button 
-              onClick={handleRestockingComplete} 
-              className="w-full font-chinese whitespace-nowrap"
+            <div className="bg-primary-50 border border-primary-200 rounded-xl p-4 mb-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-primary-600 mt-0.5 flex-shrink-0" strokeWidth={2} />
+              <p className="text-primary-700" style={{ fontSize: '13px' }}>
+                Review the items and quantities. You can edit or remove items.
+              </p>
+            </div>
+
+            <div className="max-h-64 overflow-y-auto space-y-2 mb-4">
+              {detectedItems.map((item, index) => (
+                <div key={index} className="bg-white rounded-lg p-3 border border-warm-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex-1">
+                      <p className="font-bold text-warm-900" style={{ fontSize: '15px' }}>
+                        {item.name}
+                      </p>
+                      <p className="text-warm-600" style={{ fontSize: '12px' }}>
+                        {item.category} • {Math.round(item.confidence * 100)}% confident
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveItem(index)}
+                      className="p-1 text-coral-500 hover:text-coral-700"
+                    >
+                      <X className="w-5 h-5" strokeWidth={2} />
+                    </button>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => handleEditQuantity(index, Number(e.target.value))}
+                      className="w-20 px-3 py-1.5 border border-warm-300 rounded-lg text-center font-semibold"
+                      style={{ fontSize: '14px' }}
+                      min="0.1"
+                      step="0.1"
+                    />
+                    <span className="text-warm-600" style={{ fontSize: '14px' }}>{item.unit}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button
+              onClick={handleConfirmItems}
+              className="w-full flex items-center justify-center gap-2"
               isLoading={isProcessing}
+              disabled={detectedItems.length === 0}
             >
-              {isProcessing ? '處理中...' : '完成入貨'}
+              <Check className="w-5 h-5" strokeWidth={2} />
+              {isProcessing ? 'Saving...' : `Confirm ${detectedItems.length} Items`}
             </Button>
           </div>
         )
@@ -185,20 +232,24 @@ export default function FridgeInitialization() {
       case 'complete':
         return (
           <div className="text-center">
-            <div className="text-5xl mb-6">🎉</div>
-            <h1 className="text-2xl font-bold gradient-text mb-4 font-chinese whitespace-nowrap">初始化完成！</h1>
-            <p className="text-warm-600 mb-6 font-chinese">
-              智能雪櫃已準備就緒，物品已偵測並記錄
+            <div className="w-16 h-16 bg-fresh-100 rounded-full flex items-center justify-center mx-auto mb-5">
+              <CheckCircle className="w-9 h-9 text-fresh-600" strokeWidth={2} />
+            </div>
+            <h1 className="font-bold text-warm-900 mb-2" style={{ fontSize: '21px' }}>
+              All Set!
+            </h1>
+            <p className="text-warm-600 mb-6" style={{ fontSize: '14px', lineHeight: '1.6' }}>
+              {detectedItems.length} items added to your fridge inventory
             </p>
             
-            <div className="bg-fresh-50 border border-fresh-200 rounded-2xl p-4 mb-6">
-              <p className="text-sm text-fresh-700 font-chinese">
-                雪櫃清單現在會自動追蹤
+            <div className="bg-fresh-50 border border-fresh-200 rounded-xl p-4 mb-6">
+              <p className="text-fresh-700" style={{ fontSize: '13px' }}>
+                Your smart fridge is ready to use!
               </p>
             </div>
 
-            <Button onClick={handleComplete} className="w-full font-chinese whitespace-nowrap">
-              開始使用智能雪櫃
+            <Button onClick={handleComplete} className="w-full">
+              Start Using App
             </Button>
           </div>
         )
@@ -209,11 +260,9 @@ export default function FridgeInitialization() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="floating-card animate-slide-up">
-          {renderStep()}
-        </div>
+    <div className="min-h-screen bg-warm-50 flex items-center justify-center p-5">
+      <div className="w-full max-w-md bg-white rounded-2xl p-8 shadow-lg border border-warm-100">
+        {renderStep()}
       </div>
     </div>
   )

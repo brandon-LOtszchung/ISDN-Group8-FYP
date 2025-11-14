@@ -1,8 +1,8 @@
 import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
 import { Family } from '@/types'
-import { CheckCircle, Users } from 'lucide-react'
+import { useLanguage } from '@/contexts/LanguageContext'
 import { useApp } from '@/contexts/AppContext'
+import { CheckCircle, Users } from 'lucide-react'
 
 interface OnboardingCompleteProps {
   family: Family
@@ -12,58 +12,59 @@ interface OnboardingCompleteProps {
 
 export default function OnboardingComplete({ family, onComplete, onEdit }: OnboardingCompleteProps) {
   const { state } = useApp()
+  const { t } = useLanguage()
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-amber-50 to-yellow-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-warm-50 flex items-center justify-center p-5">
       <div className="w-full max-w-md">
-        <div className="floating-card animate-slide-up">
+        <div className="bg-white rounded-2xl p-8 shadow-lg border border-warm-100">
           <div className="text-center mb-6">
-            <div className="text-5xl mb-4">✅</div>
-            <h1 className="text-2xl font-bold gradient-text font-chinese whitespace-nowrap mb-2">設定完成！</h1>
-            <p className="text-warm-600 font-chinese">家庭資料已建立</p>
+            <div className="w-16 h-16 bg-fresh-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-9 h-9 text-fresh-600" strokeWidth={2} />
+            </div>
+            <h1 className="font-bold text-warm-900 mb-2" style={{ fontSize: '21px' }}>Setup Complete</h1>
+            <p className="text-warm-600" style={{ fontSize: '14px' }}>Family profile created successfully</p>
           </div>
 
-          <div className="space-y-4 mb-6">
-            <div className="bg-white/60 rounded-2xl p-4 border border-white/50">
-              <div className="flex items-center space-x-3 mb-3">
-                <span className="text-lg">🏠</span>
-                <span className="font-medium font-chinese">{family.name}</span>
+          <div className="space-y-3 mb-6">
+            <div className="bg-warm-50 rounded-xl p-4">
+              <div className="flex items-center gap-2.5 mb-2">
+                <Users className="w-5 h-5 text-primary-500" strokeWidth={2} />
+                <span className="font-bold text-warm-900" style={{ fontSize: '16px' }}>{family.name}</span>
               </div>
-              <div className="text-sm text-warm-600 font-chinese space-y-1">
-                <p>{family.members?.length}位家庭成員</p>
-                <p>煮食技巧：{family.preferences?.cookingSkillLevel === 'beginner' ? '新手' : family.preferences?.cookingSkillLevel === 'intermediate' ? '一般' : '高手'}</p>
-                <p>預算：{family.preferences?.budgetRange === 'low' ? '慳錢' : family.preferences?.budgetRange === 'medium' ? '適中' : '豐富'}</p>
+              <div className="text-warm-600" style={{ fontSize: '14px' }}>
+                <p>{family.members?.length} family members</p>
               </div>
             </div>
 
-            <div className="bg-white/60 rounded-2xl p-4 border border-white/50">
-              <h3 className="font-medium mb-3 font-chinese">家庭成員：</h3>
-              <div className="space-y-2">
+            <div className="bg-warm-50 rounded-xl p-4">
+              <h3 className="font-bold text-warm-900 mb-2" style={{ fontSize: '14px' }}>Members:</h3>
+              <div className="space-y-1.5">
                 {family.members?.map((member) => (
-                  <div key={member.id} className="flex justify-between text-sm">
-                    <span className="font-chinese">{member.name}</span>
-                    <span className="text-warm-600 font-chinese">{member.age}歲</span>
+                  <div key={member.id} className="flex justify-between" style={{ fontSize: '14px' }}>
+                    <span className="text-warm-700 font-medium">{member.name}</span>
+                    <span className="text-warm-600">{member.age} {t('yearsOld')}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             <Button 
               onClick={onComplete} 
-              className="w-full font-chinese text-lg py-5 whitespace-nowrap"
+              className="w-full"
               isLoading={state.isLoading}
             >
-              {state.isLoading ? '儲存中...' : '開始使用🚀'}
+              {state.isLoading ? 'Saving...' : 'Start Using App'}
             </Button>
             {onEdit && (
               <Button 
                 variant="outline"
                 onClick={onEdit}
-                className="w-full font-chinese text-lg py-5 whitespace-nowrap"
+                className="w-full"
               >
-                重新設定家庭資料
+                Edit Family Info
               </Button>
             )}
           </div>
