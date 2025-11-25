@@ -13,9 +13,15 @@ from utils.logger import setup_logger
 class Controller:
     """Main controller for camera client."""
     
-    def __init__(self, config: AppConfig):
-        """Initialize controller."""
+    def __init__(self, config: AppConfig, headless: bool = False):
+        """Initialize controller.
+        
+        Args:
+            config: Application configuration
+            headless: Run without GUI (for servers/embedded systems)
+        """
         self.config = config
+        self.headless = headless
         self.logger = logging.getLogger("Controller")
         
         # Initialize camera
@@ -28,7 +34,7 @@ class Controller:
         self.api_client = None
         if config.vision_api.api_key:
             self.api_client = APIClient(
-                api_url=config.vision_api.api_key,
+                api_url=config.vision_api.api_key,  # Note: api_key field is actually the API URL
                 timeout=120,
                 retry_attempts=config.vision_api.retry_attempts
             )
@@ -45,12 +51,17 @@ class Controller:
         """Main application loop."""
         self.logger.info("=== Camera Client Started ===")
         
+        if self.headless:
+            self.logger.info("Running in headless mode (no GUI)")
+        
         if not self.camera.start():
             self.logger.error("Failed to start camera")
             return
         
-        cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(self.window_name, 1280, 720)
+        # Only create window if not headless
+        if not self.headless:
+            cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(self.window_name, 1280, 720)
         
         # Sync inventory
         if self.api_client:
@@ -64,8 +75,68 @@ class Controller:
             except:
                 pass
         
-        self.logger.info("Press 'R' to start recording, 'S' to stop, 'Q' to quit")
+        if self.headless:
+            self.logger.info("Commands: Press CTRL+C to record, wait 5s, CTRL+C again to stop and process")
+            self._run_headless()
+        else:
+            self.logger.info("Press 'R' to start recording, 'S' to stop, 'Q' to quit")
+            self._run_gui()
         
+        # Cleanup
+        self.camera.stop()
+        if not self.headless:
+            cv2.destroyAllWindows()
+        self.logger.info("Application closed")
+    
+    def _run_headless(self):
+        """Run in headless mode without GUI."""
+        import time
+        import signal
+        
+        self.logger.info("Headless mode: Recording will start automatically...")
+        time.sleep(2)
+        
+        def signal_handler(sig, frame):
+            """Handle interrupts."""
+            if not self.camera.is_recording:
+                self.logger.info("\nStarting recording...")
+                self.camera.start_recording()
+                self.logger.info("Recording... Press CTRL+C again after 5 seconds to stop")
+            else:
+                self.logger.info("\nStopping recording...")
+                video_path = self.camera.stop_recording()
+                if video_path:
+                    self._process_video(video_path)
+                self.logger.info("Done. Press CTRL+C to exit or wait to start new recording")
+        
+        signal.signal(signal.SIGINT, signal_handler)
+        
+        frame_count = 0
+        try:
+            while True:
+                frame = self.camera.get_frame()
+                
+                if frame is None:
+                    self.logger.error("Failed to get frame")
+                    break
+                
+                # Record frame if recording
+                if self.camera.is_recording:
+                    self.camera.record_frame(frame)
+                
+                frame_count += 1
+                if frame_count % 300 == 0:  # Every ~10 seconds at 30fps
+                    if self.camera.is_recording:
+                        self.logger.info("Still recording... (CTRL+C to stop)")
+                    else:
+                        self.logger.info("Ready (CTRL+C to start recording)")
+                
+                time.sleep(0.01)  # Small delay
+        except KeyboardInterrupt:
+            self.logger.info("Shutting down...")
+    
+    def _run_gui(self):
+        """Run with GUI display."""
         while True:
             frame = self.camera.get_frame()
             
@@ -96,11 +167,6 @@ class Controller:
                     video_path = self.camera.stop_recording()
                     if video_path:
                         self._process_video(video_path)
-        
-        # Cleanup
-        self.camera.stop()
-        cv2.destroyAllWindows()
-        self.logger.info("Application closed")
     
     def _add_overlay(self, frame):
         """Add status overlay to frame."""
@@ -191,6 +257,11 @@ class Controller:
 
 def main():
     """Entry point."""
+    import sys
+    
+    # Check for headless mode
+    headless = '--headless' in sys.argv or '-H' in sys.argv
+    
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
     log_file = os.path.join(log_dir, f"camera_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
@@ -211,7 +282,7 @@ def main():
         logger.warning("Created default config - set cloud API URL in config.json")
     
     try:
-        controller = Controller(config)
+        controller = Controller(config, headless=headless)
         controller.run()
     except KeyboardInterrupt:
         logger.info("Interrupted by user")

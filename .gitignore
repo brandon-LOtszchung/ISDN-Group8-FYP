@@ -32,3 +32,4 @@ config.json
 
 # Keep example config
 !config.json
+node_modules

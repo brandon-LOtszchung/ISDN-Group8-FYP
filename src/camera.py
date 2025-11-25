@@ -92,9 +92,16 @@ class Camera:
         self.current_video_path = os.path.join(output_dir, f"action_{timestamp}.mp4")
         
         # Get video properties
-        fps = int(self.cap.get(cv2.CAP_PROP_FPS)) or 30
+        # On Linux/Orange Pi, CAP_PROP_FPS often returns 0, so we use a default value
+        fps = int(self.cap.get(cv2.CAP_PROP_FPS))
+        if fps <= 0 or fps > 60:
+            fps = 30  # Default to 30 FPS
+            self.logger.warning(f"Unable to get camera FPS, using default: {fps}")
+        
         width = int(self.cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        
+        self.logger.info(f"Recording parameters: {width}x{height} @ {fps} FPS")
         
         # Initialize video writer (H.264 codec)
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')

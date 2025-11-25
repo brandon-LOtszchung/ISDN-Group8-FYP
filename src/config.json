@@ -1,6 +1,7 @@
 {
   "camera": {
     "index": 0,
+    "url": "",
     "warm_up_time": 1.5
   },
   "capture": {
@@ -15,7 +16,7 @@
     "max_num_hands": 2
   },
   "vision_api": {
-    "api_key": "",
+    "api_key": "http://159.223.45.101:8000",
     "model": "gpt-4o",
     "max_tokens": 300,
     "temperature": 0,

@@ -16,7 +16,7 @@
     "max_num_hands": 2
   },
   "vision_api": {
-    "api_key": "http://localhost:8000",
+    "api_key": "http://159.223.45.101:8000",
     "model": "gpt-4o",
     "max_tokens": 300,
     "temperature": 0,
@@ -29,4 +29,5 @@
     "enable_auto_save": true
   }
 }
+
 
