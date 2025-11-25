@@ -1,4 +1,4 @@
-"""Main controller for Fridge Item Tracking System."""
+"""Camera-side controller for Fridge Item Tracking System."""
 import cv2
 import numpy as np
 import os
@@ -10,24 +10,23 @@ from capture.camera_manager import CameraManager
 from capture.frame_buffer import FrameBuffer
 from analysis.blur_detector import BlurDetector
 from analysis.hand_detector import HandDetector
-from analysis.vision_analyzer import VisionAnalyzer
-from inventory_manager import InventoryManager
+from api_client import CloudAPIClient
 from config import AppConfig
 from utils.logger import setup_logger
 
 
-class CaptureController:
-    """Main controller for the fridge item tracking system."""
+class CameraEdgeController:
+    """Camera-side controller for capturing and sending images to cloud."""
     
     def __init__(self, config: AppConfig):
         """
-        Initialize the capture controller with configuration.
+        Initialize the camera edge controller.
         
         Args:
             config: Application configuration object
         """
         self.config = config
-        self.logger = logging.getLogger("FridgeTracker.Controller")
+        self.logger = logging.getLogger("CameraEdge.Controller")
         
         # Initialize components
         self.camera = CameraManager(
@@ -48,26 +47,27 @@ class CaptureController:
                 min_tracking_confidence=config.hand_detection.min_tracking_confidence
             )
         
-        # Initialize vision analyzer if API key is provided
-        self.vision_analyzer = None
-        if config.vision_api.api_key:
+        # Initialize cloud API client
+        self.api_client = None
+        if config.vision_api.api_key:  # Reusing this field for cloud API URL
             try:
-                self.vision_analyzer = VisionAnalyzer(
-                    api_key=config.vision_api.api_key,
-                    model=config.vision_api.model,
-                    max_tokens=config.vision_api.max_tokens,
-                    temperature=config.vision_api.temperature,
+                self.api_client = CloudAPIClient(
+                    api_url=config.vision_api.api_key,  # Will be cloud API URL
+                    timeout=30,
                     retry_attempts=config.vision_api.retry_attempts,
                     retry_delay=config.vision_api.retry_delay
                 )
-                self.logger.info("Vision analyzer initialized successfully")
+                # Check API health
+                if self.api_client.health_check():
+                    self.logger.info("✓ Connected to cloud API")
+                else:
+                    self.logger.warning("⚠ Cloud API unreachable - running in offline mode")
             except Exception as e:
-                self.logger.error(f"Failed to initialize vision analyzer: {e}")
-                self.vision_analyzer = None
+                self.logger.error(f"Failed to initialize API client: {e}")
+                self.api_client = None
         
-        # Initialize inventory manager
-        inventory_path = os.path.join(config.storage.output_dir, config.storage.inventory_file)
-        self.inventory = InventoryManager(inventory_file=inventory_path)
+        # Local inventory cache (synced from cloud)
+        self.inventory_cache = []
         
         # UI state
         self.is_capturing = False
@@ -196,7 +196,7 @@ class CaptureController:
                 self.logger.debug(f"Buffering exit OUT frame: blur {blur_score:.2f} ({len(self.exit_out_buffer)} frames)")
     
     def _complete_action(self):
-        """Complete the current action and analyze with Vision API."""
+        """Complete the current action and send to cloud for analysis."""
         # Select best frame from exit buffer
         if self.action_phase == "EXIT_OUT" and self.exit_out_buffer:
             best_frame, best_score = max(self.exit_out_buffer, key=lambda x: x[1])
@@ -208,12 +208,12 @@ class CaptureController:
             self._reset_action_state()
             return
         
-        # Analyze with Vision API if available
-        if self.vision_analyzer and len(self.action_images) == 2:
-            self._analyze_with_vision_api()
+        # Send to cloud API if available
+        if self.api_client and len(self.action_images) == 2:
+            self._send_to_cloud_api()
         else:
-            direction = self._determine_direction_simple()
-            self.logger.info(f"Action #{self.action_count} completed: {direction} (Vision API not available)")
+            direction = "UNKNOWN" if len(self.action_images) != 2 else "PENDING"
+            self.logger.info(f"Action #{self.action_count} completed: {direction} (Cloud API not available)")
         
         # Save frames to buffer
         for frame, blur_score, img_num in self.action_images:
@@ -223,53 +223,43 @@ class CaptureController:
         self.logger.info(f"Action #{self.action_count} COMPLETED ({len(self.action_images)} images)")
         self._reset_action_state()
     
-    def _analyze_with_vision_api(self):
-        """Analyze captured images with Vision API and update inventory."""
-        self.logger.info("Analyzing with GPT-4o Vision...")
-        inventory_list = self.inventory.get_inventory_list()
+    def _send_to_cloud_api(self):
+        """Send captured images to cloud API for analysis."""
+        self.logger.info("📤 Sending to cloud for analysis...")
         
-        # Analyze before image
-        before_analysis = self.vision_analyzer.analyze_hand_content(
-            self.action_images[0][0],
-            inventory_context=inventory_list
+        before_frame = self.action_images[0][0]
+        after_frame = self.action_images[1][0]
+        
+        metadata = {
+            "action_id": self.action_count,
+            "timestamp": datetime.now().isoformat(),
+            "blur_scores": {
+                "before": float(self.action_images[0][1]),
+                "after": float(self.action_images[1][1])
+            }
+        }
+        
+        # Call cloud API
+        result = self.api_client.analyze_action(
+            before_image=before_frame,
+            after_image=after_frame,
+            metadata=metadata
         )
-        self.logger.info(f"Before: {before_analysis['description']}")
         
-        # Analyze after image
-        after_analysis = self.vision_analyzer.analyze_hand_content(
-            self.action_images[1][0],
-            inventory_context=inventory_list
-        )
-        self.logger.info(f"After: {after_analysis['description']}")
-        
-        # Determine action and update inventory
-        action_result = self.vision_analyzer.compare_and_determine_action(before_analysis, after_analysis)
-        direction = action_result["action"]
-        self._last_direction = direction
-        
-        if direction == "PLACED" and action_result.get("items"):
-            for item in action_result["items"]:
-                self.inventory.add_item(item, 1)
-            self.logger.info(f"DETECTED: {action_result['description']}")
-            self.logger.info(f"Inventory updated: {self.inventory.get_inventory_list()}")
-        
-        elif direction == "REMOVED" and action_result.get("items"):
-            for item in action_result["items"]:
-                self.inventory.remove_item(item, 1)
-            self.logger.info(f"DETECTED: {action_result['description']}")
-            self.logger.info(f"Inventory updated: {self.inventory.get_inventory_list()}")
-        
+        if result.get("success"):
+            direction = result.get("action", "UNKNOWN")
+            self._last_direction = direction
+            
+            # Update local inventory cache
+            self.inventory_cache = result.get("inventory", [])
+            
+            self.logger.info(f"✓ Cloud Analysis: {result.get('description', 'Unknown')}")
+            if result.get("items"):
+                self.logger.info(f"  Items: {', '.join(result['items'])}")
+            self.logger.info(f"  Inventory: {', '.join(self.inventory_cache) if self.inventory_cache else 'Empty'}")
         else:
-            self.logger.info(f"DETECTED: {action_result['description']}")
-    
-    def _determine_direction_simple(self) -> str:
-        """Simple direction determination without Vision API."""
-        if len(self.action_images) == 2:
-            return "PLACED"
-        elif len(self.action_images) == 1:
-            return "REMOVED"
-        else:
-            return "UNKNOWN"
+            self._last_direction = "ERROR"
+            self.logger.error(f"✗ Cloud API Error: {result.get('description', 'Unknown error')}")
     
     def _reset_action_state(self):
         """Reset action capture state."""
@@ -411,6 +401,18 @@ class CaptureController:
     
     def _add_live_overlay(self, frame: np.ndarray, height: int):
         """Add overlay for live mode."""
+        # Cloud API status indicator
+        if self.api_client:
+            api_status = "CONNECTED" if self.api_client.health_check() else "OFFLINE"
+            api_color = (0, 255, 0) if api_status == "CONNECTED" else (100, 100, 100)
+            cv2.putText(frame, f"Cloud: {api_status}", (20, 130), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.6, api_color, 2)
+        
+        # Inventory display
+        if self.inventory_cache:
+            cv2.putText(frame, f"Inventory: {', '.join(self.inventory_cache[:3])}", (20, 160), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.5, (200, 200, 200), 1)
+        
         cv2.putText(frame, "Status: LIVE - Press 'C' to start capture", (20, 40), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
         
@@ -490,10 +492,10 @@ class CaptureController:
     
     def start(self):
         """Start the application main loop."""
-        self.logger.info("=== Fridge Item Capture System ===")
+        self.logger.info("=== Camera Edge - Fridge Item Tracker ===")
         self.logger.info(f"Blur threshold: {self.config.capture.blur_threshold}")
         self.logger.info(f"Hand detection: {'ENABLED' if self.config.capture.enable_hand_detection else 'DISABLED'}")
-        self.logger.info(f"Vision API: {'ENABLED' if self.vision_analyzer else 'DISABLED'}")
+        self.logger.info(f"Cloud API: {'CONNECTED' if self.api_client and self.api_client.health_check() else 'OFFLINE'}")
         
         if not self.camera.start():
             self.logger.error("Could not open camera")
@@ -502,6 +504,12 @@ class CaptureController:
         self.camera.set_frame_callback(self.on_new_frame)
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(self.window_name, 1280, 720)
+        
+        # Sync inventory from cloud
+        if self.api_client:
+            self.inventory_cache = self.api_client.get_inventory()
+            if self.inventory_cache:
+                self.logger.info(f"Synced inventory: {', '.join(self.inventory_cache)}")
         
         # Main display loop
         while True:
@@ -601,10 +609,10 @@ def main():
     # Setup logging
     log_dir = "logs"
     os.makedirs(log_dir, exist_ok=True)
-    log_file = os.path.join(log_dir, f"fridge_tracker_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
+    log_file = os.path.join(log_dir, f"camera_edge_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log")
     
     logger = setup_logger(
-        name="FridgeTracker",
+        name="CameraEdge",
         level=logging.INFO,
         log_file=log_file,
         console_output=True
@@ -619,11 +627,11 @@ def main():
         config = AppConfig.from_env()
         config.save(config_path)
         logger.info(f"Created default configuration at {config_path}")
-        logger.warning("Please set your OPENAI_API_KEY in config.json to enable Vision API features")
+        logger.warning("Please set your CLOUD_API_URL in config.json (vision_api.api_key field)")
     
     # Create and start controller
     try:
-        controller = CaptureController(config)
+        controller = CameraEdgeController(config)
         controller.start()
     except KeyboardInterrupt:
         logger.info("Interrupted by user")
