@@ -8,8 +8,21 @@ import Input from '@/components/ui/Input'
 import { FamilyMember, DietaryRestriction, Allergy } from '@/types'
 import { ArrowLeft } from 'lucide-react'
 
+const validateAge = (val: string) => {
+  if (val.trim() === '') return false
+  const num = Number(val)
+  return !isNaN(num) && num >= 0 && num <= 100
+}
+
 const schema = z.object({
   name: z.string().min(1, 'Please enter name'),
+  age: z
+    .string()
+    .refine((val) => val.trim() !== '', 'Please enter age')
+    .refine(
+      (val) => validateAge(val),
+      'Please enter a valid number between 0 and 100'
+    ),
 })
 
 type FormData = z.infer<typeof schema>
@@ -30,14 +43,21 @@ export default function FamilyMemberForm({
   onBack,
 }: FamilyMemberFormProps) {
   const { t } = useLanguage()
-  const [age, setAge] = useState(member?.age || 25)
-  const [selectedDietary, setSelectedDietary] = useState<DietaryRestriction[]>([])
+  const [selectedDietary, setSelectedDietary] = useState<DietaryRestriction[]>(
+    []
+  )
   const [selectedAllergies, setSelectedAllergies] = useState<Allergy[]>([])
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: member?.name || '',
+      age: member?.age ? String(member.age) : '',
     },
   })
 
@@ -64,10 +84,11 @@ export default function FamilyMemberForm({
   ]
 
   const onSubmit = (data: FormData) => {
+    const ageNum = parseInt(data.age)
     const updatedMember: FamilyMember = {
       id: member?.id || `member-${memberIndex + 1}`,
       name: data.name,
-      age: age,
+      age: ageNum,
       dietaryRestrictions: selectedDietary,
       allergies: selectedAllergies,
       healthConditions: [],
@@ -81,11 +102,20 @@ export default function FamilyMemberForm({
   }
 
   useEffect(() => {
-    reset({ name: member?.name || '' })
-    setAge(member?.age || 25)
+    reset({
+      name: member?.name || '',
+      age: member?.age ? String(member.age) : '',
+    })
     setSelectedDietary(member?.dietaryRestrictions || [])
     setSelectedAllergies(member?.allergies || [])
-  }, [member?.name, member?.age, member?.dietaryRestrictions, member?.allergies, memberIndex, reset])
+  }, [
+    member?.name,
+    member?.age,
+    member?.dietaryRestrictions,
+    member?.allergies,
+    memberIndex,
+    reset,
+  ])
 
   const toggleDietary = (value: DietaryRestriction) => {
     setSelectedDietary((prev) =>
@@ -108,11 +138,17 @@ export default function FamilyMemberForm({
       <div className="max-w-md mx-auto">
         {/* Top Navigation */}
         <div className="bg-white border-b border-warm-200 px-4 py-3 flex items-center">
-          <button onClick={onBack} className="p-2 -ml-2 hover:bg-warm-100 rounded-lg transition-all">
+          <button
+            onClick={onBack}
+            className="p-2 -ml-2 hover:bg-warm-100 rounded-lg transition-all"
+          >
             <ArrowLeft className="w-5 h-5 text-warm-600" strokeWidth={2} />
           </button>
           <div className="flex-1 text-center pr-8">
-            <h1 className="font-semibold text-warm-900" style={{ fontSize: '16px' }}>
+            <h1
+              className="font-semibold text-warm-900"
+              style={{ fontSize: '16px' }}
+            >
               {t('member')} {memberIndex + 1} / {totalMembers}
             </h1>
           </div>
@@ -128,25 +164,29 @@ export default function FamilyMemberForm({
                 error={errors.name?.message}
               />
 
-              {/* Age Slider */}
-              <div>
-                <label className="block font-bold text-warm-700 mb-3" style={{ fontSize: '15px' }}>
-                  {t('age')}: <span className="text-primary-600">{age}</span> {t('yearsOld')}
-                </label>
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={age}
-                  onChange={(e) => setAge(parseInt(e.target.value))}
-                  className="w-full slider"
-                />
-              </div>
+              {/* Age Input */}
+              <Input
+                label={t('age')}
+                placeholder="0-100"
+                type="text"
+                {...register('age')}
+                error={errors.age?.message}
+                inputMode="numeric"
+              />
 
               {/* Dietary - Horizontal Scroll */}
               <div>
-                <label className="block font-bold text-warm-700 mb-2" style={{ fontSize: '14px' }}>
-                  {t('dietary')} <span className="text-warm-400 font-normal" style={{ fontSize: '12px' }}>{t('optional')}</span>
+                <label
+                  className="block font-bold text-warm-700 mb-2"
+                  style={{ fontSize: '14px' }}
+                >
+                  {t('dietary')}{' '}
+                  <span
+                    className="text-warm-400 font-normal"
+                    style={{ fontSize: '12px' }}
+                  >
+                    {t('optional')}
+                  </span>
                 </label>
                 <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6">
                   {dietaryOptions.map((option) => (
@@ -169,8 +209,17 @@ export default function FamilyMemberForm({
 
               {/* Allergies - Horizontal Scroll */}
               <div>
-                <label className="block font-bold text-warm-700 mb-2" style={{ fontSize: '14px' }}>
-                  {t('allergies')} <span className="text-warm-400 font-normal" style={{ fontSize: '12px' }}>{t('optional')}</span>
+                <label
+                  className="block font-bold text-warm-700 mb-2"
+                  style={{ fontSize: '14px' }}
+                >
+                  {t('allergies')}{' '}
+                  <span
+                    className="text-warm-400 font-normal"
+                    style={{ fontSize: '12px' }}
+                  >
+                    {t('optional')}
+                  </span>
                 </label>
                 <div className="flex gap-2 overflow-x-auto pb-2 -mx-6 px-6">
                   {allergyOptions.map((option) => (
