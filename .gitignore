@@ -1,18 +1,14 @@
-# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info/
-dist/
-build/
-
-# Virtual environments
+*.pyc
+*.pyo
+*.jpg
+*.png
+*.avi
+*.mp4
 venv/
-env/
-ENV/
+.env
 
+<<<<<<< HEAD
 # IDE
 .vscode/
 .idea/
@@ -33,3 +29,5 @@ config.json
 # Keep example config
 !config.json
 node_modules
+=======
+>>>>>>> c129e094 (Implement hand tracking and Gemini image analysis for fridge monitoring)
