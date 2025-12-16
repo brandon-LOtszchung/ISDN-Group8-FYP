@@ -3,72 +3,48 @@ import { Camera, X, Check } from 'lucide-react'
 import Button from './ui/Button'
 
 interface CameraCaptureProps {
-  onPhotosCapture: (photos: string[]) => void
+  onPhotosCapture: (photos: File[]) => void
   maxPhotos?: number
 }
 
+interface CapturedPhoto {
+  file: File
+  preview: string
+}
+
 export default function CameraCapture({ onPhotosCapture, maxPhotos = 5 }: CameraCaptureProps) {
-  const [capturedPhotos, setCapturedPhotos] = useState<string[]>([])
+  const [capturedPhotos, setCapturedPhotos] = useState<CapturedPhoto[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    
     if (files.length === 0) return
-    if (capturedPhotos.length >= maxPhotos) {
-      alert(`Maximum ${maxPhotos} photos allowed`)
-      return
-    }
 
-    const newPhotos: string[] = []
+    const remainingSlots = maxPhotos - capturedPhotos.length
+    const filesToAdd = files.slice(0, remainingSlots)
 
-    for (const file of files) {
-      if (capturedPhotos.length + newPhotos.length >= maxPhotos) break
-
-      try {
-        const base64 = await fileToBase64(file)
-        newPhotos.push(base64)
-      } catch (error) {
-        console.error('Failed to process photo:', error)
-      }
-    }
+    const newPhotos: CapturedPhoto[] = filesToAdd.map((file) => ({
+      file,
+      preview: URL.createObjectURL(file),
+    }))
 
     setCapturedPhotos((prev) => [...prev, ...newPhotos])
   }
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => {
-        const result = reader.result as string
-        // Remove data URL prefix to get just base64
-        const base64 = result.split(',')[1]
-        resolve(base64)
-      }
-      reader.onerror = reject
-      reader.readAsDataURL(file)
+  const removePhoto = (index: number) => {
+    setCapturedPhotos((prev) => {
+      URL.revokeObjectURL(prev[index].preview)
+      return prev.filter((_, i) => i !== index)
     })
   }
 
-  const removePhoto = (index: number) => {
-    setCapturedPhotos((prev) => prev.filter((_, i) => i !== index))
-  }
-
   const handleSubmit = () => {
-    if (capturedPhotos.length === 0) {
-      alert('Please capture at least one photo')
-      return
-    }
-    onPhotosCapture(capturedPhotos)
-  }
-
-  const triggerFileInput = () => {
-    fileInputRef.current?.click()
+    if (capturedPhotos.length === 0) return
+    onPhotosCapture(capturedPhotos.map((p) => p.file))
   }
 
   return (
     <div className="space-y-4">
-      {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
@@ -79,10 +55,9 @@ export default function CameraCapture({ onPhotosCapture, maxPhotos = 5 }: Camera
         className="hidden"
       />
 
-      {/* Capture Button */}
       {capturedPhotos.length < maxPhotos && (
         <Button
-          onClick={triggerFileInput}
+          onClick={() => fileInputRef.current?.click()}
           className="w-full flex items-center justify-center gap-2"
           variant="secondary"
         >
@@ -91,18 +66,17 @@ export default function CameraCapture({ onPhotosCapture, maxPhotos = 5 }: Camera
         </Button>
       )}
 
-      {/* Photo Previews */}
       {capturedPhotos.length > 0 && (
         <div className="space-y-3">
           <p className="text-warm-600 text-center" style={{ fontSize: '13px' }}>
             {capturedPhotos.length} photo{capturedPhotos.length > 1 ? 's' : ''} captured
           </p>
-          
+
           <div className="grid grid-cols-2 gap-2">
             {capturedPhotos.map((photo, index) => (
               <div key={index} className="relative rounded-lg overflow-hidden border border-warm-200">
                 <img
-                  src={`data:image/jpeg;base64,${photo}`}
+                  src={photo.preview}
                   alt={`Fridge ${index + 1}`}
                   className="w-full h-32 object-cover"
                 />
@@ -131,4 +105,3 @@ export default function CameraCapture({ onPhotosCapture, maxPhotos = 5 }: Camera
     </div>
   )
 }
-

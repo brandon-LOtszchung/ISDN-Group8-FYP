@@ -5,6 +5,8 @@ import {
   HealthCondition,
 } from '@/types'
 
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://159.223.45.101:8000'
+
 export const CUISINE_OPTIONS: {
   value: CuisineType
   label: string
@@ -69,29 +71,13 @@ export const SPICE_LEVELS = [
 ] as const
 
 export const COOKING_SKILL_LEVELS = [
-  {
-    value: 'beginner',
-    label: 'Beginner',
-    description: 'Simple recipes with basic techniques',
-  },
-  {
-    value: 'intermediate',
-    label: 'Intermediate',
-    description: 'Moderate complexity with some advanced techniques',
-  },
-  {
-    value: 'advanced',
-    label: 'Advanced',
-    description: 'Complex recipes with professional techniques',
-  },
+  { value: 'beginner', label: 'Beginner', description: 'Simple recipes with basic techniques' },
+  { value: 'intermediate', label: 'Intermediate', description: 'Moderate complexity with some advanced techniques' },
+  { value: 'advanced', label: 'Advanced', description: 'Complex recipes with professional techniques' },
 ] as const
 
 export const BUDGET_RANGES = [
-  {
-    value: 'low',
-    label: 'Budget-Friendly',
-    description: 'Under HK$100 per meal',
-  },
+  { value: 'low', label: 'Budget-Friendly', description: 'Under HK$100 per meal' },
   { value: 'medium', label: 'Moderate', description: 'HK$100-200 per meal' },
   { value: 'high', label: 'Premium', description: 'Above HK$200 per meal' },
 ] as const
@@ -101,13 +87,6 @@ export const DEFAULT_MEAL_TIMES = {
   lunch: '12:30',
   dinner: '19:00',
 }
-
-export const API_ENDPOINTS = {
-  FAMILY: '/api/family',
-  INVENTORY: '/api/inventory',
-  RECIPES: '/api/recipes',
-  GENERATE_RECIPES: '/api/recipes/generate',
-} as const
 
 export const STORAGE_KEYS = {
   FAMILY_DATA: 'smart-fridge-family',

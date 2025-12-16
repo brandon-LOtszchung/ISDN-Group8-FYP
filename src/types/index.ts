@@ -41,10 +41,6 @@ export interface InventoryItem {
   name: string
   category: ItemCategory
   quantity: number
-  unit: string
-  expiryDate?: string
-  addedAt: string
-  confidence: number
 }
 
 export interface Recipe {
@@ -88,18 +84,6 @@ export interface NutritionInfo {
   fat: number
   fiber: number
   sodium: number
-}
-
-export interface RecipeRequest {
-  familyMembers: string[]
-  availableIngredients: string[]
-  cuisinePreferences: CuisineType[]
-  dietaryRestrictions: DietaryRestriction[]
-  allergies: Allergy[]
-  mealType: MealType
-  servings: number
-  maxCookingTime?: number
-  difficulty?: 'easy' | 'medium' | 'hard'
 }
 
 export type CuisineType =
@@ -173,19 +157,4 @@ export interface AppState {
   error: string | null
   onboardingCompleted: boolean
   fridgeInitialized: boolean
-}
-
-export interface ApiResponse<T> {
-  data: T
-  message: string
-  success: boolean
-}
-
-export interface PaginatedResponse<T> extends ApiResponse<T[]> {
-  pagination: {
-    page: number
-    limit: number
-    total: number
-    totalPages: number
-  }
 }

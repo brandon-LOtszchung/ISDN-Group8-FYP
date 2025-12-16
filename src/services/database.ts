@@ -1,33 +1,26 @@
 import { supabase } from './supabase'
 import { Family, InventoryItem, RecipeIngredient } from '@/types'
 
-// Check if Supabase is configured
 const isSupabaseConfigured = () => {
   return !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY)
 }
 
-// ============================================
-// FAMILY SERVICE
-// ============================================
 export const familyService = {
   async getFamily(familyId: string): Promise<Family | null> {
     if (!isSupabaseConfigured()) return null
 
-    const { data: _data, error } = await supabase
+    const { data, error } = await supabase
       .from('families')
-      .select(`
-        *,
-        members:family_members(*)
-      `)
+      .select(`*, members:family_members(*)`)
       .eq('id', familyId)
       .single()
 
     if (error) throw error
 
     return {
-      id: _data.id,
-      name: _data.name,
-      members: _data.members.map((m: any) => ({
+      id: data.id,
+      name: data.name,
+      members: data.members.map((m: any) => ({
         id: m.id,
         name: m.name,
         age: m.age,
@@ -41,38 +34,35 @@ export const familyService = {
         },
       })),
       preferences: {
-        cookingSkillLevel: _data.cooking_skill_level,
-        budgetRange: _data.budget_range,
+        cookingSkillLevel: data.cooking_skill_level,
+        budgetRange: data.budget_range,
         mealTimes: {
-          breakfast: _data.meal_time_breakfast,
-          lunch: _data.meal_time_lunch,
-          dinner: _data.meal_time_dinner,
+          breakfast: data.meal_time_breakfast,
+          lunch: data.meal_time_lunch,
+          dinner: data.meal_time_dinner,
         },
-        preferredLanguage: _data.preferred_language,
+        preferredLanguage: data.preferred_language,
       },
-      createdAt: _data.created_at,
-      updatedAt: _data.updated_at,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
     }
   },
 
   async getDefaultFamily(): Promise<Family | null> {
     if (!isSupabaseConfigured()) return null
 
-    const { data: _data, error } = await supabase
+    const { data, error } = await supabase
       .from('families')
-      .select(`
-        *,
-        members:family_members(*)
-      `)
+      .select(`*, members:family_members(*)`)
       .limit(1)
       .single()
 
-    if (error || !_data) return null
+    if (error || !data) return null
 
     return {
-      id: _data.id,
-      name: _data.name,
-      members: _data.members.map((m: any) => ({
+      id: data.id,
+      name: data.name,
+      members: data.members.map((m: any) => ({
         id: m.id,
         name: m.name,
         age: m.age,
@@ -86,17 +76,17 @@ export const familyService = {
         },
       })),
       preferences: {
-        cookingSkillLevel: _data.cooking_skill_level,
-        budgetRange: _data.budget_range,
+        cookingSkillLevel: data.cooking_skill_level,
+        budgetRange: data.budget_range,
         mealTimes: {
-          breakfast: _data.meal_time_breakfast,
-          lunch: _data.meal_time_lunch,
-          dinner: _data.meal_time_dinner,
+          breakfast: data.meal_time_breakfast,
+          lunch: data.meal_time_lunch,
+          dinner: data.meal_time_dinner,
         },
-        preferredLanguage: _data.preferred_language,
+        preferredLanguage: data.preferred_language,
       },
-      createdAt: _data.created_at,
-      updatedAt: _data.updated_at,
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
     }
   },
 
@@ -105,7 +95,6 @@ export const familyService = {
       throw new Error('Supabase not configured')
     }
 
-    // Insert family
     const { data: familyData, error: familyError } = await supabase
       .from('families')
       .insert({
@@ -122,7 +111,6 @@ export const familyService = {
 
     if (familyError) throw familyError
 
-    // Insert family members
     const membersToInsert = family.members.map((member) => ({
       family_id: familyData.id,
       name: member.name,
@@ -178,7 +166,7 @@ export const familyService = {
       throw new Error('Supabase not configured')
     }
 
-    const { data: _data, error } = await supabase
+    const { error } = await supabase
       .from('families')
       .update({
         name: family.name,
@@ -187,8 +175,6 @@ export const familyService = {
         preferred_language: family.preferences?.preferredLanguage,
       })
       .eq('id', familyId)
-      .select()
-      .single()
 
     if (error) throw error
 
@@ -196,14 +182,11 @@ export const familyService = {
   },
 }
 
-// ============================================
-// INVENTORY SERVICE
-// ============================================
 export const inventoryService = {
   async getInventory(familyId: string): Promise<InventoryItem[]> {
     if (!isSupabaseConfigured()) return []
 
-    const { data: _data, error } = await supabase
+    const { data, error } = await supabase
       .from('inventory_items')
       .select('*')
       .eq('family_id', familyId)
@@ -211,32 +194,26 @@ export const inventoryService = {
 
     if (error) throw error
 
-    return _data.map((item: any) => ({
+    return data.map((item: any) => ({
       id: item.id,
       name: item.name,
-      category: item.category as any,
+      category: item.category,
       quantity: item.quantity,
-      unit: item.unit,
-      expiryDate: item.expiry_date || undefined,
-      addedAt: item.added_at,
-      confidence: item.confidence,
     }))
   },
 
-  async addItem(familyId: string, item: Omit<InventoryItem, 'id' | 'addedAt' | 'confidence'>): Promise<InventoryItem> {
+  async addItem(familyId: string, item: Omit<InventoryItem, 'id'> | InventoryItem): Promise<InventoryItem> {
     if (!isSupabaseConfigured()) {
       throw new Error('Supabase not configured')
     }
 
-    const { data: _data, error } = await supabase
+    const { data, error } = await supabase
       .from('inventory_items')
       .insert({
         family_id: familyId,
         name: item.name,
         category: item.category,
         quantity: item.quantity,
-        unit: item.unit,
-        expiry_date: item.expiryDate || null,
       })
       .select()
       .single()
@@ -244,14 +221,10 @@ export const inventoryService = {
     if (error) throw error
 
     return {
-      id: _data.id,
-      name: _data.name,
-      category: _data.category as any,
-      quantity: _data.quantity,
-      unit: _data.unit,
-      expiryDate: _data.expiry_date || undefined,
-      addedAt: _data.added_at,
-      confidence: _data.confidence,
+      id: data.id,
+      name: data.name,
+      category: data.category,
+      quantity: data.quantity,
     }
   },
 
@@ -260,10 +233,7 @@ export const inventoryService = {
 
     const { error } = await supabase
       .from('inventory_items')
-      .update({
-        quantity: updates.quantity,
-        expiry_date: updates.expiryDate || null,
-      })
+      .update({ quantity: updates.quantity })
       .eq('id', itemId)
 
     if (error) throw error
@@ -281,14 +251,11 @@ export const inventoryService = {
   },
 }
 
-// ============================================
-// SHOPPING LIST SERVICE
-// ============================================
 export const shoppingListService = {
   async getShoppingList(familyId: string): Promise<RecipeIngredient[]> {
     if (!isSupabaseConfigured()) return []
 
-    const { data: _data, error } = await supabase
+    const { data, error } = await supabase
       .from('shopping_list_items')
       .select('*')
       .eq('family_id', familyId)
@@ -297,7 +264,7 @@ export const shoppingListService = {
 
     if (error) throw error
 
-    return _data.map((item: any) => ({
+    return data.map((item: any) => ({
       name: item.name,
       quantity: item.quantity,
       unit: item.unit,
@@ -319,10 +286,7 @@ export const shoppingListService = {
 
     const { error } = await supabase
       .from('shopping_list_items')
-      .upsert(itemsToInsert, {
-        onConflict: 'family_id,name,unit',
-        ignoreDuplicates: false,
-      })
+      .upsert(itemsToInsert, { onConflict: 'family_id,name,unit', ignoreDuplicates: false })
 
     if (error) throw error
   },
@@ -350,18 +314,4 @@ export const shoppingListService = {
 
     if (error) throw error
   },
-
-  async markPurchased(familyId: string, name: string, unit: string): Promise<void> {
-    if (!isSupabaseConfigured()) return
-
-    const { error } = await supabase
-      .from('shopping_list_items')
-      .update({ is_purchased: true })
-      .eq('family_id', familyId)
-      .eq('name', name)
-      .eq('unit', unit)
-
-    if (error) throw error
-  },
 }
-

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useApp } from '@/contexts/AppContext'
 import { useLanguage } from '@/contexts/LanguageContext'
-import { translateInventoryItem, translateUnit } from '@/translations/inventory'
+import { translateInventoryItem } from '@/translations/inventory'
 import { dataService } from '@/services/dataService'
 import Layout from '@/components/Layout'
 import Button from '@/components/ui/Button'
@@ -34,20 +34,16 @@ export default function Dashboard() {
 
   const toggleMember = (memberId: string) => {
     setSelectedMembers((prev) =>
-      prev.includes(memberId)
-        ? prev.filter((id) => id !== memberId)
-        : [...prev, memberId]
+      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId]
     )
   }
 
   const handleRemoveItem = async (itemId: string) => {
     if (!confirm(t('removeConfirm') || 'Remove this item?')) return
-    
+
     try {
       setRemovingItemId(itemId)
       await dataService.removeInventoryItem(itemId)
-      
-      // Reload inventory
       const updatedInventory = await dataService.getInventory()
       setInventory(updatedInventory)
     } catch (error) {
@@ -69,12 +65,11 @@ export default function Dashboard() {
   return (
     <Layout title={state.family?.name}>
       <div className="p-4 pb-6">
-        {/* Who's Eating - Horizontal Scroll */}
         <section className="mb-5">
           <h2 className="font-bold text-warm-900 mb-3" style={{ fontSize: '18px' }}>
             {t('whoEating')}
           </h2>
-          
+
           <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
             {state.family?.members?.map((member) => (
               <button
@@ -119,7 +114,6 @@ export default function Dashboard() {
           </div>
         </section>
 
-        {/* Fridge Inventory - Collapsible */}
         <section className="mb-5">
           <button
             onClick={() => setShowInventory(!showInventory)}
@@ -157,7 +151,7 @@ export default function Dashboard() {
                         </p>
                         <div className="flex items-center gap-2">
                           <p className="text-warm-600 font-medium whitespace-nowrap" style={{ fontSize: '13px' }}>
-                            {item.quantity} {translateUnit(item.unit, language)}
+                            x{item.quantity}
                           </p>
                           <button
                             onClick={() => handleRemoveItem(item.id)}
@@ -176,13 +170,9 @@ export default function Dashboard() {
           )}
         </section>
 
-        {/* Action Button */}
         <section>
           <Link to="/recipes">
-            <Button
-              className="w-full"
-              disabled={selectedMembers.length === 0}
-            >
+            <Button className="w-full" disabled={selectedMembers.length === 0}>
               {t('getRecipes')}
             </Button>
           </Link>
