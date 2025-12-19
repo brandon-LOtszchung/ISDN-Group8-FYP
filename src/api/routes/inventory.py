@@ -5,10 +5,10 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import List
 
 from ..schemas import VideoProcessResponse, InitializeResponse
-from ...services.video_flow_service import VideoFlowService
-from ...services.initialization_service import InitializationService
-from ...services.inventory_service import InventoryService
-from ...utils.file_handler import FileHandler
+from services.video_flow_service import VideoFlowService
+from services.initialization_service import InitializationService
+from services.inventory_service import InventoryService
+from utils.file_handler import FileHandler
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 
