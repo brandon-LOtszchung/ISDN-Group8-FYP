@@ -1,0 +1,70 @@
+create table public.inventory_items (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  family_id uuid not null,
+  name text not null,
+  category text not null,
+  quantity numeric(10, 2) not null,
+  expiry_date date null,
+  added_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint inventory_items_pkey primary key (id),
+  constraint inventory_items_family_id_fkey foreign KEY (family_id) references families (id) on delete CASCADE,
+  constraint inventory_items_category_check check (
+    (
+      category = any (
+        array[
+          'vegetables'::text,
+          'fruits'::text,
+          'meat'::text,
+          'seafood'::text,
+          'dairy'::text,
+          'grains'::text,
+          'condiments'::text,
+          'beverages'::text,
+          'snacks'::text,
+          'frozen'::text,
+          'canned'::text,
+          'other'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_inventory_family_id on public.inventory_items using btree (family_id) TABLESPACE pg_default;
+
+create index IF not exists idx_inventory_category on public.inventory_items using btree (category) TABLESPACE pg_default;
+
+create index IF not exists idx_inventory_expiry on public.inventory_items using btree (expiry_date) TABLESPACE pg_default;
+
+create trigger update_inventory_items_updated_at BEFORE
+update on inventory_items for EACH row
+execute FUNCTION update_updated_at_column ();
+
+create table public.saved_recipes (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  family_id uuid not null,
+  recipe_data jsonb not null,
+  is_favorite boolean null default false,
+  created_at timestamp with time zone null default now(),
+  constraint saved_recipes_pkey primary key (id),
+  constraint saved_recipes_family_id_fkey foreign KEY (family_id) references families (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_saved_recipes_family_id on public.saved_recipes using btree (family_id) TABLESPACE pg_default;
+
+create table public.shopping_list_items (
+  id uuid not null default extensions.uuid_generate_v4 (),
+  family_id uuid not null,
+  name text not null,
+  quantity numeric(10, 2) not null,
+  unit text not null,
+  alternatives text[] null default '{}'::text[],
+  is_purchased boolean null default false,
+  created_at timestamp with time zone null default now(),
+  constraint shopping_list_items_pkey primary key (id),
+  constraint shopping_list_items_family_id_name_unit_key unique (family_id, name, unit),
+  constraint shopping_list_items_family_id_fkey foreign KEY (family_id) references families (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_shopping_list_family_id on public.shopping_list_items using btree (family_id) TABLESPACE pg_default;

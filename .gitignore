@@ -8,7 +8,6 @@ __pycache__/
 venv/
 .env
 
-<<<<<<< HEAD
 # IDE
 .vscode/
 .idea/
@@ -29,5 +28,3 @@ config.json
 # Keep example config
 !config.json
 node_modules
-=======
->>>>>>> c129e094 (Implement hand tracking and Gemini image analysis for fridge monitoring)
