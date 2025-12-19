@@ -4,11 +4,12 @@ import google.generativeai as genai
 from pathlib import Path
 from dotenv import load_dotenv
 from typing import List, Dict
+import logging
 from PIL import Image
 
+logger = logging.getLogger(__name__)
+
 class InitializationService:
-    """Handle bulk fridge inventory initialization from multiple images"""
-    
     CATEGORIES = [
         'vegetables', 'fruits', 'meat', 'seafood', 'dairy',
         'grains', 'condiments', 'beverages', 'snacks',
@@ -22,16 +23,6 @@ class InitializationService:
         self.model = genai.GenerativeModel('gemini-2.5-flash-image')
     
     def analyze_fridge_images(self, image_paths: List[str]) -> List[Dict]:
-        """
-        Analyze multiple fridge images and return complete inventory.
-        Handles deduplication automatically via smart prompt.
-        
-        Args:
-            image_paths: List of paths to fridge images
-        
-        Returns:
-            List of detected items: [{"name": str, "quantity": float, "category": str}, ...]
-        """
         if not image_paths:
             return []
         
@@ -57,11 +48,10 @@ class InitializationService:
             return result.get("items", [])
         
         except Exception as e:
-            print(f"Error analyzing fridge images: {e}")
+            logger.exception("Error analyzing fridge images: %s", e)
             return []
     
     def _build_initialization_prompt(self) -> str:
-        """Build the prompt for multi-image fridge analysis"""
         categories_str = ", ".join(self.CATEGORIES)
         
         prompt = "=== TASK ===\n"

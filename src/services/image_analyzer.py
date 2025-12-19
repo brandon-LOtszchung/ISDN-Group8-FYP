@@ -4,7 +4,10 @@ import google.generativeai as genai
 from pathlib import Path
 from dotenv import load_dotenv
 from typing import Optional
+import logging
 from PIL import Image
+
+logger = logging.getLogger(__name__)
 
 class ImageAnalyzer:
     CATEGORIES = [
@@ -20,16 +23,6 @@ class ImageAnalyzer:
         self.model = genai.GenerativeModel('gemini-2.5-flash-image')
     
     def analyze_hand(self, image_path: str, inventory_context: Optional[str] = None) -> dict:
-        """
-        Analyze image and detect all items in hand.
-        
-        Args:
-            image_path: Path to the image file
-            inventory_context: Formatted string of existing inventory (optional)
-        
-        Returns:
-            dict with structure: {"items": [{"name": str, "quantity": float, "category": str}]}
-        """
         prompt = self._build_prompt(inventory_context)
         
         if not Path(image_path).exists():
@@ -49,11 +42,10 @@ class ImageAnalyzer:
             result = json.loads(result_text)
             return result
         except Exception as e:
-            print(f"Error analyzing image: {e}")
+            logger.exception("Error analyzing image: %s", e)
             return {"items": []}
     
     def _build_prompt(self, inventory_context: Optional[str]) -> str:
-        """Build the prompt with optional inventory context"""
         categories_str = ", ".join(self.CATEGORIES)
         
         prompt = "=== TASK ===\n"
