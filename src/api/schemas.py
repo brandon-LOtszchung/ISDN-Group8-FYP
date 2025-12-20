@@ -31,6 +31,7 @@ class InitializeResponse(BaseModel):
 class RecommendRecipesRequest(BaseModel):
     member_ids: List[str]
     cuisine_style: str
+    meal_time: str
 
 class RecipeCardSchema(BaseModel):
     saved_recipe_id: str

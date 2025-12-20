@@ -1,6 +1,9 @@
 import logging
 from typing import Any, Dict, List, Optional
 
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
 from services.inventory_service import InventoryService
 from services.member_service import MemberService
 from services.recipe_generator import RecipeGenerator
@@ -19,7 +22,7 @@ class RecipeFlowService:
         self.generator = RecipeGenerator()
         self.repo = RecipeRepository(family_id=self.FAMILY_ID)
 
-    def recommend_and_save(self, member_ids: List[str], cuisine_style: str) -> List[Dict[str, Any]]:
+    def recommend_and_save(self, member_ids: List[str], cuisine_style: str, meal_time: str) -> List[Dict[str, Any]]:
         members = self.members.get_members(member_ids)
         if len(members) != len(set(member_ids)):
             raise ValueError("One or more member_ids not found")
@@ -28,8 +31,12 @@ class RecipeFlowService:
         inventory_context = self.inventory.format_inventory_for_prompt()
         constraints = self._format_member_constraints(members)
 
+        hkt_now_iso = datetime.now(ZoneInfo("Asia/Hong_Kong")).isoformat()
+
         raw_recipes = self.generator.generate(
             cuisine_style=cuisine_style,
+            meal_time_hkt=meal_time,
+            hkt_now_iso=hkt_now_iso,
             member_constraints=constraints,
             inventory_context=inventory_context,
             count=5,
@@ -67,6 +74,8 @@ class RecipeFlowService:
             recipe_data = {
                 "name": name,
                 "cuisine_style": cuisine_style,
+                "meal_time_hkt": meal_time,
+                "hkt_now_iso": hkt_now_iso,
                 "member_ids": member_ids,
                 "ingredients": ing_norm,
                 "steps": [str(s) for s in steps if str(s).strip()],

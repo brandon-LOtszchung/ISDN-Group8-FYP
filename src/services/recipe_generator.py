@@ -16,8 +16,16 @@ class RecipeGenerator:
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel("gemini-1.5-flash")
 
-    def generate(self, cuisine_style: str, member_constraints: str, inventory_context: str, count: int = 5) -> List[Dict[str, Any]]:
-        prompt = self._build_prompt(cuisine_style, member_constraints, inventory_context, count)
+    def generate(
+        self,
+        cuisine_style: str,
+        meal_time_hkt: str,
+        hkt_now_iso: str,
+        member_constraints: str,
+        inventory_context: str,
+        count: int = 5,
+    ) -> List[Dict[str, Any]]:
+        prompt = self._build_prompt(cuisine_style, meal_time_hkt, hkt_now_iso, member_constraints, inventory_context, count)
         resp = self.model.generate_content(prompt)
         text = (resp.text or "").strip()
         if text.startswith("```json"):
@@ -30,7 +38,15 @@ class RecipeGenerator:
             return []
         return recipes
 
-    def _build_prompt(self, cuisine_style: str, member_constraints: str, inventory_context: str, count: int) -> str:
+    def _build_prompt(
+        self,
+        cuisine_style: str,
+        meal_time_hkt: str,
+        hkt_now_iso: str,
+        member_constraints: str,
+        inventory_context: str,
+        count: int,
+    ) -> str:
         return (
             "Return ONLY valid JSON.\n"
             f"Generate exactly {count} recipes.\n"
@@ -51,6 +67,8 @@ class RecipeGenerator:
             "}\n"
             "\n"
             f"CUISINE_STYLE: {cuisine_style}\n"
+            f"MEAL_TIME_HKT: {meal_time_hkt}\n"
+            f"HKT_NOW_ISO: {hkt_now_iso}\n"
             "\n"
             "MEMBER_CONSTRAINTS:\n"
             f"{member_constraints}\n"

@@ -23,9 +23,16 @@ async def recommend_recipes(payload: RecommendRecipesRequest):
             raise HTTPException(status_code=400, detail="member_ids cannot be empty")
         if not payload.cuisine_style.strip():
             raise HTTPException(status_code=400, detail="cuisine_style cannot be empty")
+        meal_time = payload.meal_time.strip().lower()
+        if meal_time not in {"breakfast", "lunch", "dinner"}:
+            raise HTTPException(status_code=400, detail="meal_time must be one of: breakfast, lunch, dinner")
 
         service = RecipeFlowService()
-        recipes = service.recommend_and_save(member_ids=payload.member_ids, cuisine_style=payload.cuisine_style)
+        recipes = service.recommend_and_save(
+            member_ids=payload.member_ids,
+            cuisine_style=payload.cuisine_style,
+            meal_time=meal_time,
+        )
 
         return RecommendRecipesResponse(success=True, recipes=recipes)
     except HTTPException:
