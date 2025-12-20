@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import inventory
+from .routes import recipes
 
 app = FastAPI(
     title="Smart Fridge Inventory API",
@@ -17,6 +18,7 @@ app.add_middleware(
 )
 
 app.include_router(inventory.router)
+app.include_router(recipes.router)
 
 @app.get("/")
 async def root():

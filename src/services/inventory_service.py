@@ -1,12 +1,10 @@
-import os
 from typing import List, Dict, Optional
 import logging
-from supabase import create_client, Client
-from dotenv import load_dotenv
+from services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 
-class InventoryService:
+class InventoryService(SupabaseService):
     CATEGORIES = [
         'vegetables', 'fruits', 'meat', 'seafood', 'dairy',
         'grains', 'condiments', 'beverages', 'snacks',
@@ -14,15 +12,7 @@ class InventoryService:
     ]
     
     def __init__(self, family_id: str = "00000000-0000-0000-0000-000000000001"):
-        load_dotenv()
-        supabase_url = os.getenv('SUPABASE_URL')
-        supabase_key = os.getenv('ANON_PUBLIC_KEY')
-        
-        if not supabase_url or not supabase_key:
-            raise ValueError("Missing SUPABASE_URL or ANON_PUBLIC_KEY in environment variables")
-        
-        self.client: Client = create_client(supabase_url, supabase_key)
-        self.family_id = family_id
+        super().__init__(family_id=family_id)
     
     def get_inventory(self) -> List[Dict]:
         try:
