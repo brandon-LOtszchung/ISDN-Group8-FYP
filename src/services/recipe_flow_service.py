@@ -22,7 +22,7 @@ class RecipeFlowService:
         self.generator = RecipeGenerator()
         self.repo = RecipeRepository(family_id=self.FAMILY_ID)
 
-    def recommend_and_save(self, member_ids: List[str], cuisine_style: str, meal_time: str) -> List[Dict[str, Any]]:
+    def recommend_and_save(self, member_ids: List[str], cuisine_style: str) -> List[Dict[str, Any]]:
         members = self.members.get_members(member_ids)
         if len(members) != len(set(member_ids)):
             raise ValueError("One or more member_ids not found")
@@ -32,6 +32,7 @@ class RecipeFlowService:
         constraints = self._format_member_constraints(members)
 
         hkt_now_iso = datetime.now(ZoneInfo("Asia/Hong_Kong")).isoformat()
+        meal_time = self._infer_meal_time_hkt(hkt_now_iso)
 
         raw_recipes = self.generator.generate(
             cuisine_style=cuisine_style,
@@ -167,5 +168,14 @@ class RecipeFlowService:
         if not parts:
             return "None"
         return "\n".join(parts)
+
+    def _infer_meal_time_hkt(self, hkt_now_iso: str) -> str:
+        dt = datetime.fromisoformat(hkt_now_iso)
+        hour = dt.hour
+        if 5 <= hour < 11:
+            return "breakfast"
+        if 11 <= hour < 17:
+            return "lunch"
+        return "dinner"
 
 
