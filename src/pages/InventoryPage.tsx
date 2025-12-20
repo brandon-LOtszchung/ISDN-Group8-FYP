@@ -6,6 +6,7 @@ import { InventoryItem, ItemCategory } from '@/types'
 import TopBar from '@/components/TopBar'
 import CameraUpload from '@/components/CameraUpload'
 import ScanPromptPopup from '@/components/ScanPromptPopup'
+import PlanningPage from './PlanningPage'
 
 export default function InventoryPage() {
   const { state, removeInventoryItem, updateInventoryItem, initializeFridge } = useApp()
@@ -380,28 +381,7 @@ export default function InventoryPage() {
           )}
 
           {activeTab === 'planning' && (
-            <div style={{
-              textAlign: 'center',
-              padding: '60px 20px',
-              color: colors.text,
-              animation: 'fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
-            }}>
-              <div style={{
-                fontSize: '48px',
-                marginBottom: '24px',
-                opacity: 0.5
-              }}>
-                📅
-              </div>
-              <div style={{
-                fontSize: '18px',
-                fontWeight: 600,
-                color: colors.text,
-                opacity: 0.7
-              }}>
-                Planning coming soon
-              </div>
-            </div>
+            <PlanningPage />
           )}
         </div>
 

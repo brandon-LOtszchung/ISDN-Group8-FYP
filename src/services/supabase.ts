@@ -230,3 +230,76 @@ export async function updateInventoryItem(itemId: string, quantity: number): Pro
   }
 }
 
+// Recipe operations
+export async function getRecipeCost(recipeId: string): Promise<number | null> {
+  if (!supabaseUrl || !supabaseAnonKey) return null
+
+  try {
+    const { data, error } = await supabase
+      .from('saved_recipes')
+      .select('estimated_total_cost')
+      .eq('id', recipeId)
+      .single()
+
+    if (error) throw error
+    return data?.estimated_total_cost ? parseFloat(data.estimated_total_cost.toString()) : null
+  } catch (error) {
+    console.error('Error fetching recipe cost:', error)
+    return null
+  }
+}
+
+// Shopping list operations
+export interface ShoppingListItem {
+  id: string
+  name: string
+  quantity: number
+  unit: string
+  is_purchased: boolean
+  estimated_unit_cost: number | null
+  alternatives: string[]
+}
+
+export async function getShoppingList(): Promise<ShoppingListItem[]> {
+  if (!supabaseUrl || !supabaseAnonKey) return []
+
+  try {
+    const { data, error } = await supabase
+      .from('shopping_list_items')
+      .select('*')
+      .eq('family_id', DEFAULT_FAMILY_ID)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return (data || []).map(item => ({
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      unit: item.unit,
+      is_purchased: item.is_purchased || false,
+      estimated_unit_cost: item.estimated_unit_cost ? parseFloat(item.estimated_unit_cost.toString()) : null,
+      alternatives: item.alternatives || [],
+    }))
+  } catch (error) {
+    console.error('Error fetching shopping list:', error)
+    return []
+  }
+}
+
+export async function updateShoppingListItem(itemId: string, isPurchased: boolean): Promise<void> {
+  if (!supabaseUrl || !supabaseAnonKey) return
+
+  try {
+    const { error } = await supabase
+      .from('shopping_list_items')
+      .update({ is_purchased: isPurchased })
+      .eq('id', itemId)
+
+    if (error) throw error
+  } catch (error) {
+    console.error('Error updating shopping list item:', error)
+    throw error
+  }
+}
+
