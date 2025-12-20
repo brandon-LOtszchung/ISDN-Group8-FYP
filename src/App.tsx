@@ -1,55 +1,20 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { useApp } from '@/contexts/AppContext'
-import { dataService } from '@/services/dataService'
-import OnboardingFlow from '@/pages/onboarding/OnboardingFlow'
-import FridgeInitialization from '@/pages/onboarding/FridgeInitialization'
-import Dashboard from '@/pages/dashboard/Dashboard'
-import RecipeGeneration from '@/pages/recipes/RecipeGeneration'
-import RecipeDetail from '@/pages/recipes/RecipeDetail'
-import ShoppingList from '@/pages/shopping/ShoppingList'
+import OnboardingFlow from '@/pages/OnboardingFlow'
+import InventoryPage from '@/pages/InventoryPage'
 
 function App() {
-  const { state, setFamily } = useApp()
-  const location = useLocation()
+  const { state } = useApp()
 
-  // Load default family on app start
-  useEffect(() => {
-    const loadDefaultFamily = async () => {
-      try {
-        const family = await dataService.getFamily()
-        if (family) {
-          setFamily(family)
-        }
-      } catch (error) {
-        console.error('Failed to load default family:', error)
-      }
-    }
-
-    if (!state.family) {
-      loadDefaultFamily()
-    }
-  }, [])
-
-  if (location.pathname.startsWith('/onboarding')) {
-    return <OnboardingFlow />
-  }
-
+  // If onboarding not completed, show onboarding
   if (!state.onboardingCompleted) {
     return <OnboardingFlow />
   }
 
-  if (!state.fridgeInitialized) {
-    return <FridgeInitialization />
-  }
-
+  // Otherwise show main app
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/recipes" element={<RecipeGeneration />} />
-      <Route path="/recipes/:id" element={<RecipeDetail />} />
-      <Route path="/shopping-list" element={<ShoppingList />} />
-      <Route path="/onboarding" element={<OnboardingFlow />} />
+      <Route path="/" element={<InventoryPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

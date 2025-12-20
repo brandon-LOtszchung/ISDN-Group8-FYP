@@ -1,68 +1,84 @@
-import { createContext, useContext, useReducer, ReactNode } from 'react'
-import { AppState, Family, InventoryItem, Recipe, RecipeIngredient } from '@/types'
+import { createContext, useContext, useReducer, ReactNode, useEffect } from 'react'
+import { Family, InventoryItem } from '@/types'
 import { STORAGE_KEYS } from '@/constants'
+import { getFamily, getInventory, supabase } from '@/services/supabase'
+
+interface AppState {
+  family: Family | null
+  inventory: InventoryItem[]
+  isLoading: boolean
+  error: string | null
+  onboardingCompleted: boolean
+  fridgeInitialized: boolean
+}
 
 interface AppContextType {
   state: AppState
   setFamily: (family: Family) => void
   setInventory: (inventory: InventoryItem[]) => void
-  setRecipes: (recipes: Recipe[]) => void
+  addInventoryItem: (item: InventoryItem) => void
+  removeInventoryItem: (itemId: string) => void
+  updateInventoryItem: (itemId: string, quantity: number) => void
   setLoading: (loading: boolean) => void
   setError: (error: string | null) => void
   completeOnboarding: () => void
   initializeFridge: () => void
   clearError: () => void
-  addToShoppingList: (items: RecipeIngredient[]) => void
-  removeFromShoppingList: (item: Pick<RecipeIngredient, 'name' | 'unit'>) => void
-  clearShoppingList: () => void
 }
 
 type AppAction =
   | { type: 'SET_FAMILY'; payload: Family }
   | { type: 'SET_INVENTORY'; payload: InventoryItem[] }
-  | { type: 'SET_RECIPES'; payload: Recipe[] }
+  | { type: 'ADD_INVENTORY_ITEM'; payload: InventoryItem }
+  | { type: 'REMOVE_INVENTORY_ITEM'; payload: string }
+  | { type: 'UPDATE_INVENTORY_ITEM'; payload: { id: string; quantity: number } }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
   | { type: 'COMPLETE_ONBOARDING' }
   | { type: 'INITIALIZE_FRIDGE' }
   | { type: 'CLEAR_ERROR' }
-  | { type: 'ADD_TO_SHOPPING_LIST'; payload: RecipeIngredient[] }
-  | {
-      type: 'REMOVE_FROM_SHOPPING_LIST'
-      payload: Pick<RecipeIngredient, 'name' | 'unit'>
-    }
-  | { type: 'CLEAR_SHOPPING_LIST' }
 
 const initialState: AppState = {
-  preferredLanguage: 'en',
   family: null,
-  inventory: [],
-  currentRecipes: [],
-  shoppingList: JSON.parse(
-    localStorage.getItem(STORAGE_KEYS.SHOPPING_LIST) || '[]'
-  ),
+  inventory: JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]'),
   isLoading: false,
   error: null,
-  onboardingCompleted:
-    localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED) === 'true',
-  fridgeInitialized:
-    localStorage.getItem(STORAGE_KEYS.FRIDGE_INITIALIZED) === 'true',
+  onboardingCompleted: localStorage.getItem(STORAGE_KEYS.ONBOARDING_COMPLETED) === 'true',
+  fridgeInitialized: localStorage.getItem(STORAGE_KEYS.FRIDGE_INITIALIZED) === 'true',
 }
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
     case 'SET_FAMILY':
-      localStorage.setItem(
-        STORAGE_KEYS.FAMILY_DATA,
-        JSON.stringify(action.payload)
-      )
+      localStorage.setItem(STORAGE_KEYS.FAMILY_DATA, JSON.stringify(action.payload))
       return { ...state, family: action.payload }
 
-    case 'SET_INVENTORY':
+    case 'SET_INVENTORY': {
+      localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(action.payload))
       return { ...state, inventory: action.payload }
+    }
 
-    case 'SET_RECIPES':
-      return { ...state, currentRecipes: action.payload }
+    case 'ADD_INVENTORY_ITEM': {
+      const updated = [...state.inventory, action.payload]
+      localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(updated))
+      return { ...state, inventory: updated }
+    }
+
+    case 'REMOVE_INVENTORY_ITEM': {
+      const updated = state.inventory.filter(item => item.id !== action.payload)
+      localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(updated))
+      return { ...state, inventory: updated }
+    }
+
+    case 'UPDATE_INVENTORY_ITEM': {
+      const updated = state.inventory.map(item =>
+        item.id === action.payload.id
+          ? { ...item, quantity: action.payload.quantity }
+          : item
+      )
+      localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(updated))
+      return { ...state, inventory: updated }
+    }
 
     case 'SET_LOADING':
       return { ...state, isLoading: action.payload }
@@ -81,58 +97,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'CLEAR_ERROR':
       return { ...state, error: null }
 
-    case 'ADD_TO_SHOPPING_LIST': {
-      const updatedList = [...state.shoppingList]
-
-      action.payload.forEach((item) => {
-        const existingIndex = updatedList.findIndex(
-          (existing) =>
-            existing.name.toLowerCase() === item.name.toLowerCase() &&
-            existing.unit.toLowerCase() === item.unit.toLowerCase()
-        )
-
-        if (existingIndex >= 0) {
-          const existingItem = updatedList[existingIndex]
-          updatedList[existingIndex] = {
-            ...existingItem,
-            quantity: existingItem.quantity + item.quantity,
-            alternatives: item.alternatives || existingItem.alternatives,
-          }
-        } else {
-          updatedList.push({ ...item })
-        }
-      })
-
-      localStorage.setItem(
-        STORAGE_KEYS.SHOPPING_LIST,
-        JSON.stringify(updatedList)
-      )
-
-      return { ...state, shoppingList: updatedList }
-    }
-
-    case 'REMOVE_FROM_SHOPPING_LIST': {
-      const updatedList = state.shoppingList.filter(
-        (item) =>
-          !(
-            item.name.toLowerCase() === action.payload.name.toLowerCase() &&
-            item.unit.toLowerCase() === action.payload.unit.toLowerCase()
-          )
-      )
-
-      localStorage.setItem(
-        STORAGE_KEYS.SHOPPING_LIST,
-        JSON.stringify(updatedList)
-      )
-
-      return { ...state, shoppingList: updatedList }
-    }
-
-    case 'CLEAR_SHOPPING_LIST': {
-      localStorage.setItem(STORAGE_KEYS.SHOPPING_LIST, JSON.stringify([]))
-      return { ...state, shoppingList: [] }
-    }
-
     default:
       return state
   }
@@ -143,6 +107,49 @@ const AppContext = createContext<AppContextType | undefined>(undefined)
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(appReducer, initialState)
 
+  // Load family and inventory from Supabase on mount
+  useEffect(() => {
+    const loadData = async () => {
+      const family = await getFamily()
+      if (family) {
+        dispatch({ type: 'SET_FAMILY', payload: family })
+      }
+      
+      const inventory = await getInventory()
+      if (inventory.length > 0) {
+        dispatch({ type: 'SET_INVENTORY', payload: inventory })
+      }
+    }
+    loadData()
+  }, [])
+
+  // Set up Supabase realtime subscription for inventory updates
+  useEffect(() => {
+    const DEFAULT_FAMILY_ID = '00000000-0000-0000-0000-000000000001'
+    
+    const channel = supabase
+      .channel('inventory-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'inventory_items',
+          filter: `family_id=eq.${DEFAULT_FAMILY_ID}`,
+        },
+        async () => {
+          // Reload inventory when changes occur
+          const inventory = await getInventory()
+          dispatch({ type: 'SET_INVENTORY', payload: inventory })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [])
+
   const setFamily = (family: Family) => {
     dispatch({ type: 'SET_FAMILY', payload: family })
   }
@@ -151,8 +158,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_INVENTORY', payload: inventory })
   }
 
-  const setRecipes = (recipes: Recipe[]) => {
-    dispatch({ type: 'SET_RECIPES', payload: recipes })
+  const addInventoryItem = async (item: InventoryItem) => {
+    try {
+      const { addInventoryItem: addToSupabase } = await import('@/services/supabase')
+      const newItem = await addToSupabase(item)
+      dispatch({ type: 'ADD_INVENTORY_ITEM', payload: newItem })
+    } catch (error) {
+      // Fallback to local storage
+      dispatch({ type: 'ADD_INVENTORY_ITEM', payload: item })
+    }
+  }
+
+  const removeInventoryItem = async (itemId: string) => {
+    try {
+      const { deleteInventoryItem: deleteFromSupabase } = await import('@/services/supabase')
+      await deleteFromSupabase(itemId)
+      dispatch({ type: 'REMOVE_INVENTORY_ITEM', payload: itemId })
+    } catch (error) {
+      // Fallback to local storage
+      dispatch({ type: 'REMOVE_INVENTORY_ITEM', payload: itemId })
+    }
+  }
+
+  const updateInventoryItem = async (itemId: string, quantity: number) => {
+    try {
+      const { updateInventoryItem: updateInSupabase } = await import('@/services/supabase')
+      await updateInSupabase(itemId, quantity)
+      dispatch({ type: 'UPDATE_INVENTORY_ITEM', payload: { id: itemId, quantity } })
+    } catch (error) {
+      // Fallback to local storage
+      dispatch({ type: 'UPDATE_INVENTORY_ITEM', payload: { id: itemId, quantity } })
+    }
   }
 
   const setLoading = (loading: boolean) => {
@@ -175,37 +211,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CLEAR_ERROR' })
   }
 
-  const addToShoppingList = (items: RecipeIngredient[]) => {
-    if (!items || items.length === 0) return
-    dispatch({ type: 'ADD_TO_SHOPPING_LIST', payload: items })
-  }
-
-  const removeFromShoppingList = (
-    item: Pick<RecipeIngredient, 'name' | 'unit'>
-  ) => {
-    dispatch({ type: 'REMOVE_FROM_SHOPPING_LIST', payload: item })
-  }
-
-  const clearShoppingList = () => {
-    dispatch({ type: 'CLEAR_SHOPPING_LIST' })
-  }
-
-  const value: AppContextType = {
-    state,
-    setFamily,
-    setInventory,
-    setRecipes,
-    setLoading,
-    setError,
-    completeOnboarding,
-    initializeFridge,
-    clearError,
-    addToShoppingList,
-    removeFromShoppingList,
-    clearShoppingList,
-  }
-
-  return <AppContext.Provider value={value}>{children}</AppContext.Provider>
+  return (
+    <AppContext.Provider
+      value={{
+        state,
+        setFamily,
+        setInventory,
+        addInventoryItem,
+        removeInventoryItem,
+        updateInventoryItem,
+        setLoading,
+        setError,
+        completeOnboarding,
+        initializeFridge,
+        clearError,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  )
 }
 
 export function useApp() {

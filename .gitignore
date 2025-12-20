@@ -29,3 +29,12 @@ coverage/
 
 # TypeScript
 *.tsbuildinfo
+
+# API documentation files (optional - include if you want, ignore if sensitive)
+# api_receipt.txt
+# api_response.txt
+# schema.txt
+
+# Temporary files
+*.tmp
+*.temp

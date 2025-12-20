@@ -1,0 +1,31 @@
+Endpoints
+POST /api/recipes/recommend
+Request
+{  "member_ids": ["00000000-0000-0000-0000-000000000012", "00000000-0000-0000-0000-000000000013"],  "cuisine_style": "japanese"}
+Response
+}
+{  "success": true,  "recipes": [    {      "saved_recipe_id": "uuid",      "name": "string",      "cuisine_style": "japanese",      "matched_count": 7,      "total_count": 10,      "missing_count": 3    }  ]}
+GET /api/recipes/{saved_recipe_id}
+Response
+{  "success": true,  "recipe": {    "saved_recipe_id": "uuid",    "name": "string",    "cuisine_style": "japanese",    "matched_count": 7,    "total_count": 10,    "ingredients": [      { "name": "egg", "quantity": 2, "unit": "pcs", "required": true }    ],    "steps": ["step 1", "step 2"],    "missing_ingredients": [      { "name": "soy sauce", "quantity": 1, "unit": "bottle", "alternatives": [] }    ]  }}
+POST /api/recipes/{saved_recipe_id}/add-to-shopping-list
+Response
+}
+{  "success": true,  "added": [    { "name": "soy sauce", "quantity": 1, "unit": "bottle", "alternatives": [] }  ]}
+How it works (backend)
+Loads the selected members (member_ids) from family_members (same family)
+Loads current inventory from inventory_items
+Sends Gemini a strict-JSON prompt to generate exactly 5 recipes (name, ingredients, steps), constrained by all selected members’ allergies/restrictions
+Computes matched_count/total_count/missing_ingredients by comparing generated ingredient names to inventory names (normalized)
+Saves each recipe as a row in saved_recipes with cuisine_style, matched_count, total_count, and recipe_data (stores member_ids, ingredients, steps, missing list)
+When a recipe is selected, reads missing_ingredients from saved_recipes.recipe_data and upserts them into shopping_list_items (conflict key family_id,name,unit)
+How to send requests (curl)
+'
+curl -sS -X POST 'http://159.223.45.101:8000/api/recipes/recommend' \  -H 'Content-Type: application/json' \  -d '{"member_ids":["00000000-0000-0000-0000-000000000012","00000000-0000-0000-0000-000000000013"],"cuisine_style":"japanese"}'
+curl -sS 'http://159.223.45.101:8000/api/recipes/<saved_recipe_id>'
+curl -sS -X POST 'http://159.223.45.101:8000/api/recipes/<saved_recipe_id>/add-to-shopping-list'
+
+
+Estimated recipe cost is not returned by API; read saved_recipes.estimated_total_cost from DB if needed.
+
+Estimated unit cost is not returned by API; read/update shopping_list_items.estimated_unit_cost in DB.

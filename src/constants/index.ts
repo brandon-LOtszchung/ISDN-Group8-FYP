@@ -92,6 +92,5 @@ export const STORAGE_KEYS = {
   FAMILY_DATA: 'smart-fridge-family',
   ONBOARDING_COMPLETED: 'smart-fridge-onboarding',
   FRIDGE_INITIALIZED: 'smart-fridge-initialized',
-  USER_PREFERENCES: 'smart-fridge-preferences',
-  SHOPPING_LIST: 'smart-fridge-shopping-list',
+  INVENTORY: 'smart-fridge-inventory',
 } as const

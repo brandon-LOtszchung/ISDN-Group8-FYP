@@ -1,11 +1,12 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 import { InterfaceLanguage } from '@/types'
-import { t as translate } from '@/translations'
+import { t as translate, getLanguageName } from '@/translations'
 
 interface LanguageContextType {
   language: InterfaceLanguage
   setLanguage: (lang: InterfaceLanguage) => void
   t: (key: string) => string
+  getLanguageName: (lang: InterfaceLanguage) => string
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
@@ -28,7 +29,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, getLanguageName }}>
       {children}
     </LanguageContext.Provider>
   )

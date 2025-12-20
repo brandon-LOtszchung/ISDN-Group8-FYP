@@ -28,11 +28,6 @@ export interface Family {
 export interface FamilyPreferences {
   cookingSkillLevel: 'beginner' | 'intermediate' | 'advanced'
   budgetRange: 'low' | 'medium' | 'high'
-  mealTimes: {
-    breakfast: string
-    lunch: string
-    dinner: string
-  }
   preferredLanguage: InterfaceLanguage
 }
 
