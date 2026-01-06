@@ -14,7 +14,7 @@ class RecipeGenerator:
         load_dotenv()
         api_key = os.getenv("GEMINI_API_KEY")
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.model = genai.GenerativeModel("gemini-3-flash-preview")
 
     def generate(
         self,

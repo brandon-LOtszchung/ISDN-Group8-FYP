@@ -23,13 +23,12 @@ class RecipeRepository(SupabaseService):
                     "matched_count": matched_count,
                     "total_count": total_count,
                     "recipe_data": recipe_data,
-                }
+                },
+                returning="representation"
             )
-            .select("id")
-            .single()
             .execute()
         )
-        return resp.data["id"]
+        return resp.data[0]["id"]
 
     def get_saved_recipe(self, saved_recipe_id: str) -> Optional[Dict[str, Any]]:
         resp = (
@@ -37,10 +36,11 @@ class RecipeRepository(SupabaseService):
             .select("*")
             .eq("family_id", self.family_id)
             .eq("id", saved_recipe_id)
-            .single()
             .execute()
         )
-        return resp.data
+        if resp.data and len(resp.data) > 0:
+            return resp.data[0]
+        return None
 
     def upsert_shopping_list_items(self, items: List[Dict[str, Any]]) -> None:
         if not items:
