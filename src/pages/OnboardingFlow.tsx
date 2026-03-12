@@ -499,34 +499,6 @@ export default function OnboardingFlow() {
     }
   }
 
-  const handleNext = () => {
-    if (currentStep === 'members') {
-      if (currentMemberIndex < editingMembers.length - 1) {
-        setCurrentMemberIndex(prev => prev + 1)
-      } else {
-        setCurrentStep('summary')
-      }
-    } else if (currentStep === 'summary') {
-      completeOnboarding()
-    }
-  }
-
-  const handleBack = () => {
-    if (currentStep === 'cooking-intro') {
-      setCurrentStep('name')
-    } else if (currentStep === 'cooking') {
-      setCurrentStep('cooking-intro')
-    } else if (currentStep === 'budget') {
-      setCurrentStep('cooking')
-    } else if (currentStep === 'members' && currentMemberIndex > 0) {
-      setCurrentMemberIndex(prev => prev - 1)
-    } else if (currentStep === 'members') {
-      setCurrentStep('budget')
-    } else if (currentStep === 'summary') {
-      setCurrentStep('members')
-      setCurrentMemberIndex(editingMembers.length - 1)
-    }
-  }
 
   const currentMember = editingMembers[currentMemberIndex] || {
     id: '',

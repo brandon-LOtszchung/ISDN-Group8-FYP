@@ -11,7 +11,7 @@ type View = 'food-idea' | 'recipe-detail' | 'shopping-list'
 
 export default function PlanningPage() {
   const { colors } = useTheme()
-  const { t } = useLanguage()
+  const { t: _t } = useLanguage()
   const { state } = useApp()
   const [view, setView] = useState<View>('food-idea')
   
@@ -20,13 +20,13 @@ export default function PlanningPage() {
   const [selectedCuisine, setSelectedCuisine] = useState<string>('')
   const [recipes, setRecipes] = useState<(RecipeRecommendation & { estimatedCost: number | null })[]>([])
   const [isLoadingRecipes, setIsLoadingRecipes] = useState(false)
-  const [processingMessage, setProcessingMessage] = useState('')
+  const [_processingMessage, setProcessingMessage] = useState('')
   const [typedMessage, setTypedMessage] = useState('')
   
   // Recipe detail state
   const [selectedRecipe, setSelectedRecipe] = useState<RecipeDetail | null>(null)
   const [recipeDetailTab, setRecipeDetailTab] = useState<'steps' | 'ingredients'>('steps')
-  const [isLoadingDetail, setIsLoadingDetail] = useState(false)
+  const [_isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
   
   // Shopping list state

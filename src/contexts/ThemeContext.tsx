@@ -16,6 +16,9 @@ interface ThemeColors {
   success: string
   danger: string
   scan: string
+  surface: string          // card/section background
+  surfaceAlt: string       // nested element background
+  backgroundSubtle: string // subtle section tint
 }
 
 const warmColors: ThemeColors = {
@@ -26,6 +29,9 @@ const warmColors: ThemeColors = {
   success: '#27AE60',
   danger: '#C0392B',
   scan: '#F39C12',
+  surface: '#FFF8F5',
+  surfaceAlt: '#FFF0E8',
+  backgroundSubtle: '#FFF3EC',
 }
 
 const coolColors: ThemeColors = {
@@ -36,6 +42,9 @@ const coolColors: ThemeColors = {
   success: '#2ECC71',
   danger: '#E74C3C',
   scan: '#F39C12',
+  surface: '#F8F9FA',
+  surfaceAlt: '#F0F4F8',
+  backgroundSubtle: '#EEF2F7',
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined)
@@ -61,6 +70,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.style.setProperty('--color-success', colors.success)
     document.documentElement.style.setProperty('--color-danger', colors.danger)
     document.documentElement.style.setProperty('--color-scan', colors.scan)
+    document.documentElement.style.setProperty('--color-surface', colors.surface)
+    document.documentElement.style.setProperty('--color-surface-alt', colors.surfaceAlt)
+    document.documentElement.style.setProperty('--color-background-subtle', colors.backgroundSubtle)
   }, [colors])
 
   return (
