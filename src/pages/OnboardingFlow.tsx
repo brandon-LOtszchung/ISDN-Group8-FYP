@@ -27,6 +27,13 @@ export default function OnboardingFlow() {
   const { colors } = useTheme()
   const { t, language } = useLanguage()
   const [currentStep, setCurrentStep] = useState<Step>('name')
+
+  const STEP_ORDER: Step[] = [
+    'name', 'cooking-intro', 'cooking', 'cooking-feedback',
+    'budget', 'budget-feedback', 'members', 'summary',
+  ]
+  const currentStepNumber = STEP_ORDER.indexOf(currentStep) + 1
+  const totalSteps = STEP_ORDER.length
   const [currentMemberIndex, setCurrentMemberIndex] = useState(0)
   const [editingFamily, setEditingFamily] = useState<Family | null>(state.family)
   const [editingMembers, setEditingMembers] = useState<FamilyMember[]>(state.family?.members || [])
@@ -579,8 +586,39 @@ export default function OnboardingFlow() {
       )}
 
       <TopBar />
-      
-      <div style={{ 
+
+      {/* Step progress bar */}
+      <div style={{
+        padding: '12px 20px 8px',
+        backgroundColor: colors.background,
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+          {STEP_ORDER.map((_, i) => (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                height: '4px',
+                borderRadius: '2px',
+                backgroundColor:
+                  i < currentStepNumber - 1
+                    ? colors.success
+                    : i === currentStepNumber - 1
+                      ? colors.primary
+                      : colors.border,
+                transition: 'background-color 0.3s ease',
+              }}
+            />
+          ))}
+        </div>
+        <div style={{ fontSize: '12px', color: colors.text, opacity: 0.5 }}>
+          Step {currentStepNumber} of {totalSteps}
+        </div>
+      </div>
+
+      <div style={{
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
