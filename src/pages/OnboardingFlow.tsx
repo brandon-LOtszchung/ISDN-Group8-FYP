@@ -57,6 +57,10 @@ export default function OnboardingFlow() {
   const [feedbackTypedText, setFeedbackTypedText] = useState('')
   const feedbackTypingRef = useRef<{ intervals: NodeJS.Timeout[], timeouts: NodeJS.Timeout[] }>({ intervals: [], timeouts: [] })
 
+  const [cookingIntroReady, setCookingIntroReady] = useState(false)
+  const [cookingFeedbackReady, setCookingFeedbackReady] = useState(false)
+  const [budgetFeedbackReady, setBudgetFeedbackReady] = useState(false)
+
   useEffect(() => {
     if (state.family) {
       setEditingFamily(state.family)
@@ -249,6 +253,7 @@ export default function OnboardingFlow() {
   // Typewriter effect for cooking intro page
   useEffect(() => {
     if (currentStep === 'cooking-intro') {
+      setCookingIntroReady(false)
       // Clear previous animations
       allIntervalsRef.current.intervals.forEach(id => clearInterval(id))
       allIntervalsRef.current.timeouts.forEach(id => clearTimeout(id))
@@ -293,8 +298,7 @@ export default function OnboardingFlow() {
                       clearInterval(interval3)
                       allIntervalsRef.current.intervals = allIntervalsRef.current.intervals.filter(id => id !== interval3)
                       const timeout3 = setTimeout(() => {
-                        // Auto-transition to next page with downward slide effect
-                        setCurrentStep('cooking')
+                        setCookingIntroReady(true)
                       }, 1200)
                       allIntervalsRef.current.timeouts.push(timeout3)
                     }
@@ -361,33 +365,30 @@ export default function OnboardingFlow() {
       setFeedbackCurrentLineIndex(0)
       setFeedbackTypedText('')
       setCurrentStep('cooking-feedback')
+      setCookingFeedbackReady(false)
       setShowFeedback(true)
-      
+
       // Clear any existing typing intervals/timeouts
       feedbackTypingRef.current.intervals.forEach(clearInterval)
       feedbackTypingRef.current.timeouts.forEach(clearTimeout)
       feedbackTypingRef.current = { intervals: [], timeouts: [] }
-      
+
       // Start typing effect
       let currentLineIndex = 0
       let currentCharIndex = 0
       const currentLines = lines
       const typedLinesArray: string[] = []
-      
+
       const typeLine = () => {
         if (currentLineIndex >= currentLines.length) {
-          // All lines typed, wait 5 seconds then transition
+          // All lines typed — show Continue button
           const timeout = setTimeout(() => {
-            setShowFeedback(false)
-            setCurrentStep('budget')
-            setFeedbackTypedLines([])
-            setFeedbackCurrentLineIndex(0)
-            setFeedbackTypedText('')
-          }, 5000)
+            setCookingFeedbackReady(true)
+          }, 500)
           feedbackTypingRef.current.timeouts.push(timeout)
           return
         }
-        
+
         const currentLine = currentLines[currentLineIndex]
         if (currentCharIndex < currentLine.length) {
           typedLinesArray[currentLineIndex] = currentLine.substring(0, currentCharIndex + 1)
@@ -410,14 +411,10 @@ export default function OnboardingFlow() {
             }, 200)
             feedbackTypingRef.current.timeouts.push(timeout)
           } else {
-            // All lines typed, wait 5 seconds then transition
+            // All lines typed — show Continue button
             const timeout = setTimeout(() => {
-              setShowFeedback(false)
-              setCurrentStep('budget')
-              setFeedbackTypedLines([])
-              setFeedbackCurrentLineIndex(0)
-              setFeedbackTypedText('')
-            }, 5000)
+              setCookingFeedbackReady(true)
+            }, 500)
             feedbackTypingRef.current.timeouts.push(timeout)
           }
         }
@@ -438,34 +435,30 @@ export default function OnboardingFlow() {
       setFeedbackCurrentLineIndex(0)
       setFeedbackTypedText('')
       setCurrentStep('budget-feedback')
+      setBudgetFeedbackReady(false)
       setShowFeedback(true)
-      
+
       // Clear any existing typing intervals/timeouts
       feedbackTypingRef.current.intervals.forEach(clearInterval)
       feedbackTypingRef.current.timeouts.forEach(clearTimeout)
       feedbackTypingRef.current = { intervals: [], timeouts: [] }
-      
+
       // Start typing effect
       let currentLineIndex = 0
       let currentCharIndex = 0
       const currentLines = lines
       const typedLinesArray: string[] = []
-      
+
       const typeLine = () => {
         if (currentLineIndex >= currentLines.length) {
-          // All lines typed, wait 5 seconds then transition
+          // All lines typed — show Continue button
           const timeout = setTimeout(() => {
-            setShowFeedback(false)
-            setCurrentStep('members')
-            setCurrentMemberIndex(0)
-            setFeedbackTypedLines([])
-            setFeedbackCurrentLineIndex(0)
-            setFeedbackTypedText('')
-          }, 5000)
+            setBudgetFeedbackReady(true)
+          }, 500)
           feedbackTypingRef.current.timeouts.push(timeout)
           return
         }
-        
+
         const currentLine = currentLines[currentLineIndex]
         if (currentCharIndex < currentLine.length) {
           typedLinesArray[currentLineIndex] = currentLine.substring(0, currentCharIndex + 1)
@@ -488,15 +481,10 @@ export default function OnboardingFlow() {
             }, 200)
             feedbackTypingRef.current.timeouts.push(timeout)
           } else {
-            // All lines typed, wait 5 seconds then transition
+            // All lines typed — show Continue button
             const timeout = setTimeout(() => {
-              setShowFeedback(false)
-              setCurrentStep('members')
-              setCurrentMemberIndex(0)
-              setFeedbackTypedLines([])
-              setFeedbackCurrentLineIndex(0)
-              setFeedbackTypedText('')
-            }, 5000)
+              setBudgetFeedbackReady(true)
+            }, 500)
             feedbackTypingRef.current.timeouts.push(timeout)
           }
         }
@@ -1010,7 +998,29 @@ export default function OnboardingFlow() {
                 )}
               </div>
             )}
-            
+
+            {cookingIntroReady && (
+              <button
+                onClick={() => setCurrentStep('cooking')}
+                style={{
+                  marginTop: '32px',
+                  padding: '16px 48px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.scan})`,
+                  color: '#FFFFFF',
+                  fontSize: '17px',
+                  fontWeight: 600,
+                  borderRadius: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: `0 4px 16px ${colors.primary}40`,
+                  animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+              >
+                Continue →
+              </button>
+            )}
+
           </div>
         )}
 
@@ -1232,6 +1242,36 @@ export default function OnboardingFlow() {
                 return null
               })}
             </div>
+
+            {cookingFeedbackReady && (
+              <button
+                onClick={() => {
+                  setShowFeedback(false)
+                  setFeedbackTypedLines([])
+                  setFeedbackCurrentLineIndex(0)
+                  setFeedbackTypedText('')
+                  setCurrentStep('budget')
+                }}
+                style={{
+                  marginTop: '32px',
+                  padding: '16px 48px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.scan})`,
+                  color: '#FFFFFF',
+                  fontSize: '17px',
+                  fontWeight: 600,
+                  borderRadius: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: `0 4px 16px ${colors.primary}40`,
+                  animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              >
+                Continue →
+              </button>
+            )}
           </div>
         )}
 
@@ -1485,6 +1525,37 @@ export default function OnboardingFlow() {
                 return null
               })}
             </div>
+
+            {budgetFeedbackReady && (
+              <button
+                onClick={() => {
+                  setShowFeedback(false)
+                  setFeedbackTypedLines([])
+                  setFeedbackCurrentLineIndex(0)
+                  setFeedbackTypedText('')
+                  setCurrentStep('members')
+                  setCurrentMemberIndex(0)
+                }}
+                style={{
+                  marginTop: '32px',
+                  padding: '16px 48px',
+                  border: 'none',
+                  background: `linear-gradient(135deg, ${colors.primary}, ${colors.scan})`,
+                  color: '#FFFFFF',
+                  fontSize: '17px',
+                  fontWeight: 600,
+                  borderRadius: '16px',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: `0 4px 16px ${colors.primary}40`,
+                  animation: 'fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              >
+                Continue →
+              </button>
+            )}
           </div>
         )}
 
