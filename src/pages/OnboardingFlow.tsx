@@ -60,6 +60,7 @@ export default function OnboardingFlow() {
   const [cookingIntroReady, setCookingIntroReady] = useState(false)
   const [cookingFeedbackReady, setCookingFeedbackReady] = useState(false)
   const [budgetFeedbackReady, setBudgetFeedbackReady] = useState(false)
+  const [memberSaved, setMemberSaved] = useState(false)
 
   useEffect(() => {
     if (state.family) {
@@ -345,6 +346,14 @@ export default function OnboardingFlow() {
     const updated = [...editingMembers]
     updated[currentMemberIndex] = member
     setEditingMembers(updated)
+  }
+
+  const handleSaveMember = (advance: () => void) => {
+    setMemberSaved(true)
+    setTimeout(() => {
+      setMemberSaved(false)
+      advance()
+    }, 800)
   }
 
   const handleNameSubmit = () => {
@@ -1953,9 +1962,7 @@ export default function OnboardingFlow() {
               animationFillMode: 'both'
             }}>
               <button
-                onClick={() => {
-                  setCurrentStep('summary')
-                }}
+                onClick={() => handleSaveMember(() => setCurrentStep('summary'))}
                 style={{
                   flex: 1,
                   padding: '16px',
@@ -1980,7 +1987,7 @@ export default function OnboardingFlow() {
                 Finish
               </button>
               <button
-                onClick={() => {
+                onClick={() => handleSaveMember(() => {
                   const newMember: FamilyMember = {
                     id: '',
                     name: '',
@@ -1989,14 +1996,14 @@ export default function OnboardingFlow() {
                     allergies: [],
                     healthConditions: [],
                     preferences: {
-                      spiceLevel: 'mild' as 'mild',
+                      spiceLevel: 'mild' as const,
                       favoriteCuisines: [],
-                      dislikedIngredients: []
-                    }
+                      dislikedIngredients: [],
+                    },
                   }
-                  setEditingMembers([...editingMembers, newMember])
-                  setCurrentMemberIndex(editingMembers.length)
-                }}
+                  setEditingMembers(prev => [...prev, newMember])
+                  setCurrentMemberIndex(prev => prev + 1)
+                })}
                 style={{
                   flex: 1,
                   padding: '16px',
@@ -2019,6 +2026,27 @@ export default function OnboardingFlow() {
               >
                 Add More
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Member saved confirmation overlay */}
+        {memberSaved && (
+          <div style={{
+            position: 'fixed',
+            top: 0, left: 0, right: 0, bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(39, 174, 96, 0.08)',
+            zIndex: 500,
+            pointerEvents: 'none',
+          }}>
+            <div style={{
+              fontSize: '80px',
+              animation: 'bounceIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+            }}>
+              ✅
             </div>
           </div>
         )}
@@ -2168,6 +2196,11 @@ export default function OnboardingFlow() {
         @keyframes blink {
           0%, 100% { opacity: 1; }
           50% { opacity: 0; }
+        }
+        @keyframes bounceIn {
+          0% { transform: scale(0.3); opacity: 0; }
+          60% { transform: scale(1.15); }
+          100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
     </div>
