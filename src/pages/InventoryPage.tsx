@@ -8,6 +8,21 @@ import CameraUpload from '@/components/CameraUpload'
 import ScanPromptPopup from '@/components/ScanPromptPopup'
 import PlanningPage from './PlanningPage'
 
+const CATEGORY_COLORS: Record<string, string> = {
+  vegetables: '#4CAF50',
+  fruits:     '#FF9800',
+  meat:       '#F44336',
+  seafood:    '#2196F3',
+  dairy:      '#03A9F4',
+  grains:     '#9C27B0',
+  condiments: '#FF5722',
+  beverages:  '#00BCD4',
+  snacks:     '#E91E63',
+  frozen:     '#3F51B5',
+  canned:     '#795548',
+  other:      '#9E9E9E',
+}
+
 export default function InventoryPage() {
   const { state, removeInventoryItem, updateInventoryItem, initializeFridge } = useApp()
   const { colors } = useTheme()
@@ -218,8 +233,8 @@ export default function InventoryPage() {
                       width: '100%',
                       padding: '10px 12px',
                       border: `1px solid ${colors.border}`,
-                      borderBottom: 'none',
-                      backgroundColor: colors.background,
+                      borderLeft: `4px solid ${CATEGORY_COLORS[category] ?? colors.border}`,
+                      backgroundColor: `${CATEGORY_COLORS[category] ?? colors.border}08`,
                       color: colors.text,
                       fontSize: '14px',
                       fontWeight: 600,
@@ -234,19 +249,37 @@ export default function InventoryPage() {
                       e.currentTarget.style.backgroundColor = `${colors.primary}10`
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.backgroundColor = colors.background
+                      e.currentTarget.style.backgroundColor = `${CATEGORY_COLORS[category] ?? colors.border}08`
                     }}
                   >
                     <span>{t(category)}</span>
-                    <span style={{ 
-                      fontSize: '12px', 
-                      color: colors.text, 
-                      opacity: 0.6,
-                      transition: 'transform 0.2s ease',
-                      transform: collapsedCategories.has(category as ItemCategory) ? 'rotate(0deg)' : 'rotate(180deg)'
-                    }}>
-                      ▼
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        color: CATEGORY_COLORS[category] ?? colors.text,
+                        backgroundColor: `${CATEGORY_COLORS[category] ?? colors.border}20`,
+                        padding: '2px 8px',
+                        borderRadius: '10px',
+                        flexShrink: 0,
+                      }}>
+                        {items.length} {items.length === 1 ? 'item' : 'items'}
+                      </span>
+                      <span
+                        aria-label={collapsedCategories.has(category as ItemCategory)
+                          ? `Expand ${t(category)}`
+                          : `Collapse ${t(category)}`}
+                        style={{
+                          fontSize: '12px',
+                          color: colors.text,
+                          opacity: 0.6,
+                          transition: 'transform 0.2s ease',
+                          transform: collapsedCategories.has(category as ItemCategory) ? 'rotate(0deg)' : 'rotate(180deg)',
+                        }}
+                      >
+                        ▼
+                      </span>
+                    </div>
                   </button>
                   {!collapsedCategories.has(category as ItemCategory) && (
                     <div style={{ 
@@ -284,9 +317,10 @@ export default function InventoryPage() {
                           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                             <button
                               onClick={() => handleAddQuantity(item)}
+                              aria-label={`Increase quantity of ${item.name}`}
                               style={{
-                                width: '28px',
-                                height: '28px',
+                                width: '44px',
+                                height: '44px',
                                 border: 'none',
                                 backgroundColor: colors.success,
                                 color: '#FFFFFF',
@@ -311,9 +345,10 @@ export default function InventoryPage() {
                             </button>
                             <button
                               onClick={() => handleRemoveQuantity(item)}
+                              aria-label={`Decrease quantity of ${item.name}`}
                               style={{
-                                width: '28px',
-                                height: '28px',
+                                width: '44px',
+                                height: '44px',
                                 border: 'none',
                                 backgroundColor: colors.danger,
                                 color: '#FFFFFF',
