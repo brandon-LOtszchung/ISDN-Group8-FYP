@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useApp } from '@/contexts/AppContext'
 import { useTheme } from '@/contexts/ThemeContext'
 import { useLanguage } from '@/contexts/LanguageContext'
@@ -32,6 +32,9 @@ export default function InventoryPage() {
   const [activeTab, setActiveTab] = useState<'inventory' | 'planning'>('inventory')
   const [collapsedCategories, setCollapsedCategories] = useState<Set<ItemCategory>>(new Set())
   const [animatingItems, setAnimatingItems] = useState<Set<string>>(new Set())
+  const [swipedItem, setSwipedItem] = useState<string | null>(null)
+  const swipeStartX = useRef<number>(0)
+  const swipeStartY = useRef<number>(0)
 
   // Show popup only if inventory is empty (new user) and fridge not initialized
   useEffect(() => {
@@ -54,6 +57,21 @@ export default function InventoryPage() {
     acc[item.category].push(item)
     return acc
   }, {} as Record<ItemCategory, InventoryItem[]>)
+
+  const handleTouchStart = (e: React.TouchEvent, _itemId: string) => {
+    swipeStartX.current = e.touches[0].clientX
+    swipeStartY.current = e.touches[0].clientY
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent, itemId: string) => {
+    const dx = e.changedTouches[0].clientX - swipeStartX.current
+    const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY.current)
+    if (dx < -60 && dy < 30) {
+      setSwipedItem(itemId)
+    } else if (dx > 20) {
+      setSwipedItem(null)
+    }
+  }
 
   const toggleCategory = (category: ItemCategory) => {
     setCollapsedCategories(prev => {
@@ -288,19 +306,61 @@ export default function InventoryPage() {
                       animation: 'slideDown 0.2s ease'
                     }}>
                       {items.map((item) => (
-                        <div
-                          key={item.id}
-                          style={{
-                            padding: '10px 12px',
-                            borderBottom: `1px solid ${colors.border}`,
+                        <div key={item.id} style={{ position: 'relative', overflow: 'hidden' }}>
+                          {/* Red delete area — behind the row */}
+                          <div style={{
+                            position: 'absolute',
+                            right: 0, top: 0, bottom: 0,
+                            width: '80px',
+                            backgroundColor: colors.danger,
                             display: 'flex',
-                            justifyContent: 'space-between',
                             alignItems: 'center',
-                            transition: 'all 0.2s ease',
-                            backgroundColor: animatingItems.has(item.id) ? `${colors.primary}10` : 'transparent',
-                            animation: animatingItems.has(item.id) ? 'pulse 0.3s ease' : 'none',
-                          }}
-                        >
+                            justifyContent: 'center',
+                            color: '#FFFFFF',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                          }}>
+                            Delete
+                          </div>
+
+                          {/* Tap target over revealed delete area */}
+                          {swipedItem === item.id && (
+                            <div
+                              aria-label={`Delete ${item.name}`}
+                              role="button"
+                              tabIndex={0}
+                              style={{
+                                position: 'absolute',
+                                right: 0, top: 0, bottom: 0,
+                                width: '80px',
+                                cursor: 'pointer',
+                                zIndex: 2,
+                              }}
+                              onClick={() => {
+                                removeInventoryItem(item.id)
+                                setSwipedItem(null)
+                              }}
+                            />
+                          )}
+
+                          <div
+                            onTouchStart={(e) => handleTouchStart(e, item.id)}
+                            onTouchEnd={(e) => handleTouchEnd(e, item.id)}
+                            onClick={() => { if (swipedItem === item.id) setSwipedItem(null) }}
+                            style={{
+                              padding: '10px 12px',
+                              borderBottom: `1px solid ${colors.border}`,
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              transition: 'all 0.2s ease',
+                              backgroundColor: animatingItems.has(item.id) ? `${colors.primary}10` : 'transparent',
+                              animation: animatingItems.has(item.id) ? 'pulse 0.3s ease' : 'none',
+                              transform: swipedItem === item.id ? 'translateX(-80px)' : 'translateX(0)',
+                              position: 'relative',
+                              zIndex: 1,
+                            }}
+                          >
                           <div style={{ flex: 1, fontSize: '14px', color: colors.text }}>
                             <span style={{ fontWeight: 500 }}>{item.name}</span>
                             <span style={{ 
@@ -371,6 +431,7 @@ export default function InventoryPage() {
                             >
                               −
                             </button>
+                          </div>
                           </div>
                         </div>
                       ))}
