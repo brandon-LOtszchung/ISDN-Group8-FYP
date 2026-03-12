@@ -16,17 +16,17 @@ export default function CameraUpload({ onClose }: CameraUploadProps) {
   const [isDetecting, setIsDetecting] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [processingMessage, setProcessingMessage] = useState('')
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
+  const galleryInputRef = useRef<HTMLInputElement>(null)
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     if (files.length > 0) {
       const newImages = [...images, ...files].slice(0, 3)
       setImages(newImages)
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
+      // Reset file inputs
+      if (cameraInputRef.current) cameraInputRef.current.value = ''
+      if (galleryInputRef.current) galleryInputRef.current.value = ''
     }
   }
 
@@ -178,8 +178,18 @@ export default function CameraUpload({ onClose }: CameraUploadProps) {
             Take photos or upload from your gallery
           </div>
 
+          {/* Camera capture */}
           <input
-            ref={fileInputRef}
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleFileSelect}
+            style={{ display: 'none' }}
+          />
+          {/* Gallery picker */}
+          <input
+            ref={galleryInputRef}
             type="file"
             accept="image/*"
             multiple
@@ -193,7 +203,7 @@ export default function CameraUpload({ onClose }: CameraUploadProps) {
             gap: '12px', 
             marginBottom: '16px' 
           }}>
-            {[0, 1, 2].map((index) => (
+            {Array.from({ length: Math.min(images.length + 1, 3) }).map((_, index) => (
               <div
                 key={index}
                 style={{
@@ -214,17 +224,38 @@ export default function CameraUpload({ onClose }: CameraUploadProps) {
                     <img
                       src={URL.createObjectURL(images[index])}
                       alt={`Photo ${index + 1}`}
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
+                      style={{
+                        width: '100%',
+                        height: '100%',
                         objectFit: 'cover',
-                        transition: 'transform 0.2s ease'
+                        transition: 'transform 0.2s ease',
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
                       onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     />
+                    {/* Checkmark badge */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '6px',
+                      left: '6px',
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: '50%',
+                      backgroundColor: colors.success,
+                      color: '#FFFFFF',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: `0 2px 6px ${colors.success}60`,
+                      pointerEvents: 'none',
+                    }}>
+                      ✓
+                    </div>
                     <button
                       onClick={() => handleRemoveImage(index)}
+                      aria-label={`Remove image ${index + 1}`}
                       style={{
                         position: 'absolute',
                         top: '6px',
@@ -255,45 +286,59 @@ export default function CameraUpload({ onClose }: CameraUploadProps) {
                     </button>
                   </>
                 ) : (
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
-                      backgroundColor: 'transparent',
-                      color: colors.text,
-                      fontSize: '32px',
-                      transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '4px'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.color = colors.scan
-                      e.currentTarget.style.transform = 'scale(1.05)'
-                      e.currentTarget.style.backgroundColor = `${colors.scan}08`
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.color = colors.text
-                      e.currentTarget.style.transform = 'scale(1)'
-                      e.currentTarget.style.backgroundColor = 'transparent'
-                    }}
-                  >
-                    <span style={{ fontSize: '40px', lineHeight: '1' }}>+</span>
-                    <span style={{ 
-                      fontSize: '10px', 
-                      opacity: 0.6,
-                      fontWeight: 500,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px'
-                    }}>
-                      Add
-                    </span>
-                  </button>
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    padding: '12px',
+                    width: '100%',
+                    height: '100%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <button
+                      onClick={() => cameraInputRef.current?.click()}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        border: `1.5px solid ${colors.border}`,
+                        borderRadius: '8px',
+                        backgroundColor: 'transparent',
+                        color: colors.text,
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      📷 Camera
+                    </button>
+                    <button
+                      onClick={() => galleryInputRef.current?.click()}
+                      style={{
+                        width: '100%',
+                        padding: '8px',
+                        border: `1.5px solid ${colors.border}`,
+                        borderRadius: '8px',
+                        backgroundColor: 'transparent',
+                        color: colors.text,
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '4px',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      🖼 Gallery
+                    </button>
+                  </div>
                 )}
               </div>
             ))}
