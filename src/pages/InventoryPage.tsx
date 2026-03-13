@@ -42,6 +42,8 @@ export default function InventoryPage() {
   const swipeStartY = useRef<number>(0)
   const [windowWidth, setWindowWidth] = useState(() => window.innerWidth)
   const isWide = windowWidth >= 640
+  const [confirmDeleteItem, setConfirmDeleteItem] =
+    useState<InventoryItem | null>(null)
 
   // Track window width for responsive delete button layout
   useEffect(() => {
@@ -574,7 +576,7 @@ export default function InventoryPage() {
                                     {isWide && (
                                       <button
                                         onClick={() =>
-                                          removeInventoryItem(item.id)
+                                          setConfirmDeleteItem(item)
                                         }
                                         aria-label={`Delete ${item.name}`}
                                         style={{
@@ -784,6 +786,113 @@ export default function InventoryPage() {
           onEmpty={handleEmptyFridge}
           onClose={() => setShowPopup(false)}
         />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {confirmDeleteItem && (
+        <div
+          onClick={() => setConfirmDeleteItem(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0,0,0,0.45)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 200,
+            animation: 'fadeIn 0.15s ease',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: colors.background,
+              borderRadius: '16px',
+              padding: '24px',
+              width: 'min(320px, 90vw)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+              animation: 'fadeInUp 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
+            <div style={{ fontSize: '20px', marginBottom: '8px' }}>🗑</div>
+            <div
+              style={{
+                fontSize: '16px',
+                fontWeight: 600,
+                color: colors.text,
+                marginBottom: '8px',
+              }}
+            >
+              Delete item?
+            </div>
+            <div
+              style={{
+                fontSize: '14px',
+                color: colors.text,
+                opacity: 0.7,
+                marginBottom: '24px',
+                lineHeight: '1.4',
+              }}
+            >
+              Remove <strong>{confirmDeleteItem.name}</strong> from your
+              inventory?
+            </div>
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setConfirmDeleteItem(null)}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: '10px',
+                  backgroundColor: 'transparent',
+                  color: colors.text,
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = `${colors.text}08`)
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = 'transparent')
+                }
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  removeInventoryItem(confirmDeleteItem.id)
+                  setConfirmDeleteItem(null)
+                }}
+                style={{
+                  flex: 1,
+                  padding: '12px',
+                  border: 'none',
+                  borderRadius: '10px',
+                  backgroundColor: colors.danger,
+                  color: '#FFFFFF',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: `0 2px 8px ${colors.danger}40`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.filter = 'brightness(1.1)'
+                  e.currentTarget.style.boxShadow = `0 4px 12px ${colors.danger}60`
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.filter = 'brightness(1)'
+                  e.currentTarget.style.boxShadow = `0 2px 8px ${colors.danger}40`
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       <style>{`
