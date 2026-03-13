@@ -13,46 +13,49 @@ export default function TopBar() {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-50 bg-white border-b"
+      className="fixed top-0 left-0 right-0 z-50 border-b"
       style={{
         borderColor: colors.border,
         height: '64px',
         padding: '0 20px',
+        backgroundColor: colors.background,
       }}
     >
       <div className="flex items-center justify-between h-full">
         {/* Left: App Name */}
         <div
           style={{
-            fontSize: '15px',
-            fontWeight: 700,
-            background: `linear-gradient(135deg, ${colors.primary}, ${colors.scan})`,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            letterSpacing: '0.3px',
-            fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
             display: 'inline-flex',
             alignItems: 'center',
             gap: '4px',
-            transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            lineHeight: '1.2',
             maxWidth: 'calc(100vw - 120px)',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
+            flexShrink: 1,
           }}
         >
-          <span style={{
-            display: 'inline-block',
-            width: '4px',
-            height: '4px',
-            background: `linear-gradient(135deg, ${colors.primary}, ${colors.scan})`,
-            borderRadius: '50%',
-            transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            flexShrink: 0,
-          }} />
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              display: 'inline-block',
+              width: '4px',
+              height: '4px',
+              background: `linear-gradient(135deg, ${colors.primary}, ${colors.scan})`,
+              borderRadius: '50%',
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              fontSize: '15px',
+              fontWeight: 700,
+              color: colors.primary,
+              letterSpacing: '0.3px',
+              fontFamily:
+                '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif',
+              lineHeight: '1.2',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             Your Cooking Partner
           </span>
         </div>
@@ -62,7 +65,9 @@ export default function TopBar() {
           {/* Theme Toggle — single icon button */}
           <button
             onClick={() => setTheme(theme === 'warm' ? 'cool' : 'warm')}
-            aria-label={theme === 'warm' ? 'Switch to cool theme' : 'Switch to warm theme'}
+            aria-label={
+              theme === 'warm' ? 'Switch to cool theme' : 'Switch to warm theme'
+            }
             style={{
               width: '36px',
               height: '36px',
@@ -132,7 +137,11 @@ export default function TopBar() {
           <div
             onClick={() => setShowProfile(false)}
             style={{
-              position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
               backgroundColor: 'rgba(0,0,0,0.4)',
               zIndex: 200,
               animation: 'fadeIn 0.2s ease',
@@ -142,7 +151,9 @@ export default function TopBar() {
           <div
             style={{
               position: 'fixed',
-              bottom: 0, left: 0, right: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
               backgroundColor: colors.background,
               borderRadius: '20px 20px 0 0',
               zIndex: 201,
@@ -154,46 +165,112 @@ export default function TopBar() {
             }}
           >
             {/* Drag handle */}
-            <div style={{
-              width: '40px', height: '4px',
-              backgroundColor: colors.border,
-              borderRadius: '2px',
-              margin: '12px auto 20px',
-            }} />
+            <div
+              style={{
+                width: '40px',
+                height: '4px',
+                backgroundColor: colors.border,
+                borderRadius: '2px',
+                margin: '12px auto 20px',
+              }}
+            />
 
             {/* Family name heading */}
-            <div style={{ padding: '0 20px 16px', borderBottom: `1px solid ${colors.border}` }}>
-              <div style={{ fontSize: '20px', fontWeight: 700, color: colors.text }}>
+            <div
+              style={{
+                padding: '0 20px 16px',
+                borderBottom: `1px solid ${colors.border}`,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '20px',
+                  fontWeight: 700,
+                  color: colors.text,
+                }}
+              >
                 {state?.family?.name || 'Your Family'}
               </div>
-              <div style={{ fontSize: '13px', color: colors.text, opacity: 0.6, marginTop: '4px' }}>
-                {state?.family?.members?.length ?? 0} member{(state?.family?.members?.length ?? 0) !== 1 ? 's' : ''}
+              <div
+                style={{
+                  fontSize: '13px',
+                  color: colors.text,
+                  opacity: 0.6,
+                  marginTop: '4px',
+                }}
+              >
+                {state?.family?.members?.length ?? 0} member
+                {(state?.family?.members?.length ?? 0) !== 1 ? 's' : ''}
               </div>
             </div>
 
             {/* Family members list */}
             {(state?.family?.members?.length ?? 0) > 0 && (
-              <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}` }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, color: colors.text, opacity: 0.5, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <div
+                style={{
+                  padding: '16px 20px',
+                  borderBottom: `1px solid ${colors.border}`,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: colors.text,
+                    opacity: 0.5,
+                    marginBottom: '12px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                  }}
+                >
                   Members
                 </div>
-                {state!.family!.members.map(member => (
-                  <div key={member.id} style={{
-                    display: 'flex', alignItems: 'center', gap: '12px',
-                    padding: '8px 0',
-                  }}>
-                    <div style={{
-                      width: '36px', height: '36px', borderRadius: '50%',
-                      background: `linear-gradient(135deg, ${colors.primary}60, ${colors.scan}60)`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '14px', fontWeight: 700, color: colors.primary,
-                    }}>
+                {state!.family!.members.map((member) => (
+                  <div
+                    key={member.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '8px 0',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        background: `linear-gradient(135deg, ${colors.primary}60, ${colors.scan}60)`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        color: colors.primary,
+                      }}
+                    >
                       {member.name[0]?.toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontSize: '15px', fontWeight: 500, color: colors.text }}>{member.name}</div>
+                      <div
+                        style={{
+                          fontSize: '15px',
+                          fontWeight: 500,
+                          color: colors.text,
+                        }}
+                      >
+                        {member.name}
+                      </div>
                       {member.age > 0 && (
-                        <div style={{ fontSize: '12px', color: colors.text, opacity: 0.5 }}>Age {member.age}</div>
+                        <div
+                          style={{
+                            fontSize: '12px',
+                            color: colors.text,
+                            opacity: 0.5,
+                          }}
+                        >
+                          Age {member.age}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -202,30 +279,50 @@ export default function TopBar() {
             )}
 
             {/* Language selector */}
-            <div style={{ padding: '16px 20px', borderBottom: `1px solid ${colors.border}` }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: colors.text, opacity: 0.5, marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div
+              style={{
+                padding: '16px 20px',
+                borderBottom: `1px solid ${colors.border}`,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 600,
+                  color: colors.text,
+                  opacity: 0.5,
+                  marginBottom: '12px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              >
                 Language
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                {(['en', 'zh-HK', 'fil', 'id'] as InterfaceLanguage[]).map(lang => (
-                  <button
-                    key={lang}
-                    onClick={() => setLanguage(lang)}
-                    style={{
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      border: `1.5px solid ${language === lang ? colors.primary : colors.border}`,
-                      background: language === lang ? `${colors.primary}15` : 'transparent',
-                      color: language === lang ? colors.primary : colors.text,
-                      fontSize: '14px',
-                      fontWeight: language === lang ? 600 : 500,
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                    }}
-                  >
-                    {getLanguageName(lang)}
-                  </button>
-                ))}
+                {(['en', 'zh-HK', 'fil', 'id'] as InterfaceLanguage[]).map(
+                  (lang) => (
+                    <button
+                      key={lang}
+                      onClick={() => setLanguage(lang)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: `1.5px solid ${language === lang ? colors.primary : colors.border}`,
+                        background:
+                          language === lang
+                            ? `${colors.primary}15`
+                            : 'transparent',
+                        color: language === lang ? colors.primary : colors.text,
+                        fontSize: '14px',
+                        fontWeight: language === lang ? 600 : 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      {getLanguageName(lang)}
+                    </button>
+                  )
+                )}
               </div>
             </div>
 
