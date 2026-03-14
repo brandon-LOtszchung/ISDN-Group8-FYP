@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext'
 import { useApp } from '@/contexts/AppContext'
 import { CUISINE_OPTIONS } from '@/constants'
 import { recommendRecipes, getRecipeDetail, addToShoppingList, type RecipeRecommendation, type RecipeDetail } from '@/services/recipeApi'
-import { getRecipeCost, getShoppingList, updateShoppingListItem, type ShoppingListItem, supabase } from '@/services/supabase'
+import { getRecipeCost, getShoppingList, updateShoppingListItem, deleteShoppingListItems, type ShoppingListItem, supabase } from '@/services/supabase'
 import { shareRecipe } from '@/utils/share'
 
 type View = 'food-idea' | 'recipe-detail' | 'shopping-list'
@@ -206,6 +206,14 @@ export default function PlanningPage() {
       recipe.total_count,
       recipe.estimatedCost
     )
+  }
+
+  const handleClearPurchased = async () => {
+    const purchasedIds = shoppingList.filter(i => i.is_purchased).map(i => i.id)
+    if (purchasedIds.length === 0) return
+    await deleteShoppingListItems(purchasedIds)
+    const list = await getShoppingList()
+    setShoppingList(list)
   }
 
   const toggleMemberSelection = (memberId: string) => {
@@ -869,63 +877,132 @@ export default function PlanningPage() {
                 </div>
               ) : (
                 <div>
-                  {shoppingList.map((item) => (
-                    <div
-                      key={item.id}
-                      style={{
-                        padding: '16px',
-                        marginBottom: '12px',
-                        backgroundColor: item.is_purchased ? `${colors.border}20` : colors.background,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: '12px',
+                  {/* Total cost bar */}
+                  {(() => {
+                    const unpurchased = shoppingList.filter(i => !i.is_purchased)
+                    const totalCost = unpurchased.reduce(
+                      (sum, i) => sum + (i.estimated_unit_cost ?? 0) * i.quantity, 0
+                    )
+                    return (
+                      <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        opacity: item.is_purchased ? 0.6 : 1,
-                        textDecoration: item.is_purchased ? 'line-through' : 'none',
-                        transition: 'all 0.2s ease'
-                      }}
-                    >
-                      <div style={{ flex: 1 }}>
-                        <div style={{
-                          fontSize: '16px',
-                          fontWeight: 500,
-                          color: colors.text,
-                          marginBottom: '4px'
-                        }}>
-                          {item.name}
+                        padding: '12px 16px',
+                        backgroundColor: colors.surface,
+                        borderRadius: '12px',
+                        marginBottom: '16px',
+                        border: `1px solid ${colors.border}`,
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '12px', color: colors.text, opacity: 0.6 }}>Total estimate</div>
+                          <div style={{ fontSize: '20px', fontWeight: 700, color: colors.text }}>
+                            HK${totalCost.toFixed(2)}
+                          </div>
                         </div>
-                        <div style={{
-                          fontSize: '14px',
-                          color: colors.text,
-                          opacity: 0.7
-                        }}>
-                          {item.quantity} {item.unit}
-                          {item.estimated_unit_cost && ` • HK$${item.estimated_unit_cost.toFixed(2)}`}
+                        <div style={{ fontSize: '14px', color: colors.text, opacity: 0.7 }}>
+                          {unpurchased.length} item{unpurchased.length !== 1 ? 's' : ''} remaining
                         </div>
                       </div>
-                      <button
-                        onClick={async () => {
-                          await updateShoppingListItem(item.id, !item.is_purchased)
-                          const list = await getShoppingList()
-                          setShoppingList(list)
-                        }}
-                        style={{
-                          padding: '8px 16px',
-                          border: `1px solid ${item.is_purchased ? colors.success : colors.border}`,
-                          background: item.is_purchased ? colors.success : colors.background,
-                          color: item.is_purchased ? '#FFFFFF' : colors.text,
-                          fontSize: '14px',
-                          fontWeight: 500,
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        {item.is_purchased ? '✓' : 'Mark'}
-                      </button>
-                    </div>
-                  ))}
+                    )
+                  })()}
+
+                  {/* Clear purchased button */}
+                  {shoppingList.some(i => i.is_purchased) && (
+                    <button
+                      onClick={handleClearPurchased}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        marginBottom: '16px',
+                        border: `1px solid ${colors.danger}40`,
+                        borderRadius: '10px',
+                        backgroundColor: `${colors.danger}08`,
+                        color: colors.danger,
+                        fontSize: '14px',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      🗑 Clear purchased items
+                    </button>
+                  )}
+
+                  {/* Grouped list */}
+                  {(() => {
+                    const groups: Record<string, ShoppingListItem[]> = {}
+                    for (const item of shoppingList) {
+                      const key = item.recipe_name || 'Other'
+                      if (!groups[key]) groups[key] = []
+                      groups[key].push(item)
+                    }
+                    return Object.entries(groups).map(([recipeName, groupItems]) => (
+                      <div key={recipeName} style={{ marginBottom: '24px' }}>
+                        <div style={{
+                          fontSize: '12px',
+                          fontWeight: 600,
+                          color: colors.text,
+                          opacity: 0.5,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          marginBottom: '8px',
+                          paddingBottom: '6px',
+                          borderBottom: `1px solid ${colors.border}`,
+                        }}>
+                          {recipeName}
+                        </div>
+                        {groupItems.map((item) => (
+                          <div
+                            key={item.id}
+                            style={{
+                              padding: '16px',
+                              marginBottom: '12px',
+                              backgroundColor: item.is_purchased ? `${colors.border}20` : colors.background,
+                              border: `1px solid ${colors.border}`,
+                              borderRadius: '12px',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              opacity: item.is_purchased ? 0.6 : 1,
+                              textDecoration: item.is_purchased ? 'line-through' : 'none',
+                              transition: 'all 0.2s ease',
+                            }}
+                          >
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '16px', fontWeight: 500, color: colors.text, marginBottom: '4px' }}>
+                                {item.name}
+                              </div>
+                              <div style={{ fontSize: '14px', color: colors.text, opacity: 0.7 }}>
+                                {item.quantity} {item.unit}
+                                {item.estimated_unit_cost && ` • HK$${item.estimated_unit_cost.toFixed(2)}`}
+                              </div>
+                            </div>
+                            <button
+                              onClick={async () => {
+                                await updateShoppingListItem(item.id, !item.is_purchased)
+                                const list = await getShoppingList()
+                                setShoppingList(list)
+                              }}
+                              style={{
+                                padding: '8px 16px',
+                                border: `1px solid ${item.is_purchased ? colors.success : colors.border}`,
+                                background: item.is_purchased ? colors.success : colors.background,
+                                color: item.is_purchased ? '#FFFFFF' : colors.text,
+                                fontSize: '14px',
+                                fontWeight: 500,
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                              }}
+                            >
+                              {item.is_purchased ? '✓' : 'Mark'}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    ))
+                  })()}
                 </div>
               )}
             </div>
