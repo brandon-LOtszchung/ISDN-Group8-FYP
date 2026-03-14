@@ -363,14 +363,23 @@ export default function PlanningPage() {
                 {/* Ingredients we have */}
                 {selectedRecipe.ingredients.filter(ing => ing.required).length > 0 && (
                   <div style={{ marginBottom: '32px' }}>
-                    <h3 style={{
-                      fontSize: '18px',
-                      fontWeight: 600,
-                      color: colors.success,
-                      marginBottom: '16px'
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '12px 16px',
+                      backgroundColor: `${colors.success}12`,
+                      borderRadius: '10px',
+                      marginBottom: '12px',
                     }}>
-                      ✅ We Have ({selectedRecipe.matched_count})
-                    </h3>
+                      <span style={{ fontSize: '20px' }}>✓</span>
+                      <div>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: colors.success }}>We Have</div>
+                        <div style={{ fontSize: '12px', color: colors.success, opacity: 0.8 }}>
+                          {selectedRecipe.matched_count} items in your fridge
+                        </div>
+                      </div>
+                    </div>
                     {selectedRecipe.ingredients.filter(ing => ing.required).map((ing, index) => (
                       <div
                         key={index}
@@ -384,6 +393,7 @@ export default function PlanningPage() {
                           alignItems: 'center'
                         }}
                       >
+                        <span style={{ color: colors.success, fontWeight: 600, marginRight: '8px', flexShrink: 0 }}>✓</span>
                         <span style={{ fontSize: '16px', color: colors.text }}>{ing.name}</span>
                         <span style={{ fontSize: '14px', color: colors.text, opacity: 0.7 }}>
                           {ing.quantity} {ing.unit}
@@ -396,14 +406,23 @@ export default function PlanningPage() {
                 {/* Missing ingredients */}
                 {selectedRecipe.missing_ingredients.length > 0 && (
                   <div>
-                    <h3 style={{
-                      fontSize: '18px',
-                      fontWeight: 600,
-                      color: colors.danger,
-                      marginBottom: '16px'
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '12px 16px',
+                      backgroundColor: `${colors.danger}10`,
+                      borderRadius: '10px',
+                      marginBottom: '12px',
                     }}>
-                      ❌ Need to Buy ({selectedRecipe.missing_ingredients.length})
-                    </h3>
+                      <span style={{ fontSize: '20px' }}>✗</span>
+                      <div>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: colors.danger }}>Need to Buy</div>
+                        <div style={{ fontSize: '12px', color: colors.danger, opacity: 0.8 }}>
+                          {selectedRecipe.missing_ingredients.length} items missing
+                        </div>
+                      </div>
+                    </div>
                     {selectedRecipe.missing_ingredients.map((ing, index) => (
                       <div
                         key={index}
@@ -417,6 +436,7 @@ export default function PlanningPage() {
                           alignItems: 'center'
                         }}
                       >
+                        <span style={{ color: colors.danger, fontWeight: 600, marginRight: '8px', flexShrink: 0 }}>✗</span>
                         <div>
                           <span style={{ fontSize: '16px', color: colors.text }}>{ing.name}</span>
                           {ing.alternatives.length > 0 && (
@@ -764,6 +784,22 @@ export default function PlanningPage() {
                           </button>
                         </div>
 
+                        {/* Cuisine chip */}
+                        <div style={{ marginBottom: '10px' }}>
+                          <span style={{
+                            display: 'inline-block',
+                            padding: '3px 10px',
+                            borderRadius: '20px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            backgroundColor: `${colors.scan}20`,
+                            color: colors.scan,
+                            textTransform: 'capitalize',
+                          }}>
+                            {selectedCuisine}
+                          </span>
+                        </div>
+
                         {/* Progress bar */}
                         <div style={{
                           width: '100%',
@@ -789,9 +825,24 @@ export default function PlanningPage() {
                           color: colors.text,
                           opacity: 0.7
                         }}>
-                          <span>{recipe.matched_count}/{recipe.total_count} ingredients available</span>
+                          <span style={{ fontSize: '13px' }}>
+                            {recipe.matched_count} of {recipe.total_count} ingredients in your fridge
+                          </span>
                           {recipe.estimatedCost && (
-                            <span style={{ fontWeight: 600 }}>HK${recipe.estimatedCost.toFixed(2)}</span>
+                            <span style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '4px 10px',
+                              borderRadius: '20px',
+                              fontSize: '13px',
+                              fontWeight: 700,
+                              backgroundColor: `${colors.success}15`,
+                              color: colors.success,
+                              border: `1px solid ${colors.success}30`,
+                            }}>
+                              💰 ~HK${recipe.estimatedCost.toFixed(0)}
+                            </span>
                           )}
                         </div>
                       </div>
