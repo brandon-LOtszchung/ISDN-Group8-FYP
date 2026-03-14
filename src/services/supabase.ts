@@ -258,6 +258,7 @@ export interface ShoppingListItem {
   is_purchased: boolean
   estimated_unit_cost: number | null
   alternatives: string[]
+  recipe_name: string | null
 }
 
 export async function getShoppingList(): Promise<ShoppingListItem[]> {
@@ -280,6 +281,7 @@ export async function getShoppingList(): Promise<ShoppingListItem[]> {
       is_purchased: item.is_purchased || false,
       estimated_unit_cost: item.estimated_unit_cost ? parseFloat(item.estimated_unit_cost.toString()) : null,
       alternatives: item.alternatives || [],
+      recipe_name: item.recipe_name || null,
     }))
   } catch (error) {
     console.error('Error fetching shopping list:', error)
@@ -299,6 +301,22 @@ export async function updateShoppingListItem(itemId: string, isPurchased: boolea
     if (error) throw error
   } catch (error) {
     console.error('Error updating shopping list item:', error)
+    throw error
+  }
+}
+
+export async function deleteShoppingListItems(ids: string[]): Promise<void> {
+  if (!supabaseUrl || !supabaseAnonKey || ids.length === 0) return
+
+  try {
+    const { error } = await supabase
+      .from('shopping_list_items')
+      .delete()
+      .in('id', ids)
+
+    if (error) throw error
+  } catch (error) {
+    console.error('Error deleting shopping list items:', error)
     throw error
   }
 }
