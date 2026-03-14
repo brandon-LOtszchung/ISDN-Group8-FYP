@@ -99,6 +99,7 @@ export default function ScanPromptPopup({ onScan, onEmpty, onClose }: ScanPrompt
         {/* Close Button */}
         <button
           onClick={onClose}
+          aria-label="Close scan prompt"
           style={{
             position: 'absolute',
             top: '16px',

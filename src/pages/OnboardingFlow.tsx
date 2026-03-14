@@ -1067,6 +1067,7 @@ export default function OnboardingFlow() {
             {/* Back Button - Apple Style */}
             <button
               onClick={() => setCurrentStep('cooking-intro')}
+              aria-label="Go to previous step"
               style={{
                 position: 'relative',
                 width: '44px',
@@ -1330,6 +1331,7 @@ export default function OnboardingFlow() {
             {/* Back Button - Apple Style */}
             <button
               onClick={() => setCurrentStep('cooking')}
+              aria-label="Go to previous step"
               style={{
                 position: 'relative',
                 width: '44px',
@@ -1623,6 +1625,7 @@ export default function OnboardingFlow() {
             }}>
               <button
                 onClick={() => setCurrentStep('budget')}
+                aria-label="Go to previous step"
                 style={{
                   width: '44px',
                   height: '44px',
