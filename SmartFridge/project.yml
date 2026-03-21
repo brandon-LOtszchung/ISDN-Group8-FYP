@@ -1,0 +1,48 @@
+name: SmartFridge
+
+options:
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "17.0"
+
+packages:
+  Supabase:
+    url: https://github.com/supabase-community/supabase-swift
+    majorVersion: 2
+
+targets:
+  SmartFridge:
+    type: application
+    platform: iOS
+    sources:
+      - SmartFridge
+    info:
+      path: SmartFridge/Info.plist
+      properties:
+        NSCameraUsageDescription: SmartFridge uses the camera to scan your fridge contents.
+        NSPhotoLibraryUsageDescription: SmartFridge reads photos from your library to detect fridge contents.
+        SUPABASE_URL: https://dpgxcyktcptsnihpitjr.supabase.co
+        SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
+        API_BASE_URL: http://152.42.221.192:8000
+        UILaunchStoryboardName: LaunchScreen
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.smartfridge.app
+        SWIFT_VERSION: "5.9"
+        SUPABASE_ANON_KEY: ""
+    dependencies:
+      - package: Supabase
+        product: Supabase
+
+  SmartFridgeTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - SmartFridgeTests
+    settings:
+      base:
+        SWIFT_VERSION: "5.9"
+    dependencies:
+      - target: SmartFridge
