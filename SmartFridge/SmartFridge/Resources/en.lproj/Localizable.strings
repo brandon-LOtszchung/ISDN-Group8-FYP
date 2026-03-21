@@ -1,0 +1,63 @@
+// Tab bar
+"tab.fridge"    = "Fridge";
+"tab.plan"      = "Plan";
+"tab.shopping"  = "Shopping";
+
+// Onboarding
+"onboarding.family_name.title"     = "What's your family name?";
+"onboarding.family_name.hint"      = "e.g. The Chan Family";
+"onboarding.cooking_intro.title"   = "Let's talk about cooking";
+"onboarding.cooking.title"         = "What's your cooking skill level?";
+"onboarding.budget.title"          = "What's your weekly food budget?";
+"onboarding.members.title"         = "Who's in your family?";
+"onboarding.summary.title"         = "You're all set!";
+"onboarding.continue"              = "Continue";
+"onboarding.add_member"            = "Add Member";
+
+// Inventory
+"inventory.title"                  = "My Fridge";
+"inventory.search"                 = "Search ingredients...";
+"inventory.empty"                  = "Your fridge is empty";
+"inventory.scan_prompt.title"      = "Set up your fridge";
+"inventory.scan_prompt.subtitle"   = "Scan your fridge or mark it as empty to get started";
+"inventory.scan_prompt.scan"       = "Scan My Fridge";
+"inventory.scan_prompt.empty"      = "My Fridge is Empty";
+"inventory.delete_confirm"         = "Remove Item";
+
+// Camera
+"camera.take_photo"                = "Take Photo";
+"camera.choose_library"            = "Choose from Library";
+"camera.cancel"                    = "Cancel";
+"camera.scanning"                  = "Scanning fridge...";
+
+// Planning / Food Ideas
+"planning.title"                   = "Food Ideas";
+"planning.cooking_for"             = "Cooking for";
+"planning.cuisine"                 = "Cuisine";
+"planning.get_ideas"               = "Get Ideas";
+"planning.match"                   = "%d/%d ingredients matched";
+"planning.missing"                 = "%d missing";
+
+// Recipe Detail
+"recipe.ingredients"               = "Ingredients";
+"recipe.steps"                     = "Steps";
+"recipe.in_fridge"                 = "In fridge";
+"recipe.need_to_buy"               = "Need to buy";
+"recipe.add_to_shopping"           = "Add Missing to Shopping List";
+"recipe.share"                     = "Share Recipe";
+
+// Shopping
+"shopping.title"                   = "Shopping";
+"shopping.clear_bought"            = "Clear Bought";
+"shopping.total"                   = "Estimated Total";
+"shopping.items"                   = "%d items";
+"shopping.bought"                  = "%d bought";
+
+// Common
+"common.loading"                   = "Loading...";
+"common.error"                     = "Something went wrong";
+"common.retry"                     = "Retry";
+"common.cancel"                    = "Cancel";
+"common.done"                      = "Done";
+"common.save"                      = "Save";
+"common.delete"                    = "Delete";

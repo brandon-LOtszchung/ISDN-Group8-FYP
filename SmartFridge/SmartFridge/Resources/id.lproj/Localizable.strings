@@ -1,0 +1,63 @@
+// Tab bar
+"tab.fridge"    = "Kulkas";
+"tab.plan"      = "Rencana";
+"tab.shopping"  = "Belanja";
+
+// Onboarding
+"onboarding.family_name.title"     = "Apa nama keluarga Anda?";
+"onboarding.family_name.hint"      = "mis. Keluarga Chan";
+"onboarding.cooking_intro.title"   = "Mari bicara tentang memasak";
+"onboarding.cooking.title"         = "Apa tingkat kemampuan memasak Anda?";
+"onboarding.budget.title"          = "Berapa anggaran makanan mingguan Anda?";
+"onboarding.members.title"         = "Siapa saja yang ada di keluarga Anda?";
+"onboarding.summary.title"         = "Semuanya siap!";
+"onboarding.continue"              = "Lanjut";
+"onboarding.add_member"            = "Tambah Anggota";
+
+// Inventory
+"inventory.title"                  = "Kulkas Saya";
+"inventory.search"                 = "Cari bahan...";
+"inventory.empty"                  = "Kulkas Anda kosong";
+"inventory.scan_prompt.title"      = "Siapkan kulkas Anda";
+"inventory.scan_prompt.subtitle"   = "Pindai kulkas Anda atau tandai sebagai kosong untuk memulai";
+"inventory.scan_prompt.scan"       = "Pindai Kulkas Saya";
+"inventory.scan_prompt.empty"      = "Kulkas Saya Kosong";
+"inventory.delete_confirm"         = "Hapus Item";
+
+// Camera
+"camera.take_photo"                = "Ambil Foto";
+"camera.choose_library"            = "Pilih dari Galeri";
+"camera.cancel"                    = "Batal";
+"camera.scanning"                  = "Memindai kulkas...";
+
+// Planning / Food Ideas
+"planning.title"                   = "Ide Makanan";
+"planning.cooking_for"             = "Memasak untuk";
+"planning.cuisine"                 = "Masakan";
+"planning.get_ideas"               = "Dapatkan Ide";
+"planning.match"                   = "%d/%d bahan cocok";
+"planning.missing"                 = "%d kurang";
+
+// Recipe Detail
+"recipe.ingredients"               = "Bahan-bahan";
+"recipe.steps"                     = "Langkah-langkah";
+"recipe.in_fridge"                 = "Di kulkas";
+"recipe.need_to_buy"               = "Perlu dibeli";
+"recipe.add_to_shopping"           = "Tambahkan yang Kurang ke Daftar Belanja";
+"recipe.share"                     = "Bagikan Resep";
+
+// Shopping
+"shopping.title"                   = "Belanja";
+"shopping.clear_bought"            = "Hapus yang Dibeli";
+"shopping.total"                   = "Total Perkiraan";
+"shopping.items"                   = "%d item";
+"shopping.bought"                  = "%d dibeli";
+
+// Common
+"common.loading"                   = "Memuat...";
+"common.error"                     = "Terjadi kesalahan";
+"common.retry"                     = "Coba Lagi";
+"common.cancel"                    = "Batal";
+"common.done"                      = "Selesai";
+"common.save"                      = "Simpan";
+"common.delete"                    = "Hapus";

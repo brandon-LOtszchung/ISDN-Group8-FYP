@@ -1,0 +1,63 @@
+// Tab bar
+"tab.fridge"    = "Ref";
+"tab.plan"      = "Plano";
+"tab.shopping"  = "Pamimili";
+
+// Onboarding
+"onboarding.family_name.title"     = "Ano ang pangalan ng iyong pamilya?";
+"onboarding.family_name.hint"      = "hal. Ang Pamilyang Chan";
+"onboarding.cooking_intro.title"   = "Pag-usapan natin ang pagluluto";
+"onboarding.cooking.title"         = "Ano ang iyong antas ng kasanayan sa pagluluto?";
+"onboarding.budget.title"          = "Ano ang iyong lingguhang badyet sa pagkain?";
+"onboarding.members.title"         = "Sino ang nasa iyong pamilya?";
+"onboarding.summary.title"         = "Handa na ang lahat!";
+"onboarding.continue"              = "Magpatuloy";
+"onboarding.add_member"            = "Magdagdag ng Miyembro";
+
+// Inventory
+"inventory.title"                  = "Aking Ref";
+"inventory.search"                 = "Maghanap ng mga sangkap...";
+"inventory.empty"                  = "Walang laman ang iyong ref";
+"inventory.scan_prompt.title"      = "I-set up ang iyong ref";
+"inventory.scan_prompt.subtitle"   = "I-scan ang iyong ref o markahan itong walang laman upang magsimula";
+"inventory.scan_prompt.scan"       = "I-scan ang Aking Ref";
+"inventory.scan_prompt.empty"      = "Walang Laman ang Aking Ref";
+"inventory.delete_confirm"         = "Alisin ang Item";
+
+// Camera
+"camera.take_photo"                = "Kumuha ng Litrato";
+"camera.choose_library"            = "Pumili mula sa Library";
+"camera.cancel"                    = "Kanselahin";
+"camera.scanning"                  = "Ina-scan ang ref...";
+
+// Planning / Food Ideas
+"planning.title"                   = "Mga Ideya sa Pagkain";
+"planning.cooking_for"             = "Nagluluto para sa";
+"planning.cuisine"                 = "Lutuin";
+"planning.get_ideas"               = "Kumuha ng mga Ideya";
+"planning.match"                   = "%d/%d na sangkap ang nagtugma";
+"planning.missing"                 = "%d kulang";
+
+// Recipe Detail
+"recipe.ingredients"               = "Mga Sangkap";
+"recipe.steps"                     = "Mga Hakbang";
+"recipe.in_fridge"                 = "Sa ref";
+"recipe.need_to_buy"               = "Kailangang bilhin";
+"recipe.add_to_shopping"           = "Idagdag ang Mga Kulang sa Listahan ng Pamimili";
+"recipe.share"                     = "Ibahagi ang Resipe";
+
+// Shopping
+"shopping.title"                   = "Pamimili";
+"shopping.clear_bought"            = "I-clear ang Nabili";
+"shopping.total"                   = "Tinatayang Kabuuan";
+"shopping.items"                   = "%d na item";
+"shopping.bought"                  = "%d nabili";
+
+// Common
+"common.loading"                   = "Naglo-load...";
+"common.error"                     = "May nangyaring mali";
+"common.retry"                     = "Subukan Ulit";
+"common.cancel"                    = "Kanselahin";
+"common.done"                      = "Tapos";
+"common.save"                      = "I-save";
+"common.delete"                    = "Tanggalin";

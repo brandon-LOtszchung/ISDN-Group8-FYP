@@ -1,0 +1,63 @@
+// Tab bar
+"tab.fridge"    = "雪櫃";
+"tab.plan"      = "計劃";
+"tab.shopping"  = "購物";
+
+// Onboarding
+"onboarding.family_name.title"     = "你的家庭叫什麼名字？";
+"onboarding.family_name.hint"      = "例如：陳氏家庭";
+"onboarding.cooking_intro.title"   = "讓我們談談烹飪";
+"onboarding.cooking.title"         = "您的烹飪技術水平如何？";
+"onboarding.budget.title"          = "您每週的食物預算是多少？";
+"onboarding.members.title"         = "您家有哪些成員？";
+"onboarding.summary.title"         = "一切準備就緒！";
+"onboarding.continue"              = "繼續";
+"onboarding.add_member"            = "新增成員";
+
+// Inventory
+"inventory.title"                  = "我的雪櫃";
+"inventory.search"                 = "搜尋食材...";
+"inventory.empty"                  = "您的雪櫃是空的";
+"inventory.scan_prompt.title"      = "設定您的雪櫃";
+"inventory.scan_prompt.subtitle"   = "掃描您的雪櫃或將其標記為空以開始";
+"inventory.scan_prompt.scan"       = "掃描我的雪櫃";
+"inventory.scan_prompt.empty"      = "我的雪櫃是空的";
+"inventory.delete_confirm"         = "移除項目";
+
+// Camera
+"camera.take_photo"                = "拍照";
+"camera.choose_library"            = "從相簿選擇";
+"camera.cancel"                    = "取消";
+"camera.scanning"                  = "正在掃描雪櫃...";
+
+// Planning / Food Ideas
+"planning.title"                   = "食物點子";
+"planning.cooking_for"             = "為誰烹飪";
+"planning.cuisine"                 = "菜系";
+"planning.get_ideas"               = "獲取點子";
+"planning.match"                   = "%d/%d 食材已配對";
+"planning.missing"                 = "%d 缺少";
+
+// Recipe Detail
+"recipe.ingredients"               = "食材";
+"recipe.steps"                     = "步驟";
+"recipe.in_fridge"                 = "已在雪櫃";
+"recipe.need_to_buy"               = "需要購買";
+"recipe.add_to_shopping"           = "將缺少的加入購物清單";
+"recipe.share"                     = "分享食譜";
+
+// Shopping
+"shopping.title"                   = "購物";
+"shopping.clear_bought"            = "清除已購";
+"shopping.total"                   = "預計總額";
+"shopping.items"                   = "%d 件";
+"shopping.bought"                  = "%d 已購";
+
+// Common
+"common.loading"                   = "載入中...";
+"common.error"                     = "出現問題";
+"common.retry"                     = "重試";
+"common.cancel"                    = "取消";
+"common.done"                      = "完成";
+"common.save"                      = "儲存";
+"common.delete"                    = "刪除";
