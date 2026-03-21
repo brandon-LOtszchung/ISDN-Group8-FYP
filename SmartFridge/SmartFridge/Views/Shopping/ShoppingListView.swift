@@ -1,4 +1,105 @@
+// Views/Shopping/ShoppingListView.swift
 import SwiftUI
+
 struct ShoppingListView: View {
-    var body: some View { Text("Shopping — TODO") }
+    @Environment(ShoppingViewModel.self) private var shoppingVM
+    @Environment(ThemeManager.self) private var theme
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if shoppingVM.items.isEmpty {
+                    ContentUnavailableView(
+                        "No items",
+                        systemImage: "cart",
+                        description: Text("Add missing ingredients from a recipe.")
+                    )
+                } else {
+                    shoppingList
+                }
+            }
+            .navigationTitle(String(localized: "shopping.title"))
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(String(localized: "shopping.clear_bought")) {
+                        shoppingVM.clearBought()
+                    }
+                    .disabled(shoppingVM.purchasedItemIDs.isEmpty)
+                    .foregroundStyle(theme.colors.danger)
+                }
+            }
+        }
+    }
+
+    private var shoppingList: some View {
+        List {
+            // Total cost card
+            Section {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(String(localized: "shopping.total"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text("HK$\(shoppingVM.totalEstimatedCost, specifier: "%.0f")")
+                            .font(.title2.bold())
+                            .foregroundStyle(theme.colors.primary)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text(String(format: NSLocalizedString("shopping.items", comment: ""), shoppingVM.items.count))
+                            .font(.caption).foregroundStyle(.secondary)
+                        Text(String(format: NSLocalizedString("shopping.bought", comment: ""), shoppingVM.purchasedItemIDs.count))
+                            .font(.caption).foregroundStyle(.green)
+                    }
+                }
+                .padding(.vertical, 4)
+            }
+
+            // Items grouped by recipe
+            ForEach(shoppingVM.itemsGroupedByRecipe.keys.sorted(), id: \.self) { recipe in
+                Section(recipe) {
+                    ForEach(shoppingVM.itemsGroupedByRecipe[recipe] ?? []) { item in
+                        ShoppingItemRow(item: item) {
+                            shoppingVM.togglePurchased(item)
+                        }
+                    }
+                }
+            }
+        }
+        .listStyle(.insetGrouped)
+    }
+}
+
+// MARK: - Shopping Item Row
+
+private struct ShoppingItemRow: View {
+    let item: ShoppingListItem
+    let onToggle: () -> Void
+    @Environment(ThemeManager.self) private var theme
+
+    var body: some View {
+        Button(action: onToggle) {
+            HStack(spacing: 12) {
+                Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(item.isPurchased ? .green : theme.colors.border)
+                    .font(.title3)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.name)
+                        .strikethrough(item.isPurchased)
+                        .foregroundStyle(item.isPurchased ? .secondary : theme.colors.text)
+                        .font(.body)
+                    Text("\(item.quantity, specifier: "%.0f") \(item.unit)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+                if let cost = item.estimatedUnitCost {
+                    Text("HK$\(cost, specifier: "%.0f")")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(theme.colors.primary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
 }
