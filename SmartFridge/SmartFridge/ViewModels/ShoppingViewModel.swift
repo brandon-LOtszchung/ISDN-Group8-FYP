@@ -13,7 +13,7 @@ final class ShoppingViewModel {
     private var realtimeChannel: RealtimeChannelV2?
 
     var totalEstimatedCost: Double {
-        items.compactMap(\.estimatedUnitCost).reduce(0, +)
+        items.compactMap { item in item.estimatedUnitCost.map { $0 * item.quantity } }.reduce(0, +)
     }
 
     var purchasedItemIDs: [UUID] {
