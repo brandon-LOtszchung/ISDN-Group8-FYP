@@ -17,7 +17,7 @@ final class SupabaseService {
     // MARK: - Family
 
     func fetchFamily() async throws -> Family? {
-        let families: [Family] = try await client.database
+        let families: [Family] = try await client
             .from("families")
             .select()
             .eq("id", value: Constants.defaultFamilyID)
@@ -28,7 +28,7 @@ final class SupabaseService {
     }
 
     func upsertFamily(_ family: Family) async throws {
-        try await client.database
+        try await client
             .from("families")
             .upsert(family, onConflict: "id")
             .execute()
@@ -37,7 +37,7 @@ final class SupabaseService {
     // MARK: - Family Members
 
     func fetchMembers(familyId: UUID) async throws -> [FamilyMember] {
-        try await client.database
+        try await client
             .from("family_members")
             .select()
             .eq("family_id", value: familyId)
@@ -46,14 +46,14 @@ final class SupabaseService {
     }
 
     func upsertMember(_ member: FamilyMember) async throws {
-        try await client.database
+        try await client
             .from("family_members")
             .upsert(member, onConflict: "id")
             .execute()
     }
 
     func deleteMember(id: UUID) async throws {
-        try await client.database
+        try await client
             .from("family_members")
             .delete()
             .eq("id", value: id)
@@ -63,7 +63,7 @@ final class SupabaseService {
     // MARK: - Inventory
 
     func fetchInventory(familyId: UUID) async throws -> [InventoryItem] {
-        try await client.database
+        try await client
             .from("inventory_items")
             .select()
             .eq("family_id", value: familyId)
@@ -72,14 +72,14 @@ final class SupabaseService {
     }
 
     func addItem(_ item: InventoryItem) async throws {
-        try await client.database
+        try await client
             .from("inventory_items")
             .insert(item)
             .execute()
     }
 
     func updateItem(_ item: InventoryItem) async throws {
-        try await client.database
+        try await client
             .from("inventory_items")
             .update(item)
             .eq("id", value: item.id)
@@ -87,7 +87,7 @@ final class SupabaseService {
     }
 
     func deleteItem(id: UUID) async throws {
-        try await client.database
+        try await client
             .from("inventory_items")
             .delete()
             .eq("id", value: id)
@@ -97,7 +97,7 @@ final class SupabaseService {
     // MARK: - Shopping List
 
     func fetchShoppingList(familyId: UUID) async throws -> [ShoppingListItem] {
-        try await client.database
+        try await client
             .from("shopping_list_items")
             .select()
             .eq("family_id", value: familyId)
@@ -106,14 +106,14 @@ final class SupabaseService {
     }
 
     func addShoppingItems(_ items: [ShoppingListItem]) async throws {
-        try await client.database
+        try await client
             .from("shopping_list_items")
             .insert(items)
             .execute()
     }
 
     func updateShoppingItem(_ item: ShoppingListItem) async throws {
-        try await client.database
+        try await client
             .from("shopping_list_items")
             .update(item)
             .eq("id", value: item.id)
@@ -123,7 +123,7 @@ final class SupabaseService {
     /// Deletes specific items by ID — used by "Clear Bought".
     func deleteShoppingListItems(ids: [UUID]) async throws {
         guard !ids.isEmpty else { return }
-        try await client.database
+        try await client
             .from("shopping_list_items")
             .delete()
             .in("id", values: ids.map(\.uuidString))
@@ -137,19 +137,20 @@ final class SupabaseService {
         onChange: @escaping @Sendable ([ShoppingListItem]) -> Void
     ) -> RealtimeChannelV2 {
         let channel = client.realtimeV2.channel("shopping_list_items:\(familyId)")
-        Task {
-            await channel.subscribe()
-            for await _ in await channel.postgresChanges(
-                event: .all,
-                schema: "public",
-                table: "shopping_list_items",
-                filter: "family_id=eq.\(familyId)"
-            ) {
+        channel.onPostgresChange(
+            AnyAction.self,
+            schema: "public",
+            table: "shopping_list_items",
+            filter: "family_id=eq.\(familyId)"
+        ) { [weak self] _ in
+            guard let self else { return }
+            Task {
                 if let updated = try? await self.fetchShoppingList(familyId: familyId) {
                     onChange(updated)
                 }
             }
         }
+        Task { await channel.subscribe() }
         return channel
     }
 }

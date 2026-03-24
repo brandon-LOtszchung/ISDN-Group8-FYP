@@ -8,7 +8,7 @@ options:
 packages:
   Supabase:
     url: https://github.com/supabase-community/supabase-swift
-    majorVersion: 2
+    majorVersion: "2.0.0"
 
 targets:
   SmartFridge:
@@ -35,7 +35,7 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.smartfridge.app
         SWIFT_VERSION: "5.9"
-        SUPABASE_ANON_KEY: ""
+        SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZ3hjeWt0Y3B0c25paHBpdGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA3OTMsImV4cCI6MjA4OTI5Njc5M30.e9TOBfXerlt9DJreTNHdxDEiTyWsU-BTbZC0gqAl1RU"
     dependencies:
       - package: Supabase
         product: Supabase

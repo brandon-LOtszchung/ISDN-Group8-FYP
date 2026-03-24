@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Fridge - System Diagrams</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            padding: 40px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #58a6ff, #a371f7, #f78166);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #8b949e;
+            margin-bottom: 60px;
+            font-size: 1.1rem;
+        }
+        
+        .diagram-section {
+            margin-bottom: 80px;
+            page-break-after: always;
+        }
+        
+        .diagram-title {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: linear-gradient(135deg, #161b22, #21262d);
+            border-radius: 12px;
+            border-left: 4px solid;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .diagram-title.green { border-color: #3fb950; }
+        .diagram-title.purple { border-color: #a371f7; }
+        .diagram-title.pink { border-color: #f778ba; }
+        
+        .diagram-container {
+            background: #161b22;
+            border-radius: 16px;
+            padding: 40px;
+            border: 1px solid #30363d;
+            overflow-x: auto;
+        }
+        
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        
+        .legend {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            background: #21262d;
+            border-radius: 8px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .legend-color.green { background: #3fb950; }
+        .legend-color.purple { background: #a371f7; }
+        .legend-color.red { background: #f85149; }
+        .legend-color.orange { background: #d29922; }
+        .legend-color.blue { background: #58a6ff; }
+        .legend-color.pink { background: #f778ba; }
+        
+        .instructions {
+            background: #21262d;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 60px;
+            border: 1px solid #30363d;
+        }
+        
+        .instructions h2 {
+            color: #58a6ff;
+            margin-bottom: 15px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            line-height: 2;
+        }
+        
+        .instructions code {
+            background: #0d1117;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        @media print {
+            body { background: white; color: black; }
+            .instructions { display: none; }
+            .diagram-section { page-break-after: always; }
+        }
+    </style>
+</head>
+<body>
+    <h1>🍳 Smart Fridge System Diagrams</h1>
+    <p class="subtitle">ISDN Group 8 - Final Year Project</p>
+    
+    <div class="instructions">
+        <h2>📸 How to Export as Images</h2>
+        <ol>
+            <li>Right-click on any diagram → <code>Save image as...</code></li>
+            <li>Or use browser screenshot: <code>Cmd+Shift+4</code> (Mac) / <code>Win+Shift+S</code> (Windows)</li>
+            <li>Or print to PDF: <code>Cmd+P</code> → Save as PDF</li>
+            <li>For higher quality, zoom in browser first (<code>Cmd/Ctrl + +</code>)</li>
+        </ol>
+    </div>
+
+    <!-- DIAGRAM 1: System Architecture -->
+    <div class="diagram-section">
+        <div class="diagram-title green">
+            <span>🏗️</span>
+            <span>System Architecture Overview</span>
+        </div>
+        <div class="diagram-container">
+            <pre class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#0d1117', 'primaryTextColor': '#fff', 'primaryBorderColor': '#30363d', 'lineColor': '#58a6ff', 'fontSize': '16px'}}}%%
+
+flowchart TB
+    subgraph CLIENT["🟢 CLIENT LAYER"]
+        style CLIENT fill:#1a7f37,stroke:#2ea043,stroke-width:3px,color:#fff
+        direction TB
+        
+        subgraph MOBILE["📱 Progressive Web App"]
+            style MOBILE fill:#238636,stroke:#3fb950,stroke-width:2px
+            M1["⚛️ React 18 + TypeScript"]
+            M2["⚡ Vite 5 Build System"]
+            M3["🎨 TailwindCSS Styling"]
+        end
+        
+        subgraph FEATURES["🔧 Core Features"]
+            style FEATURES fill:#238636,stroke:#3fb950,stroke-width:2px
+            F1["📷 Camera Integration"]
+            F2["🔄 State Management"]
+            F3["🌐 i18n Support"]
+        end
+    end
+
+    subgraph API["🟣 API GATEWAY"]
+        style API fill:#6e40c9,stroke:#8957e5,stroke-width:3px,color:#fff
+        direction TB
+        
+        subgraph SERVER["⚙️ FastAPI Server"]
+            style SERVER fill:#8250df,stroke:#a371f7,stroke-width:2px
+            S1["🐍 Python 3.11"]
+            S2["🦄 Uvicorn ASGI"]
+            S3["📊 Pydantic v2"]
+        end
+        
+        subgraph ENDPOINTS["📡 REST Endpoints"]
+            style ENDPOINTS fill:#8250df,stroke:#a371f7,stroke-width:2px
+            E1["POST /inventory/initialize"]
+            E2["POST /recipes/recommend"]
+            E3["GET /recipes/{id}"]
+            E4["POST /add-to-cart"]
+        end
+    end
+
+    subgraph AI["🔴 AI/ML LAYER"]
+        style AI fill:#b62324,stroke:#da3633,stroke-width:3px,color:#fff
+        
+        subgraph VISION["👁️ Computer Vision"]
+            style VISION fill:#cf222e,stroke:#f85149,stroke-width:2px
+            V1["🧠 GPT-4 Vision"]
+            V2["🔍 Food Detection"]
+        end
+        
+        subgraph ENGINE["🍳 Recipe Engine"]
+            style ENGINE fill:#cf222e,stroke:#f85149,stroke-width:2px
+            R1["🔗 Matching"]
+            R2["⚠️ Diet Filter"]
+            R3["💰 Cost Calc"]
+        end
+    end
+
+    subgraph DATA["🟠 DATA LAYER"]
+        style DATA fill:#9a6700,stroke:#bf8700,stroke-width:3px,color:#fff
+        
+        subgraph DB["🗄️ PostgreSQL"]
+            style DB fill:#b58900,stroke:#d4a72c,stroke-width:2px
+            D1["👨‍👩‍👧 families"]
+            D2["👤 members"]
+            D3["🥬 inventory"]
+            D4["🍳 recipes"]
+            D5["🛒 shopping"]
+        end
+        
+        subgraph SUPA["☁️ Supabase"]
+            style SUPA fill:#b58900,stroke:#d4a72c,stroke-width:2px
+            SU1["🔐 RLS Security"]
+            SU2["⚡ Realtime"]
+        end
+    end
+
+    CLIENT -->|"HTTPS"| API
+    API -->|"OpenAI API"| AI
+    API <-->|"Supabase SDK"| DATA
+    CLIENT <-->|"WebSocket"| SU2
+
+    linkStyle 0 stroke:#3fb950,stroke-width:3px
+    linkStyle 1 stroke:#f85149,stroke-width:3px
+    linkStyle 2 stroke:#d4a72c,stroke-width:3px
+    linkStyle 3 stroke:#d4a72c,stroke-width:3px
+            </pre>
+        </div>
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color green"></div><span>Client (React)</span></div>
+            <div class="legend-item"><div class="legend-color purple"></div><span>API (FastAPI)</span></div>
+            <div class="legend-item"><div class="legend-color red"></div><span>AI/ML (GPT-4)</span></div>
+            <div class="legend-item"><div class="legend-color orange"></div><span>Database (PostgreSQL)</span></div>
+        </div>
+    </div>
+
+    <!-- DIAGRAM 2: Ultra Clean Architecture -->
+    <div class="diagram-section">
+        <div class="diagram-title purple">
+            <span>⚡</span>
+            <span>Technical Architecture (Ultra Clean)</span>
+        </div>
+        <div class="diagram-container">
+            <pre class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '18px'}}}%%
+
+flowchart LR
+    subgraph C["🟢 CLIENT"]
+        direction TB
+        C1["📱 React 18 PWA<br/>TypeScript 5.0<br/>Vite 5.0"]
+        C2["📷 Camera API<br/>Image Capture"]
+        C3["🔄 Context API<br/>State Mgmt"]
+    end
+    
+    subgraph S["🟣 SERVER"]
+        direction TB
+        S1["⚙️ FastAPI<br/>Python 3.11<br/>Async I/O"]
+        S2["📡 4 REST APIs<br/>JSON Response"]
+        S3["🛡️ Middleware<br/>CORS + Validation"]
+    end
+    
+    subgraph A["🔴 AI ENGINE"]
+        direction TB
+        A1["👁️ GPT-4 Vision<br/>Food Detection"]
+        A2["🔍 Recipe Matcher<br/>Diet Filter"]
+        A3["💰 Cost Engine<br/>Budget Calc"]
+    end
+    
+    subgraph D["🟠 DATABASE"]
+        direction TB
+        D1["🗄️ PostgreSQL 15<br/>5 Tables"]
+        D2["⚡ Realtime<br/>WebSocket"]
+        D3["🔐 RLS Security<br/>Encryption"]
+    end
+
+    C -->|"HTTPS POST"| S
+    S -->|"OpenAI API"| A
+    S <-->|"Supabase SDK"| D
+    D -->|"WebSocket"| C
+
+    style C fill:#1a7f37,stroke:#3fb950,stroke-width:4px,color:#fff
+    style S fill:#6e40c9,stroke:#a371f7,stroke-width:4px,color:#fff
+    style A fill:#b62324,stroke:#f85149,stroke-width:4px,color:#fff
+    style D fill:#9a6700,stroke:#d4a72c,stroke-width:4px,color:#fff
+            </pre>
+        </div>
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color green"></div><span>Client Layer</span></div>
+            <div class="legend-item"><div class="legend-color purple"></div><span>Server Layer</span></div>
+            <div class="legend-item"><div class="legend-color red"></div><span>AI Layer</span></div>
+            <div class="legend-item"><div class="legend-color orange"></div><span>Data Layer</span></div>
+        </div>
+    </div>
+
+    <!-- DIAGRAM 3: Data Flow -->
+    <div class="diagram-section">
+        <div class="diagram-title green">
+            <span>🔄</span>
+            <span>Data Flow Pipeline</span>
+        </div>
+        <div class="diagram-container">
+            <pre class="mermaid">
+%%{init: {'theme': 'base'}}%%
+
+flowchart LR
+    subgraph INPUT["📥 INPUT"]
+        A["📷 Fridge Photo"]
+        B["👥 Family Prefs"]
+    end
+
+    subgraph PROCESS["⚡ AI PROCESSING"]
+        C["🧠 GPT-4 Vision<br/>Image → Items"]
+        D["🔍 Recipe Match<br/>Filter + Rank"]
+        E["💰 Cost Calc<br/>Budget Check"]
+    end
+
+    subgraph OUTPUT["📤 OUTPUT"]
+        F["📋 Recipe List"]
+        G["🛒 Shopping List"]
+    end
+
+    A --> C
+    B --> D
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+
+    style INPUT fill:#238636,stroke:#3fb950,stroke-width:3px,color:#fff
+    style PROCESS fill:#8250df,stroke:#a371f7,stroke-width:3px,color:#fff
+    style OUTPUT fill:#b58900,stroke:#d4a72c,stroke-width:3px,color:#fff
+            </pre>
+        </div>
+    </div>
+
+    <!-- DIAGRAM 4: User Flow -->
+    <div class="diagram-section">
+        <div class="diagram-title pink">
+            <span>👤</span>
+            <span>Complete User Flow</span>
+        </div>
+        <div class="diagram-container">
+            <pre class="mermaid">
+%%{init: {'theme': 'base', 'themeVariables': { 'fontSize': '14px'}}}%%
+
+flowchart TB
+    subgraph LAUNCH["🚀 APP LAUNCH"]
+        style LAUNCH fill:#1e1e2e,stroke:#f5c2e7,stroke-width:3px,color:#fff
+        START(("🏠 Open"))
+        CHECK{"First<br/>Time?"}
+        START --> CHECK
+    end
+
+    subgraph ONBOARD["✨ ONBOARDING"]
+        style ONBOARD fill:#1e1e2e,stroke:#f5c2e7,stroke-width:3px,color:#fff
+        O1["📝 Family Name"]
+        O2["👨‍🍳 Cooking Skill"]
+        O3["💰 Budget"]
+        O4["👨‍👩‍👧 Members"]
+        O5["🎉 Welcome!"]
+        O1 --> O2 --> O3 --> O4 --> O5
+    end
+
+    subgraph MAIN["📱 MAIN APP"]
+        style MAIN fill:#1e1e2e,stroke:#89b4fa,stroke-width:3px,color:#fff
+        
+        subgraph INV["🥬 INVENTORY TAB"]
+            style INV fill:#1a7f37,stroke:#3fb950,stroke-width:2px,color:#fff
+            I1["📦 View Items"]
+            I2["📷 Scan Fridge"]
+            I3["🔍 AI Detection"]
+            I1 --> I2 --> I3 --> I1
+        end
+        
+        subgraph PLAN["🍳 PLANNING TAB"]
+            style PLAN fill:#6e40c9,stroke:#a371f7,stroke-width:2px,color:#fff
+            P1["👥 Select Diners"]
+            P2["🍜 Choose Cuisine"]
+            P3["📋 Get Recipes"]
+            P4["📖 Recipe Detail"]
+            P5["🛒 Shopping List"]
+            P1 --> P2 --> P3 --> P4 --> P5
+        end
+        
+        INV <--> PLAN
+    end
+
+    CHECK -->|"Yes"| O1
+    CHECK -->|"No"| MAIN
+    O5 --> MAIN
+            </pre>
+        </div>
+    </div>
+
+    <!-- DIAGRAM 5: Database Schema -->
+    <div class="diagram-section">
+        <div class="diagram-title orange">
+            <span>🗄️</span>
+            <span>Database Schema</span>
+        </div>
+        <div class="diagram-container">
+            <pre class="mermaid">
+%%{init: {'theme': 'base'}}%%
+
+erDiagram
+    families ||--o{ family_members : "has"
+    families ||--o{ inventory_items : "owns"
+    families ||--o{ saved_recipes : "saves"
+    families ||--o{ shopping_list_items : "creates"
+
+    families {
+        uuid id PK
+        text name
+        enum cooking_skill
+        enum budget_range
+        enum language
+    }
+
+    family_members {
+        uuid id PK
+        uuid family_id FK
+        text name
+        int age
+        array dietary_restrictions
+        array allergies
+    }
+
+    inventory_items {
+        uuid id PK
+        uuid family_id FK
+        text name
+        enum category
+        numeric quantity
+    }
+
+    saved_recipes {
+        uuid id PK
+        uuid family_id FK
+        jsonb recipe_data
+        text cuisine_style
+        numeric cost
+    }
+
+    shopping_list_items {
+        uuid id PK
+        uuid family_id FK
+        text name
+        numeric quantity
+        boolean is_purchased
+    }
+            </pre>
+        </div>
+    </div>
+
+    <!-- DIAGRAM 6: API Endpoints -->
+    <div class="diagram-section">
+        <div class="diagram-title purple">
+            <span>📡</span>
+            <span>API Endpoints</span>
+        </div>
+        <div class="diagram-container">
+            <pre class="mermaid">
+%%{init: {'theme': 'base'}}%%
+
+flowchart LR
+    subgraph CLIENT["📱 Client"]
+        C1["Camera"]
+        C2["Planning"]
+    end
+
+    subgraph API["⚙️ FastAPI @ 159.223.45.101:8000"]
+        direction TB
+        E1["<b>POST</b> /api/inventory/initialize<br/>📷 Images → 🥬 Items"]
+        E2["<b>POST</b> /api/recipes/recommend<br/>👥 + 🍜 → 📋 Recipes"]
+        E3["<b>GET</b> /api/recipes/{id}<br/>📖 Full Details"]
+        E4["<b>POST</b> /api/recipes/{id}/add-to-cart<br/>🛒 Add Missing"]
+    end
+
+    subgraph DB["🗄️ Database"]
+        D1["inventory"]
+        D2["recipes"]
+        D3["shopping"]
+    end
+
+    C1 --> E1
+    C2 --> E2
+    C2 --> E3
+    C2 --> E4
+    E1 --> D1
+    E2 --> D2
+    E4 --> D3
+
+    style CLIENT fill:#238636,stroke:#3fb950,stroke-width:2px,color:#fff
+    style API fill:#8250df,stroke:#a371f7,stroke-width:2px,color:#fff
+    style DB fill:#b58900,stroke:#d4a72c,stroke-width:2px,color:#fff
+            </pre>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'dark',
+            themeVariables: {
+                darkMode: true,
+                background: '#0d1117',
+                primaryColor: '#238636',
+                primaryTextColor: '#ffffff',
+                primaryBorderColor: '#30363d',
+                lineColor: '#58a6ff',
+                secondaryColor: '#21262d',
+                tertiaryColor: '#161b22'
+            },
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            er: {
+                useMaxWidth: true
+            }
+        });
+    </script>
+</body>
+</html>
+
+

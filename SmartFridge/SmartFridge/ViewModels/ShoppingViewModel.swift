@@ -10,7 +10,7 @@ final class ShoppingViewModel {
     var error: String?
 
     private let supabase = SupabaseService.shared
-    private var realtimeChannel: RealtimeChannelV2?
+    nonisolated(unsafe) private var realtimeChannel: RealtimeChannelV2?
 
     var totalEstimatedCost: Double {
         items.compactMap { item in item.estimatedUnitCost.map { $0 * item.quantity } }.reduce(0, +)
