@@ -117,7 +117,9 @@ struct OnboardingView: View {
             Text("👨‍👩‍👧‍👦").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.family_name.title")).font(.title.bold())
             TextField(String(localized: "onboarding.family_name.hint"), text: $familyName)
-                .textFieldStyle(.roundedBorder)
+                .padding(10)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .font(.body)
         }
     }
@@ -286,7 +288,9 @@ private struct MemberRowView: View {
     var body: some View {
         HStack {
             TextField("Name", text: $member.name)
-                .textFieldStyle(.roundedBorder)
+                .padding(10)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             Button(role: .destructive, action: onDelete) {
                 Image(systemName: "minus.circle.fill")
                     .foregroundStyle(theme.colors.danger)
