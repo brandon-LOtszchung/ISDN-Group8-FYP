@@ -17,39 +17,37 @@ struct InventoryView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if appVM.inventory.isEmpty && !appVM.isLoading {
-                    ContentUnavailableView(
-                        String(localized: "inventory.empty"),
-                        systemImage: "refrigerator",
-                        description: Text("Tap the camera icon to scan your fridge.")
-                    )
-                } else {
-                    inventoryList
+        Group {
+            if appVM.inventory.isEmpty && !appVM.isLoading {
+                ContentUnavailableView(
+                    String(localized: "inventory.empty"),
+                    systemImage: "refrigerator",
+                    description: Text("Tap the camera icon to scan your fridge.")
+                )
+            } else {
+                inventoryList
+            }
+        }
+        .navigationTitle(String(localized: "inventory.title"))
+        .searchable(text: $searchText, prompt: String(localized: "inventory.search"))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showCamera = true } label: {
+                    Image(systemName: "camera.fill").foregroundStyle(theme.colors.scan)
                 }
+                .accessibilityLabel("Scan fridge")
             }
-            .navigationTitle(String(localized: "inventory.title"))
-            .searchable(text: $searchText, prompt: String(localized: "inventory.search"))
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button { showCamera = true } label: {
-                        Image(systemName: "camera.fill").foregroundStyle(theme.colors.scan)
-                    }
-                    .accessibilityLabel("Scan fridge")
-                }
-            }
-            .sheet(isPresented: $showCamera) {
-                CameraPickerView(isPresented: $showCamera)
-            }
-            .sheet(isPresented: $showScanPrompt) {
-                ScanPromptView(showCamera: $showCamera, isPresented: $showScanPrompt)
-                    .presentationDetents([.medium])
-            }
-            .onAppear {
-                if !appVM.fridgeInitialized && appVM.inventory.isEmpty {
-                    showScanPrompt = true
-                }
+        }
+        .sheet(isPresented: $showCamera) {
+            CameraPickerView(isPresented: $showCamera)
+        }
+        .sheet(isPresented: $showScanPrompt) {
+            ScanPromptView(showCamera: $showCamera, isPresented: $showScanPrompt)
+                .presentationDetents([.medium])
+        }
+        .onAppear {
+            if !appVM.fridgeInitialized && appVM.inventory.isEmpty {
+                showScanPrompt = true
             }
         }
     }

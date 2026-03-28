@@ -6,27 +6,25 @@ struct ShoppingListView: View {
     @Environment(ThemeManager.self) private var theme
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if shoppingVM.items.isEmpty {
-                    ContentUnavailableView(
-                        "No items",
-                        systemImage: "cart",
-                        description: Text("Add missing ingredients from a recipe.")
-                    )
-                } else {
-                    shoppingList
-                }
+        Group {
+            if shoppingVM.items.isEmpty {
+                ContentUnavailableView(
+                    "No items",
+                    systemImage: "cart",
+                    description: Text("Add missing ingredients from a recipe.")
+                )
+            } else {
+                shoppingList
             }
-            .navigationTitle(String(localized: "shopping.title"))
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(String(localized: "shopping.clear_bought")) {
-                        shoppingVM.clearBought()
-                    }
-                    .disabled(shoppingVM.purchasedItemIDs.isEmpty)
-                    .foregroundStyle(theme.colors.danger)
+        }
+        .navigationTitle(String(localized: "shopping.title"))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(String(localized: "shopping.clear_bought")) {
+                    shoppingVM.clearBought()
                 }
+                .disabled(shoppingVM.purchasedItemIDs.isEmpty)
+                .foregroundStyle(theme.colors.danger)
             }
         }
     }
