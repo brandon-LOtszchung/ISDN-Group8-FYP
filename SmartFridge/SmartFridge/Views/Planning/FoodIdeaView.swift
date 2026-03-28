@@ -76,7 +76,6 @@ struct FoodIdeaView: View {
                             RecipeCardView(recommendation: rec)
                                 .padding(.horizontal)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
