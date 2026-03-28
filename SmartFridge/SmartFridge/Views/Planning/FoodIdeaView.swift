@@ -115,10 +115,6 @@ private struct RecipeCardView: View {
                     HStack {
                         Text(recommendation.name).font(.body.bold()).foregroundStyle(theme.colors.text)
                         Spacer()
-                        ShareLink(item: "Check out this recipe: \(recommendation.name)") {
-                            Image(systemName: "square.and.arrow.up")
-                                .foregroundStyle(theme.colors.primary)
-                        }
                     }
                     Text(recommendation.cuisineStyle).font(.caption).foregroundStyle(.secondary)
                     // Match bar
