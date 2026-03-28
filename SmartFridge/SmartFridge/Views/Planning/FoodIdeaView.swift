@@ -116,24 +116,16 @@ private struct RecipeCardView: View {
                     Text(recommendation.cuisineStyle).font(.caption).foregroundStyle(.secondary)
                     // Match bar
                     HStack(spacing: 6) {
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(theme.colors.border)
-                                    .frame(height: 4)
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(Color.green)
-                                    .frame(width: geo.size.width * CGFloat(recommendation.matchPercentage) / 100, height: 4)
-                            }
-                        }
-                        .frame(height: 4)
+                        ProgressView(value: Double(recommendation.matchPercentage), total: 100)
+                            .tint(theme.colors.success)
+                            .scaleEffect(x: 1, y: 0.6, anchor: .center)
                         Text("\(recommendation.matchPercentage)%")
                             .font(.caption.bold())
-                            .foregroundStyle(.green)
+                            .foregroundStyle(theme.colors.success)
                     }
                     Text("\(recommendation.missingCount) missing")
                         .font(.caption)
-                        .foregroundStyle(recommendation.missingCount == 0 ? .green : theme.colors.danger)
+                        .foregroundStyle(recommendation.missingCount == 0 ? theme.colors.success : theme.colors.danger)
                 }
                 .padding(10)
             }
