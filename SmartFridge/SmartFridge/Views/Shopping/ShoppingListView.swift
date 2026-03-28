@@ -100,7 +100,7 @@ private struct ShoppingItemRow: View {
         Button(action: onToggle) {
             HStack(spacing: 12) {
                 Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(item.isPurchased ? .green : theme.colors.border)
+                    .foregroundStyle(item.isPurchased ? theme.colors.success : theme.colors.border)
                     .font(.title3)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)

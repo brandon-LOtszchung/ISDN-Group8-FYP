@@ -129,7 +129,7 @@ struct RecipeDetailView: View {
                 }
                 HStack {
                     Image(systemName: inFridge ? "checkmark.circle.fill" : "circle")
-                        .foregroundStyle(inFridge ? .green : theme.colors.border)
+                        .foregroundStyle(inFridge ? theme.colors.success : theme.colors.border)
                     Text(ing.name).foregroundStyle(theme.colors.text)
                     Spacer()
                     Text("\(ing.quantity, specifier: "%.1f") \(ing.unit)")
@@ -142,7 +142,7 @@ struct RecipeDetailView: View {
                     } else {
                         Text(String(localized: "recipe.in_fridge"))
                             .font(.caption.bold())
-                            .foregroundStyle(.green)
+                            .foregroundStyle(theme.colors.success)
                     }
                 }
                 .padding(.vertical, 8)
