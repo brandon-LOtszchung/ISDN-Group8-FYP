@@ -68,7 +68,7 @@ struct CameraPickerView: View {
             }
         }
         // Camera sheet — UIImagePickerController (sourceType: .camera)
-        .fullScreenCover(isPresented: $showCamera) {
+        .sheet(isPresented: $showCamera) {
             CameraCaptureBridge { image in
                 showCamera = false
                 Task { await upload(images: [image]) }
