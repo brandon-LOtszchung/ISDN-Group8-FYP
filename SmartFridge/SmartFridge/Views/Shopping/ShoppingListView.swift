@@ -4,6 +4,7 @@ import SwiftUI
 struct ShoppingListView: View {
     @Environment(ShoppingViewModel.self) private var shoppingVM
     @Environment(ThemeManager.self) private var theme
+    @State private var showClearConfirmation = false
 
     var body: some View {
         Group {
@@ -21,11 +22,23 @@ struct ShoppingListView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button(String(localized: "shopping.clear_bought")) {
-                    shoppingVM.clearBought()
+                    showClearConfirmation = true
                 }
                 .disabled(shoppingVM.purchasedItemIDs.isEmpty)
-                .foregroundStyle(theme.colors.danger)
+                .tint(theme.colors.danger)
             }
+        }
+        .confirmationDialog(
+            String(localized: "shopping.clear_bought_confirm.title"),
+            isPresented: $showClearConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(String(localized: "shopping.clear_bought"), role: .destructive) {
+                shoppingVM.clearBought()
+            }
+            Button(String(localized: "common.cancel"), role: .cancel) {}
+        } message: {
+            Text(String(localized: "shopping.clear_bought_confirm.message"))
         }
         .topBarToolbar()
     }

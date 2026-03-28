@@ -61,6 +61,8 @@
 // Shopping
 "shopping.hint.mark"               = "Tandai sebagai sudah dibeli";
 "shopping.hint.unmark"             = "Tandai sebagai belum dibeli";
+"shopping.clear_bought_confirm.title"   = "Hapus Item yang Dibeli";
+"shopping.clear_bought_confirm.message" = "Ini akan menghapus semua item yang sudah dibeli secara permanen.";
 "shopping.title"                   = "Belanja";
 "shopping.clear_bought"            = "Hapus yang Dibeli";
 "shopping.total"                   = "Total Perkiraan";

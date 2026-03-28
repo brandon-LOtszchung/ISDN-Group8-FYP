@@ -61,6 +61,8 @@
 // Shopping
 "shopping.hint.mark"               = "Marks item as bought";
 "shopping.hint.unmark"             = "Marks item as not bought";
+"shopping.clear_bought_confirm.title"   = "Clear Bought Items";
+"shopping.clear_bought_confirm.message" = "This will permanently remove all purchased items.";
 "shopping.title"                   = "Shopping";
 "shopping.clear_bought"            = "Clear Bought";
 "shopping.total"                   = "Estimated Total";

@@ -61,6 +61,8 @@
 // Shopping
 "shopping.hint.mark"               = "標記為已購買";
 "shopping.hint.unmark"             = "標記為未購買";
+"shopping.clear_bought_confirm.title"   = "清除已購買項目";
+"shopping.clear_bought_confirm.message" = "這將永久刪除所有已購買的項目。";
 "shopping.title"                   = "購物";
 "shopping.clear_bought"            = "清除已購";
 "shopping.total"                   = "預計總額";
