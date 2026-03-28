@@ -47,6 +47,9 @@
 "planning.no_results.title"        = "沒有符合的食譜";
 "planning.no_results.description"  = "嘗試選擇其他菜系，或在冰箱中添加更多食材。";
 
+// Recipe added to shopping
+"recipe.added_to_shopping"         = "已加入購物清單";
+
 // Recipe Detail
 "recipe.ingredients"               = "食材";
 "recipe.steps"                     = "步驟";

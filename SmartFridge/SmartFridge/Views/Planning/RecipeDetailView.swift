@@ -10,6 +10,7 @@ struct RecipeDetailView: View {
 
     @ScaledMetric private var heroEmojiSize: CGFloat = 60
     @State private var selectedTab = 0
+    @State private var showSuccess = false
 
     var body: some View {
         ScrollView {
@@ -52,8 +53,13 @@ struct RecipeDetailView: View {
                     // Add missing to shopping list CTA
                     Button {
                         Task {
+                            let errorBefore = planningVM.error
                             await planningVM.addMissingToShoppingList(recipeId: recommendation.savedRecipeId)
-                            dismiss()
+                            if planningVM.error == errorBefore {
+                                showSuccess = true
+                                try? await Task.sleep(for: .seconds(1))
+                                dismiss()
+                            }
                         }
                     } label: {
                         Text(String(localized: "recipe.add_to_shopping"))
@@ -63,12 +69,29 @@ struct RecipeDetailView: View {
                     .buttonStyle(.borderedProminent)
                     .tint(theme.colors.primary)
                     .controlSize(.large)
+                    .overlay(alignment: .center) {
+                        if showSuccess {
+                            Label(String(localized: "recipe.added_to_shopping"), systemImage: "checkmark.circle.fill")
+                                .font(.subheadline.bold())
+                                .padding(12)
+                                .background(.regularMaterial)
+                                .clipShape(Capsule())
+                                .transition(.scale.combined(with: .opacity))
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: showSuccess)
                 }
                 .padding()
             }
         }
         .navigationTitle(recommendation.name)
         .navigationBarTitleDisplayMode(.inline)
+        .alert(String(localized: "common.error"), isPresented: Binding(
+            get: { planningVM.error != nil },
+            set: { if !$0 { planningVM.error = nil } }
+        )) {
+            Button(String(localized: "common.done")) { planningVM.error = nil }
+        } message: { Text(planningVM.error ?? "") }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 ShareLink(item: "Check out this recipe: \(recommendation.name)") {

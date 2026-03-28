@@ -47,6 +47,9 @@
 "planning.no_results.title"        = "No matching recipes";
 "planning.no_results.description"  = "Try selecting a different cuisine or add more items to your fridge.";
 
+// Recipe added to shopping
+"recipe.added_to_shopping"         = "Added to Shopping List";
+
 // Recipe Detail
 "recipe.ingredients"               = "Ingredients";
 "recipe.steps"                     = "Steps";

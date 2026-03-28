@@ -47,6 +47,9 @@
 "planning.no_results.title"        = "Tidak ada resep yang cocok";
 "planning.no_results.description"  = "Coba pilih masakan lain atau tambahkan lebih banyak item ke kulkas Anda.";
 
+// Recipe added to shopping
+"recipe.added_to_shopping"         = "Ditambahkan ke Daftar Belanja";
+
 // Recipe Detail
 "recipe.ingredients"               = "Bahan-bahan";
 "recipe.steps"                     = "Langkah-langkah";

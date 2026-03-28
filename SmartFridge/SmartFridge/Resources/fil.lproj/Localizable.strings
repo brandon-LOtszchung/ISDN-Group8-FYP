@@ -47,6 +47,9 @@
 "planning.no_results.title"        = "Walang nahanap na recipe";
 "planning.no_results.description"  = "Subukan ang ibang lutuin o magdagdag ng mga item sa inyong ref.";
 
+// Recipe added to shopping
+"recipe.added_to_shopping"         = "Naidagdag sa Shopping List";
+
 // Recipe Detail
 "recipe.ingredients"               = "Mga Sangkap";
 "recipe.steps"                     = "Mga Hakbang";
