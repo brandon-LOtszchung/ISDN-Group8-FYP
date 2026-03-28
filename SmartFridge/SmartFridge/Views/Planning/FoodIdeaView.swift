@@ -90,7 +90,10 @@ struct FoodIdeaView: View {
         }
         .navigationTitle(String(localized: "planning.title"))
         .topBarToolbar()
-        .alert(String(localized: "common.error"), isPresented: .constant(planningVM.error != nil)) {
+        .alert(String(localized: "common.error"), isPresented: Binding(
+            get: { planningVM.error != nil },
+            set: { if !$0 { planningVM.error = nil } }
+        )) {
             Button(String(localized: "common.done")) { planningVM.error = nil }
         } message: { Text(planningVM.error ?? "") }
     }

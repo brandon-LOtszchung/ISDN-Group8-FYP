@@ -30,6 +30,7 @@
 
 // Camera
 "camera.title"                     = "新增食材";
+"camera.upload_error"              = "上傳錯誤";
 "camera.take_photo"                = "拍照";
 "camera.choose_library"            = "從相簿選擇";
 "camera.cancel"                    = "取消";

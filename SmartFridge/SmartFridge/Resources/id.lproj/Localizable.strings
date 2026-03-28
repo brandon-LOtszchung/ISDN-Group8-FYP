@@ -30,6 +30,7 @@
 
 // Camera
 "camera.title"                     = "Tambah Item";
+"camera.upload_error"              = "Error Unggahan";
 "camera.take_photo"                = "Ambil Foto";
 "camera.choose_library"            = "Pilih dari Galeri";
 "camera.cancel"                    = "Batal";

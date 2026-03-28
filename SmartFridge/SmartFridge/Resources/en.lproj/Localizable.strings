@@ -30,6 +30,7 @@
 
 // Camera
 "camera.title"                     = "Add Items";
+"camera.upload_error"              = "Upload Error";
 "camera.take_photo"                = "Take Photo";
 "camera.choose_library"            = "Choose from Library";
 "camera.cancel"                    = "Cancel";

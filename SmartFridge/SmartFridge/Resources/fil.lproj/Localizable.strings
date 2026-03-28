@@ -30,6 +30,7 @@
 
 // Camera
 "camera.title"                     = "Magdagdag ng Mga Item";
+"camera.upload_error"              = "Error sa Pag-upload";
 "camera.take_photo"                = "Kumuha ng Litrato";
 "camera.choose_library"            = "Pumili mula sa Library";
 "camera.cancel"                    = "Kanselahin";

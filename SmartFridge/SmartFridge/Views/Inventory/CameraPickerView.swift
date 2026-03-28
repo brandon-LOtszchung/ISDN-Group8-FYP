@@ -59,7 +59,10 @@ struct CameraPickerView: View {
                     Button(String(localized: "camera.cancel")) { isPresented = false }
                 }
             }
-            .alert("Upload Error", isPresented: .constant(uploadError != nil)) {
+            .alert(String(localized: "camera.upload_error"), isPresented: Binding(
+                get: { uploadError != nil },
+                set: { if !$0 { uploadError = nil } }
+            )) {
                 Button(String(localized: "common.done")) { uploadError = nil }
             } message: {
                 Text(uploadError ?? "")
