@@ -44,12 +44,24 @@ struct OnboardingView: View {
             .padding(.top, 16)
             // Progress dots
             progressDots
-            // Step content
-            ScrollView {
-                stepContent
-                    .padding(.horizontal, 24)
-                    .padding(.top, 20)
+            // Step content — paged with swipe support
+            TabView(selection: Binding(
+                get: { step.rawValue },
+                set: { newVal in
+                    if let s = OnboardingStep(rawValue: newVal) { step = s }
+                }
+            )) {
+                ForEach(OnboardingStep.allCases, id: \.rawValue) { s in
+                    ScrollView {
+                        stepContentFor(s)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 20)
+                    }
+                    .tag(s.rawValue)
+                }
             }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(.easeInOut, value: step)
             // Continue button
             if shouldShowContinue {
                 continueButton
@@ -80,8 +92,8 @@ struct OnboardingView: View {
     // MARK: - Step routing
 
     @ViewBuilder
-    private var stepContent: some View {
-        switch step {
+    private func stepContentFor(_ s: OnboardingStep) -> some View {
+        switch s {
         case .name:            nameStep
         case .cookingIntro:    typewriterStep(text: "Let's talk about how your family cooks.", emoji: "🍳")
         case .cooking:         cookingStep
@@ -91,6 +103,11 @@ struct OnboardingView: View {
         case .members:         membersStep
         case .summary:         summaryStep
         }
+    }
+
+    @ViewBuilder
+    private var stepContent: some View {
+        stepContentFor(step)
     }
 
     // MARK: - Individual Steps
