@@ -27,11 +27,10 @@ struct CameraPickerView: View {
                         Label(String(localized: "camera.take_photo"), systemImage: "camera.fill")
                             .font(.body.bold())
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(theme.colors.scan)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(theme.colors.scan)
+                    .controlSize(.large)
 
                     // Library picker (supports up to 3 images)
                     PhotosPicker(
@@ -42,11 +41,10 @@ struct CameraPickerView: View {
                         Label(String(localized: "camera.choose_library"), systemImage: "photo.on.rectangle")
                             .font(.body.bold())
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(theme.colors.primary)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(theme.colors.primary)
+                    .controlSize(.large)
                     .onChange(of: photoPickerItems) { _, items in
                         guard !items.isEmpty else { return }
                         Task { await uploadLibraryPhotos(items) }

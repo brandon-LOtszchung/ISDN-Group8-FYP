@@ -217,10 +217,9 @@ struct OnboardingView: View {
         }
         .font(.body.bold())
         .frame(maxWidth: .infinity)
-        .padding()
-        .background(theme.colors.primary)
-        .foregroundStyle(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .buttonStyle(.borderedProminent)
+        .tint(theme.colors.primary)
+        .controlSize(.large)
     }
 
     // MARK: - Finish

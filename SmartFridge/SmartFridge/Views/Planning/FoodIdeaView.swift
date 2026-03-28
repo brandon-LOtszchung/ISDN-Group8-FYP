@@ -58,14 +58,10 @@ struct FoodIdeaView: View {
                     Text(String(localized: "planning.get_ideas"))
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            (planningVM.selectedCuisine == nil || planningVM.selectedMemberIds.isEmpty)
-                                ? theme.colors.border : theme.colors.primary
-                        )
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(theme.colors.primary)
+                .controlSize(.large)
                 .disabled(planningVM.selectedCuisine == nil || planningVM.selectedMemberIds.isEmpty)
                 .padding(.horizontal)
 

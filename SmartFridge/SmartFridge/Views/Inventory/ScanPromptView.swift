@@ -27,11 +27,10 @@ struct ScanPromptView: View {
                 Text(String(localized: "inventory.scan_prompt.scan"))
                     .font(.body.bold())
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(theme.colors.scan)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
             }
+            .buttonStyle(.borderedProminent)
+            .tint(theme.colors.scan)
+            .controlSize(.large)
 
             Button {
                 appVM.fridgeInitialized = true

@@ -59,11 +59,10 @@ struct RecipeDetailView: View {
                         Text(String(localized: "recipe.add_to_shopping"))
                             .font(.body.bold())
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(theme.colors.primary)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(theme.colors.primary)
+                    .controlSize(.large)
                 }
                 .padding()
             }
