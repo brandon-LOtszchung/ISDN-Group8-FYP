@@ -13,6 +13,7 @@ struct RecipeDetailView: View {
     @State private var showSuccess = false
 
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 // Hero
@@ -20,6 +21,7 @@ struct RecipeDetailView: View {
                     .fill(theme.colors.surfaceAlt)
                     .frame(height: 160)
                     .overlay(Text("🍽️").font(.system(size: heroEmojiSize)).accessibilityHidden(true))
+                    .id("top")
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text(recommendation.name).font(.title2.bold())
@@ -84,6 +86,10 @@ struct RecipeDetailView: View {
                 .padding()
             }
         }
+        .onChange(of: selectedTab) {
+            withAnimation { proxy.scrollTo("top", anchor: .top) }
+        }
+        } // ScrollViewReader
         .navigationTitle(recommendation.name)
         .navigationBarTitleDisplayMode(.inline)
         .alert(String(localized: "common.error"), isPresented: Binding(
