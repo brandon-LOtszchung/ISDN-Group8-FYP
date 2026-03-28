@@ -86,6 +86,8 @@ struct RecipeDetailView: View {
             .padding(.vertical, 5)
             .background(theme.colors.surfaceAlt)
             .clipShape(Capsule())
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(text)
     }
 
     @ViewBuilder
