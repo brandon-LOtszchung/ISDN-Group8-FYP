@@ -67,6 +67,7 @@ struct RecipeDetailView: View {
                 .padding()
             }
         }
+        .navigationTitle(recommendation.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
