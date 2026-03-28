@@ -52,7 +52,7 @@ struct CameraPickerView: View {
                 }
             }
             .padding(.horizontal, 24)
-            .navigationTitle(String(localized: "inventory.title"))
+            .navigationTitle(String(localized: "camera.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {

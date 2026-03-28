@@ -29,6 +29,7 @@
 "inventory.delete_confirm"         = "Remove Item";
 
 // Camera
+"camera.title"                     = "Add Items";
 "camera.take_photo"                = "Take Photo";
 "camera.choose_library"            = "Choose from Library";
 "camera.cancel"                    = "Cancel";

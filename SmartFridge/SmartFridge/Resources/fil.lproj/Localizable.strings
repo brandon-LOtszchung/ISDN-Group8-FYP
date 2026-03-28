@@ -29,6 +29,7 @@
 "inventory.delete_confirm"         = "Alisin ang Item";
 
 // Camera
+"camera.title"                     = "Magdagdag ng Mga Item";
 "camera.take_photo"                = "Kumuha ng Litrato";
 "camera.choose_library"            = "Pumili mula sa Library";
 "camera.cancel"                    = "Kanselahin";

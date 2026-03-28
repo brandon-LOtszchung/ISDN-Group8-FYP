@@ -29,6 +29,7 @@
 "inventory.delete_confirm"         = "Hapus Item";
 
 // Camera
+"camera.title"                     = "Tambah Item";
 "camera.take_photo"                = "Ambil Foto";
 "camera.choose_library"            = "Pilih dari Galeri";
 "camera.cancel"                    = "Batal";
