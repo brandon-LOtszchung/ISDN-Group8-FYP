@@ -69,5 +69,8 @@ struct InventoryView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .refreshable {
+            await appVM.loadAll()
+        }
     }
 }
