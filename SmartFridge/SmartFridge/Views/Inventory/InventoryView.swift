@@ -18,7 +18,10 @@ struct InventoryView: View {
 
     var body: some View {
         Group {
-            if appVM.inventory.isEmpty {
+            if appVM.isLoading && appVM.inventory.isEmpty {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if appVM.inventory.isEmpty {
                 if !appVM.fridgeInitialized {
                     ScanPromptView(showCamera: $showCamera, isPresented: $showScanPromptInline)
                 } else {
