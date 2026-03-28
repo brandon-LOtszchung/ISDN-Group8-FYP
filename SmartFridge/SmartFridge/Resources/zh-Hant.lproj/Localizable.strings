@@ -47,6 +47,8 @@
 "recipe.share"                     = "分享食譜";
 
 // Shopping
+"shopping.hint.mark"               = "標記為已購買";
+"shopping.hint.unmark"             = "標記為未購買";
 "shopping.title"                   = "購物";
 "shopping.clear_bought"            = "清除已購";
 "shopping.total"                   = "預計總額";

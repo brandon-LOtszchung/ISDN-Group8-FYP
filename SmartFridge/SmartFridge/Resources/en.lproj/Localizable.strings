@@ -47,6 +47,8 @@
 "recipe.share"                     = "Share Recipe";
 
 // Shopping
+"shopping.hint.mark"               = "Marks item as bought";
+"shopping.hint.unmark"             = "Marks item as not bought";
 "shopping.title"                   = "Shopping";
 "shopping.clear_bought"            = "Clear Bought";
 "shopping.total"                   = "Estimated Total";

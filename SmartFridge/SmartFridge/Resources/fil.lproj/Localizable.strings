@@ -47,6 +47,8 @@
 "recipe.share"                     = "Ibahagi ang Resipe";
 
 // Shopping
+"shopping.hint.mark"               = "Markahan bilang binili";
+"shopping.hint.unmark"             = "Markahan bilang hindi binili";
 "shopping.title"                   = "Pamimili";
 "shopping.clear_bought"            = "I-clear ang Nabili";
 "shopping.total"                   = "Tinatayang Kabuuan";

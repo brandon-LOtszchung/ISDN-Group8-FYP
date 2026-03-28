@@ -100,5 +100,9 @@ private struct ShoppingItemRow: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(item.name)
+        .accessibilityHint(item.isPurchased
+            ? String(localized: "shopping.hint.unmark")
+            : String(localized: "shopping.hint.mark"))
     }
 }

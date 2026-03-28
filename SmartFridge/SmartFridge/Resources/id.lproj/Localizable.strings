@@ -47,6 +47,8 @@
 "recipe.share"                     = "Bagikan Resep";
 
 // Shopping
+"shopping.hint.mark"               = "Tandai sebagai sudah dibeli";
+"shopping.hint.unmark"             = "Tandai sebagai belum dibeli";
 "shopping.title"                   = "Belanja";
 "shopping.clear_bought"            = "Hapus yang Dibeli";
 "shopping.total"                   = "Total Perkiraan";
