@@ -8,6 +8,7 @@ struct RecipeDetailView: View {
     @Environment(ThemeManager.self) private var theme
     @Environment(\.dismiss) private var dismiss
 
+    @ScaledMetric private var heroEmojiSize: CGFloat = 60
     @State private var selectedTab = 0
 
     var body: some View {
@@ -17,7 +18,7 @@ struct RecipeDetailView: View {
                 Rectangle()
                     .fill(theme.colors.surfaceAlt)
                     .frame(height: 160)
-                    .overlay(Text("🍽️").font(.system(size: 60)))
+                    .overlay(Text("🍽️").font(.system(size: heroEmojiSize)))
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text(recommendation.name).font(.title2.bold())

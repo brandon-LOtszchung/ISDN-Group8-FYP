@@ -10,6 +10,8 @@ struct OnboardingView: View {
     @Environment(AppViewModel.self) private var appVM
     @Environment(ThemeManager.self) private var theme
 
+    @ScaledMetric private var emojiSize: CGFloat = 52
+
     @State private var step: OnboardingStep = .name
     @State private var familyName = ""
     @State private var selectedSkill = ""
@@ -77,7 +79,7 @@ struct OnboardingView: View {
 
     private var nameStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("👨‍👩‍👧‍👦").font(.system(size: 52))
+            Text("👨‍👩‍👧‍👦").font(.system(size: emojiSize))
             Text(String(localized: "onboarding.family_name.title")).font(.title.bold())
             TextField(String(localized: "onboarding.family_name.hint"), text: $familyName)
                 .textFieldStyle(.roundedBorder)
@@ -87,7 +89,7 @@ struct OnboardingView: View {
 
     private var cookingStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("🍽️").font(.system(size: 52))
+            Text("🍽️").font(.system(size: emojiSize))
             Text(String(localized: "onboarding.cooking.title")).font(.title.bold())
             FlowLayout(spacing: 8) {
                 ForEach(Constants.cookingSkillLevels, id: \.self) { skill in
@@ -101,7 +103,7 @@ struct OnboardingView: View {
 
     private var budgetStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("💵").font(.system(size: 52))
+            Text("💵").font(.system(size: emojiSize))
             Text(String(localized: "onboarding.budget.title")).font(.title.bold())
             FlowLayout(spacing: 8) {
                 ForEach(Constants.budgetRanges, id: \.value) { budget in
@@ -115,7 +117,7 @@ struct OnboardingView: View {
 
     private var membersStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("👥").font(.system(size: 52))
+            Text("👥").font(.system(size: emojiSize))
             Text(String(localized: "onboarding.members.title")).font(.title.bold())
             ForEach(members.indices, id: \.self) { i in
                 MemberRowView(member: $members[i]) {
@@ -137,7 +139,7 @@ struct OnboardingView: View {
 
     private var summaryStep: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("🎉").font(.system(size: 52))
+            Text("🎉").font(.system(size: emojiSize))
             Text(String(localized: "onboarding.summary.title")).font(.title.bold())
             Group {
                 LabeledContent("Family", value: familyName)
@@ -153,7 +155,7 @@ struct OnboardingView: View {
 
     private func typewriterStep(text: String, emoji: String) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(emoji).font(.system(size: 52))
+            Text(emoji).font(.system(size: emojiSize))
             Text(typewriterText)
                 .font(.title2.bold())
                 .animation(nil)

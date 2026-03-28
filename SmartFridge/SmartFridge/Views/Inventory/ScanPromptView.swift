@@ -7,9 +7,11 @@ struct ScanPromptView: View {
     @Binding var showCamera: Bool
     @Binding var isPresented: Bool
 
+    @ScaledMetric private var emojiSize: CGFloat = 60
+
     var body: some View {
         VStack(spacing: 20) {
-            Text("📷").font(.system(size: 60))
+            Text("📷").font(.system(size: emojiSize))
             Text(String(localized: "inventory.scan_prompt.title"))
                 .font(.title2.bold())
             Text(String(localized: "inventory.scan_prompt.subtitle"))
