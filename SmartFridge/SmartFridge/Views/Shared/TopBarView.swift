@@ -45,8 +45,54 @@ struct TopBarView: View {
     }
 }
 
+struct TopBarToolbarModifier: ViewModifier {
+    @Environment(ThemeManager.self) private var theme
+    @Environment(LanguageManager.self) private var languageManager
+    @State private var showProfileDrawer = false
+
+    func body(content: Content) -> some View {
+        content
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        theme.setTheme(theme.theme == .warm ? .cool : .warm)
+                    } label: {
+                        Image(systemName: theme.theme == .warm ? "sun.max.fill" : "snowflake")
+                    }
+                    .accessibilityLabel("Toggle theme")
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Button(lang.displayName) { languageManager.setLanguage(lang) }
+                        }
+                    } label: {
+                        Image(systemName: "globe")
+                    }
+                    .accessibilityLabel("Select language")
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Button { showProfileDrawer = true } label: {
+                        Image(systemName: "person.circle")
+                    }
+                    .accessibilityLabel("Profile")
+                }
+            }
+            .sheet(isPresented: $showProfileDrawer) {
+                ProfileDrawerView()
+                    .presentationDetents([.medium])
+            }
+    }
+}
+
+extension View {
+    func topBarToolbar() -> some View {
+        modifier(TopBarToolbarModifier())
+    }
+}
+
 // Minimal profile drawer — shows family name and member list
-private struct ProfileDrawerView: View {
+struct ProfileDrawerView: View {
     @Environment(AppViewModel.self) private var appVM
     @Environment(ThemeManager.self) private var theme
 

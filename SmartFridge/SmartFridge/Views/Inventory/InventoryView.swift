@@ -50,6 +50,7 @@ struct InventoryView: View {
                 showScanPrompt = true
             }
         }
+        .topBarToolbar()
     }
 
     private var inventoryList: some View {

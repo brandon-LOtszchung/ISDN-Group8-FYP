@@ -87,6 +87,7 @@ struct FoodIdeaView: View {
             .padding(.top)
         }
         .navigationTitle(String(localized: "planning.title"))
+        .topBarToolbar()
         .alert(String(localized: "common.error"), isPresented: .constant(planningVM.error != nil)) {
             Button(String(localized: "common.done")) { planningVM.error = nil }
         } message: { Text(planningVM.error ?? "") }

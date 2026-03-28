@@ -27,6 +27,7 @@ struct ShoppingListView: View {
                 .foregroundStyle(theme.colors.danger)
             }
         }
+        .topBarToolbar()
     }
 
     private var shoppingList: some View {
