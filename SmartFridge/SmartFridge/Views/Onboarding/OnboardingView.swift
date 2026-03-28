@@ -156,9 +156,11 @@ struct OnboardingView: View {
     private func typewriterStep(text: String, emoji: String) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             Text(emoji).font(.system(size: emojiSize))
+                .accessibilityHidden(true)
             Text(typewriterText)
                 .font(.title2.bold())
                 .animation(nil)
+                .accessibilityLabel(text)
         }
     }
 
