@@ -7,7 +7,7 @@ struct InventoryView: View {
 
     @State private var searchText = ""
     @State private var showCamera = false
-    @State private var showScanPrompt = false
+    @State private var showScanPromptInline = false
 
     private var groupedInventory: [String: [InventoryItem]] {
         let filtered = searchText.isEmpty
@@ -18,12 +18,16 @@ struct InventoryView: View {
 
     var body: some View {
         Group {
-            if appVM.inventory.isEmpty && !appVM.isLoading {
-                ContentUnavailableView(
-                    String(localized: "inventory.empty"),
-                    systemImage: "refrigerator",
-                    description: Text("Tap the camera icon to scan your fridge.")
-                )
+            if appVM.inventory.isEmpty {
+                if !appVM.fridgeInitialized {
+                    ScanPromptView(showCamera: $showCamera, isPresented: $showScanPromptInline)
+                } else {
+                    ContentUnavailableView(
+                        String(localized: "inventory.empty"),
+                        systemImage: "refrigerator",
+                        description: Text("Tap the camera icon to scan your fridge.")
+                    )
+                }
             } else {
                 inventoryList
             }
@@ -40,15 +44,6 @@ struct InventoryView: View {
         }
         .sheet(isPresented: $showCamera) {
             CameraPickerView(isPresented: $showCamera)
-        }
-        .sheet(isPresented: $showScanPrompt) {
-            ScanPromptView(showCamera: $showCamera, isPresented: $showScanPrompt)
-                .presentationDetents([.medium])
-        }
-        .onAppear {
-            if !appVM.fridgeInitialized && appVM.inventory.isEmpty {
-                showScanPrompt = true
-            }
         }
         .topBarToolbar()
     }
