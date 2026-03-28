@@ -107,7 +107,7 @@ private struct RecipeCardView: View {
                 Rectangle()
                     .fill(theme.colors.surfaceAlt)
                     .frame(height: 80)
-                    .overlay(Text("🍽️").font(.largeTitle))
+                    .overlay(Text("🍽️").font(.largeTitle).accessibilityHidden(true))
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {

@@ -79,7 +79,7 @@ struct OnboardingView: View {
 
     private var nameStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("👨‍👩‍👧‍👦").font(.system(size: emojiSize))
+            Text("👨‍👩‍👧‍👦").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.family_name.title")).font(.title.bold())
             TextField(String(localized: "onboarding.family_name.hint"), text: $familyName)
                 .textFieldStyle(.roundedBorder)
@@ -89,7 +89,7 @@ struct OnboardingView: View {
 
     private var cookingStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("🍽️").font(.system(size: emojiSize))
+            Text("🍽️").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.cooking.title")).font(.title.bold())
             FlowLayout(spacing: 8) {
                 ForEach(Constants.cookingSkillLevels, id: \.self) { skill in
@@ -103,7 +103,7 @@ struct OnboardingView: View {
 
     private var budgetStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("💵").font(.system(size: emojiSize))
+            Text("💵").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.budget.title")).font(.title.bold())
             FlowLayout(spacing: 8) {
                 ForEach(Constants.budgetRanges, id: \.value) { budget in
@@ -117,7 +117,7 @@ struct OnboardingView: View {
 
     private var membersStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("👥").font(.system(size: emojiSize))
+            Text("👥").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.members.title")).font(.title.bold())
             ForEach(members.indices, id: \.self) { i in
                 MemberRowView(member: $members[i]) {
@@ -139,7 +139,7 @@ struct OnboardingView: View {
 
     private var summaryStep: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("🎉").font(.system(size: emojiSize))
+            Text("🎉").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.summary.title")).font(.title.bold())
             Group {
                 LabeledContent("Family", value: familyName)
@@ -155,8 +155,7 @@ struct OnboardingView: View {
 
     private func typewriterStep(text: String, emoji: String) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(emoji).font(.system(size: emojiSize))
-                .accessibilityHidden(true)
+            Text(emoji).font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(typewriterText)
                 .font(.title2.bold())
                 .animation(nil)

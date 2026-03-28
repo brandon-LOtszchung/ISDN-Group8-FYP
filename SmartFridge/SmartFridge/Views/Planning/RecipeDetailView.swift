@@ -18,7 +18,7 @@ struct RecipeDetailView: View {
                 Rectangle()
                     .fill(theme.colors.surfaceAlt)
                     .frame(height: 160)
-                    .overlay(Text("🍽️").font(.system(size: heroEmojiSize)))
+                    .overlay(Text("🍽️").font(.system(size: heroEmojiSize)).accessibilityHidden(true))
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text(recommendation.name).font(.title2.bold())

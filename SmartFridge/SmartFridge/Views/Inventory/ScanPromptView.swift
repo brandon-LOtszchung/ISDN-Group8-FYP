@@ -11,7 +11,7 @@ struct ScanPromptView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            Text("📷").font(.system(size: emojiSize))
+            Text("📷").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "inventory.scan_prompt.title"))
                 .font(.title2.bold())
             Text(String(localized: "inventory.scan_prompt.subtitle"))
