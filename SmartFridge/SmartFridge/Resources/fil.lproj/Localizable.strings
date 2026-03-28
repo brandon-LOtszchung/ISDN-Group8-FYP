@@ -4,6 +4,10 @@
 "tab.shopping"  = "Pamimili";
 
 // Onboarding
+"onboarding.summary.family"        = "Pamilya";
+"onboarding.summary.cooking_skill" = "Kasanayan sa Pagluluto";
+"onboarding.summary.budget"        = "Badyet";
+"onboarding.summary.members"       = "Mga Miyembro";
 "onboarding.family_name.title"     = "Ano ang pangalan ng iyong pamilya?";
 "onboarding.family_name.hint"      = "hal. Ang Pamilyang Chan";
 "onboarding.cooking_intro.title"   = "Pag-usapan natin ang pagluluto";

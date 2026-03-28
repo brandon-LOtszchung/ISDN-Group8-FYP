@@ -4,6 +4,10 @@
 "tab.shopping"  = "Belanja";
 
 // Onboarding
+"onboarding.summary.family"        = "Keluarga";
+"onboarding.summary.cooking_skill" = "Kemampuan Memasak";
+"onboarding.summary.budget"        = "Anggaran";
+"onboarding.summary.members"       = "Anggota";
 "onboarding.family_name.title"     = "Apa nama keluarga Anda?";
 "onboarding.family_name.hint"      = "mis. Keluarga Chan";
 "onboarding.cooking_intro.title"   = "Mari bicara tentang memasak";

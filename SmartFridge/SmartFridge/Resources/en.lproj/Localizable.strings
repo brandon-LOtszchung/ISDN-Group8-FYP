@@ -4,6 +4,10 @@
 "tab.shopping"  = "Shopping";
 
 // Onboarding
+"onboarding.summary.family"        = "Family";
+"onboarding.summary.cooking_skill" = "Cooking skill";
+"onboarding.summary.budget"        = "Budget";
+"onboarding.summary.members"       = "Members";
 "onboarding.family_name.title"     = "What's your family name?";
 "onboarding.family_name.hint"      = "e.g. The Chan Family";
 "onboarding.cooking_intro.title"   = "Let's talk about cooking";

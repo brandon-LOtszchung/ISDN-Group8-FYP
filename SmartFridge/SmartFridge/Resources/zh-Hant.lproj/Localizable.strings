@@ -4,6 +4,10 @@
 "tab.shopping"  = "購物";
 
 // Onboarding
+"onboarding.summary.family"        = "家庭";
+"onboarding.summary.cooking_skill" = "烹飪技巧";
+"onboarding.summary.budget"        = "預算";
+"onboarding.summary.members"       = "成員";
 "onboarding.family_name.title"     = "你的家庭叫什麼名字？";
 "onboarding.family_name.hint"      = "例如：陳氏家庭";
 "onboarding.cooking_intro.title"   = "讓我們談談烹飪";

@@ -179,10 +179,11 @@ struct OnboardingView: View {
             Text("🎉").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.summary.title")).font(.title.bold())
             Group {
-                LabeledContent("Family", value: familyName)
-                LabeledContent("Cooking skill", value: selectedSkill.capitalized)
-                LabeledContent("Budget", value: Constants.budgetRanges.first(where: { $0.value == selectedBudget })?.label ?? selectedBudget)
-                LabeledContent("Members", value: "\(members.count)")
+                LabeledContent(String(localized: "onboarding.summary.family"), value: familyName)
+                LabeledContent(String(localized: "onboarding.summary.cooking_skill"), value: selectedSkill.capitalized)
+                LabeledContent(String(localized: "onboarding.summary.budget"),
+                               value: Constants.budgetRanges.first(where: { $0.value == selectedBudget })?.label ?? selectedBudget)
+                LabeledContent(String(localized: "onboarding.summary.members"), value: "\(members.count)")
             }
             .font(.body)
         }
