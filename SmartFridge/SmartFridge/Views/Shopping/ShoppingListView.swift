@@ -116,6 +116,10 @@ private struct ShoppingItemRow: View {
                     Text("HK$\(cost, specifier: "%.0f")")
                         .font(.subheadline.bold())
                         .foregroundStyle(theme.colors.primary)
+                } else {
+                    Text("—")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.secondary)
                 }
             }
         }
