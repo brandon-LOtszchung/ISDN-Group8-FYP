@@ -63,11 +63,10 @@ struct OnboardingView: View {
             .tabViewStyle(.page(indexDisplayMode: .never))
             .animation(.easeInOut, value: step)
             // Continue button
-            if shouldShowContinue {
-                continueButton
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 32)
-            }
+            continueButton
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
+                .disabled(!shouldShowContinue)
         }
         .background(theme.colors.background.ignoresSafeArea())
         .onChange(of: step) { _, newStep in startTypewriter(for: newStep) }
