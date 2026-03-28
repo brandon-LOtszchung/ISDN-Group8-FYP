@@ -74,6 +74,13 @@ struct ShoppingListView: View {
                         ShoppingItemRow(item: item) {
                             shoppingVM.togglePurchased(item)
                         }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                shoppingVM.removeItem(id: item.id)
+                            } label: {
+                                Label(String(localized: "common.delete"), systemImage: "trash")
+                            }
+                        }
                     }
                 }
             }
