@@ -6,6 +6,14 @@ struct ShoppingListView: View {
     @Environment(ThemeManager.self) private var theme
     @State private var showClearConfirmation = false
 
+    fileprivate static let hkdFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.currencyCode = "HKD"
+        f.maximumFractionDigits = 0
+        return f
+    }()
+
     var body: some View {
         Group {
             if shoppingVM.items.isEmpty {
@@ -52,7 +60,7 @@ struct ShoppingListView: View {
                         Text(String(localized: "shopping.total"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Text("HK$\(shoppingVM.totalEstimatedCost, specifier: "%.0f")")
+                        Text(ShoppingListView.hkdFormatter.string(from: NSNumber(value: shoppingVM.totalEstimatedCost)) ?? "")
                             .font(.title2.bold())
                             .foregroundStyle(theme.colors.primary)
                     }
@@ -113,7 +121,7 @@ private struct ShoppingItemRow: View {
                 }
                 Spacer()
                 if let cost = item.estimatedUnitCost {
-                    Text("HK$\(cost, specifier: "%.0f")")
+                    Text(ShoppingListView.hkdFormatter.string(from: NSNumber(value: cost)) ?? "—")
                         .font(.subheadline.bold())
                         .foregroundStyle(theme.colors.primary)
                 } else {
