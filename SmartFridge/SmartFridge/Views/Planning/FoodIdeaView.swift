@@ -68,6 +68,13 @@ struct FoodIdeaView: View {
                 // Recipe list
                 if planningVM.isLoadingRecommendations {
                     ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
+                } else if planningVM.recommendations.isEmpty && planningVM.hasFetched {
+                    ContentUnavailableView(
+                        String(localized: "planning.no_results.title"),
+                        systemImage: "fork.knife",
+                        description: Text(String(localized: "planning.no_results.description"))
+                    )
+                    .padding(.top, 40)
                 } else {
                     ForEach(planningVM.recommendations) { rec in
                         NavigationLink {

@@ -43,6 +43,10 @@
 "planning.match"                   = "%d/%d bahan cocok";
 "planning.missing"                 = "%d kurang";
 
+// Planning empty state
+"planning.no_results.title"        = "Tidak ada resep yang cocok";
+"planning.no_results.description"  = "Coba pilih masakan lain atau tambahkan lebih banyak item ke kulkas Anda.";
+
 // Recipe Detail
 "recipe.ingredients"               = "Bahan-bahan";
 "recipe.steps"                     = "Langkah-langkah";

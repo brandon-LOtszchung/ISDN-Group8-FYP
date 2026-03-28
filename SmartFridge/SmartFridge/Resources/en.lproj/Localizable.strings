@@ -43,6 +43,10 @@
 "planning.match"                   = "%d/%d ingredients matched";
 "planning.missing"                 = "%d missing";
 
+// Planning empty state
+"planning.no_results.title"        = "No matching recipes";
+"planning.no_results.description"  = "Try selecting a different cuisine or add more items to your fridge.";
+
 // Recipe Detail
 "recipe.ingredients"               = "Ingredients";
 "recipe.steps"                     = "Steps";

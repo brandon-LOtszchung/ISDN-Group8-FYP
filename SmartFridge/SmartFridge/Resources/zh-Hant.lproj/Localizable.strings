@@ -43,6 +43,10 @@
 "planning.match"                   = "%d/%d 食材已配對";
 "planning.missing"                 = "%d 缺少";
 
+// Planning empty state
+"planning.no_results.title"        = "沒有符合的食譜";
+"planning.no_results.description"  = "嘗試選擇其他菜系，或在冰箱中添加更多食材。";
+
 // Recipe Detail
 "recipe.ingredients"               = "食材";
 "recipe.steps"                     = "步驟";

@@ -17,6 +17,7 @@ final class PlanningViewModel {
     var selectedDetail: RecipeDetail?
     var isLoadingRecommendations = false
     var isLoadingDetail = false
+    var hasFetched = false
     var error: String?
 
     private let api = RecipeAPIService.shared
@@ -41,6 +42,7 @@ final class PlanningViewModel {
         } catch {
             self.error = error.localizedDescription
         }
+        hasFetched = true
     }
 
     func fetchDetail(for recommendation: RecipeRecommendation) async {
