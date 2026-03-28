@@ -24,6 +24,24 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Back button row
+            HStack {
+                if step.rawValue > 0 {
+                    Button {
+                        if let prev = OnboardingStep(rawValue: step.rawValue - 1) {
+                            step = prev
+                        }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.body.bold())
+                            .foregroundStyle(theme.colors.primary)
+                    }
+                    .accessibilityLabel("Back")
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
             // Progress dots
             progressDots
             // Step content
@@ -55,7 +73,7 @@ struct OnboardingView: View {
                     .animation(.spring(), value: step)
             }
         }
-        .padding(.top, 60)
+        .padding(.top, 12)
         .padding(.bottom, 12)
     }
 
