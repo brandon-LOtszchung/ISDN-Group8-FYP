@@ -58,10 +58,10 @@ struct ShoppingListView: View {
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(String(format: NSLocalizedString("shopping.items", comment: ""), shoppingVM.items.count))
+                        Text(String(format: String(localized: "shopping.items"), shoppingVM.items.count))
                             .font(.caption).foregroundStyle(.secondary)
-                        Text(String(format: NSLocalizedString("shopping.bought", comment: ""), shoppingVM.purchasedItemIDs.count))
-                            .font(.caption).foregroundStyle(.green)
+                        Text(String(format: String(localized: "shopping.bought"), shoppingVM.purchasedItemIDs.count))
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .padding(.vertical, 4)
