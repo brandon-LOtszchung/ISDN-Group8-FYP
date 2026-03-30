@@ -155,6 +155,9 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("👥").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.members.title")).font(.title.bold())
+            Text(String(localized: "onboarding.members.dietary_hint"))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             ForEach(members.indices, id: \.self) { i in
                 MemberRowView(member: $members[i]) {
                     members.remove(at: i)

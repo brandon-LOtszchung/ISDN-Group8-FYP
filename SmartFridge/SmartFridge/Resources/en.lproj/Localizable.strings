@@ -15,6 +15,7 @@
 "onboarding.cooking.title"         = "What's your cooking skill level?";
 "onboarding.budget.title"          = "What's your weekly food budget?";
 "onboarding.members.title"         = "Who's in your family?";
+"onboarding.members.dietary_hint"  = "Dietary preferences and allergies can be set for each member in their profile after setup.";
 "onboarding.summary.title"         = "You're all set!";
 "onboarding.continue"              = "Continue";
 "onboarding.add_member"            = "Add Member";

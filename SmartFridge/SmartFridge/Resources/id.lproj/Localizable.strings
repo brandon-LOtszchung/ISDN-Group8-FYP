@@ -15,6 +15,7 @@
 "onboarding.cooking.title"         = "Apa tingkat kemampuan memasak Anda?";
 "onboarding.budget.title"          = "Berapa anggaran makanan mingguan Anda?";
 "onboarding.members.title"         = "Siapa saja yang ada di keluarga Anda?";
+"onboarding.members.dietary_hint"  = "Preferensi makanan dan alergi setiap anggota dapat diatur di profil mereka setelah setup selesai.";
 "onboarding.summary.title"         = "Semuanya siap!";
 "onboarding.continue"              = "Lanjut";
 "onboarding.add_member"            = "Tambah Anggota";

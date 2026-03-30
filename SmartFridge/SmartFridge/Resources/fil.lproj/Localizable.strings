@@ -15,6 +15,7 @@
 "onboarding.cooking.title"         = "Ano ang iyong antas ng kasanayan sa pagluluto?";
 "onboarding.budget.title"          = "Ano ang iyong lingguhang badyet sa pagkain?";
 "onboarding.members.title"         = "Sino ang nasa iyong pamilya?";
+"onboarding.members.dietary_hint"  = "Maaaring itakda ang mga kagustuhan sa pagkain at allergy ng bawat miyembro sa kanilang profile pagkatapos ng setup.";
 "onboarding.summary.title"         = "Handa na ang lahat!";
 "onboarding.continue"              = "Magpatuloy";
 "onboarding.add_member"            = "Magdagdag ng Miyembro";

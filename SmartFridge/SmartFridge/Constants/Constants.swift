@@ -27,7 +27,7 @@ enum Constants {
 
     static let dietaryRestrictions: [String] = [
         "Vegetarian", "Vegan", "Pescatarian", "Halal", "Kosher",
-        "Low Sodium", "Low Sugar", "Low Fat", "Keto", "Gluten Free"
+        "Low Sodium", "Low Sugar", "Low Fat", "Keto", "Gluten Free", "Fasting"
     ]
 
     static let allergies: [String] = [
