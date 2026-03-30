@@ -72,6 +72,7 @@
 "shopping.total"                   = "預計總額";
 "shopping.items"                   = "%d 件";
 "shopping.bought"                  = "%d 已購";
+"shopping.share"                   = "分享清單";
 
 // Profile
 "profile.title"                    = "個人資料";

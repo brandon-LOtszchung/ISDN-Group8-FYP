@@ -72,6 +72,7 @@
 "shopping.total"                   = "Tinatayang Kabuuan";
 "shopping.items"                   = "%d na item";
 "shopping.bought"                  = "%d nabili";
+"shopping.share"                   = "I-share ang Listahan";
 
 // Profile
 "profile.title"                    = "Profile";

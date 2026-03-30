@@ -72,6 +72,7 @@
 "shopping.total"                   = "Total Perkiraan";
 "shopping.items"                   = "%d item";
 "shopping.bought"                  = "%d dibeli";
+"shopping.share"                   = "Bagikan Daftar";
 
 // Profile
 "profile.title"                    = "Profil";

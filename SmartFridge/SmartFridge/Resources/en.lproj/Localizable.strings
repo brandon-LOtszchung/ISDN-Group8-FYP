@@ -72,6 +72,7 @@
 "shopping.total"                   = "Estimated Total";
 "shopping.items"                   = "%d items";
 "shopping.bought"                  = "%d bought";
+"shopping.share"                   = "Share List";
 
 // Profile
 "profile.title"                    = "Profile";

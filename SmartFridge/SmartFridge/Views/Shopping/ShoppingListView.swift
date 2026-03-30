@@ -14,6 +14,29 @@ struct ShoppingListView: View {
         return f
     }()
 
+    private var shareText: String {
+        var lines: [String] = []
+        lines.append(String(localized: "shopping.title"))
+        if let total = Self.hkdFormatter.string(from: NSNumber(value: shoppingVM.totalEstimatedCost)) {
+            lines.append("\(String(localized: "shopping.total")): \(total)")
+        }
+        lines.append("")
+        for recipe in shoppingVM.itemsGroupedByRecipe.keys.sorted() {
+            lines.append("\(recipe):")
+            for item in shoppingVM.itemsGroupedByRecipe[recipe] ?? [] {
+                let status = item.isPurchased ? "✓" : "○"
+                var row = "\(status) \(item.name) – \(Int(item.quantity)) \(item.unit)"
+                if let cost = item.estimatedUnitCost,
+                   let formatted = Self.hkdFormatter.string(from: NSNumber(value: cost)) {
+                    row += " (\(formatted))"
+                }
+                lines.append(row)
+            }
+            lines.append("")
+        }
+        return lines.joined(separator: "\n").trimmingCharacters(in: .newlines)
+    }
+
     var body: some View {
         Group {
             if shoppingVM.items.isEmpty {
@@ -28,6 +51,12 @@ struct ShoppingListView: View {
         }
         .navigationTitle(String(localized: "shopping.title"))
         .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ShareLink(item: shareText) {
+                    Label(String(localized: "shopping.share"), systemImage: "square.and.arrow.up")
+                }
+                .disabled(shoppingVM.items.isEmpty)
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button(String(localized: "shopping.clear_bought")) {
                     showClearConfirmation = true
