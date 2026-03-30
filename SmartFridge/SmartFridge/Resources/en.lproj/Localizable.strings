@@ -29,6 +29,15 @@
 "inventory.scan_prompt.scan"       = "Scan My Fridge";
 "inventory.scan_prompt.empty"      = "My Fridge is Empty";
 "inventory.delete_confirm"         = "Remove Item";
+"inventory.add_item"               = "Add Item";
+"inventory.edit_item"              = "Edit Item";
+"inventory.item_name"              = "Name";
+"inventory.item_category"          = "Category";
+"inventory.item_quantity"          = "Quantity";
+"inventory.category_custom"        = "Add custom\u2026";
+"inventory.action_stock"           = "Stock";
+"inventory.action_use"             = "Use";
+"inventory.action_edit"            = "Edit";
 
 // Camera
 "camera.title"                     = "Add Items";

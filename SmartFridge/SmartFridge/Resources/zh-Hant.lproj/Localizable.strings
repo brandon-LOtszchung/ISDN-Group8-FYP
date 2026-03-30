@@ -29,6 +29,15 @@
 "inventory.scan_prompt.scan"       = "掃描我的雪櫃";
 "inventory.scan_prompt.empty"      = "我的雪櫃是空的";
 "inventory.delete_confirm"         = "移除項目";
+"inventory.add_item"               = "新增食材";
+"inventory.edit_item"              = "編輯食材";
+"inventory.item_name"              = "名稱";
+"inventory.item_category"          = "類別";
+"inventory.item_quantity"          = "數量";
+"inventory.category_custom"        = "自訂\u2026";
+"inventory.action_stock"           = "補貨";
+"inventory.action_use"             = "使用";
+"inventory.action_edit"            = "編輯";
 
 // Camera
 "camera.title"                     = "新增食材";

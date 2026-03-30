@@ -29,6 +29,15 @@
 "inventory.scan_prompt.scan"       = "Pindai Kulkas Saya";
 "inventory.scan_prompt.empty"      = "Kulkas Saya Kosong";
 "inventory.delete_confirm"         = "Hapus Item";
+"inventory.add_item"               = "Tambah Item";
+"inventory.edit_item"              = "Edit Item";
+"inventory.item_name"              = "Nama";
+"inventory.item_category"          = "Kategori";
+"inventory.item_quantity"          = "Jumlah";
+"inventory.category_custom"        = "Tambah kustom\u2026";
+"inventory.action_stock"           = "Tambah Stok";
+"inventory.action_use"             = "Gunakan";
+"inventory.action_edit"            = "Edit";
 
 // Camera
 "camera.title"                     = "Tambah Item";

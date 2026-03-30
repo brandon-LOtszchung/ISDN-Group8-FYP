@@ -80,6 +80,14 @@ final class AppViewModel {
         }
     }
 
+    func updateItem(_ item: InventoryItem) {
+        updateLocalItem(item)
+        Task {
+            do { try await supabase.updateItem(item) }
+            catch { self.error = error.localizedDescription }
+        }
+    }
+
     func updateMember(_ member: FamilyMember) {
         if let idx = members.firstIndex(where: { $0.id == member.id }) {
             members[idx] = member

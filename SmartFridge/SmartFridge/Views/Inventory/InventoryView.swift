@@ -8,6 +8,8 @@ struct InventoryView: View {
     @State private var searchText = ""
     @State private var showCamera = false
     @State private var showScanPromptInline = false
+    @State private var showAddForm = false
+    @State private var editingItem: InventoryItem?
 
     private var groupedInventory: [String: [InventoryItem]] {
         let filtered = searchText.isEmpty
@@ -39,14 +41,27 @@ struct InventoryView: View {
         .searchable(text: $searchText, prompt: String(localized: "inventory.search"))
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showCamera = true } label: {
-                    Image(systemName: "camera.fill").foregroundStyle(theme.colors.scan)
+                HStack(spacing: 16) {
+                    Button { showAddForm = true } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel(String(localized: "inventory.add_item"))
+
+                    Button { showCamera = true } label: {
+                        Image(systemName: "camera.fill").foregroundStyle(theme.colors.scan)
+                    }
+                    .accessibilityLabel("Scan fridge")
                 }
-                .accessibilityLabel("Scan fridge")
             }
         }
         .sheet(isPresented: $showCamera) {
             CameraPickerView(isPresented: $showCamera)
+        }
+        .sheet(isPresented: $showAddForm) {
+            InventoryItemFormView(item: nil)
+        }
+        .sheet(item: $editingItem) { item in
+            InventoryItemFormView(item: item)
         }
         .topBarToolbar()
     }
@@ -56,7 +71,7 @@ struct InventoryView: View {
             ForEach(groupedInventory.keys.sorted(), id: \.self) { category in
                 Section(category) {
                     ForEach(groupedInventory[category] ?? []) { item in
-                        InventoryItemRow(item: item)
+                        InventoryItemRow(item: item, onEdit: { editingItem = item })
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
                                     appVM.removeItem(id: item.id)

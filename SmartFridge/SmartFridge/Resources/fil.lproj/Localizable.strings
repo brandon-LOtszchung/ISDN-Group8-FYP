@@ -29,6 +29,15 @@
 "inventory.scan_prompt.scan"       = "I-scan ang Aking Ref";
 "inventory.scan_prompt.empty"      = "Walang Laman ang Aking Ref";
 "inventory.delete_confirm"         = "Alisin ang Item";
+"inventory.add_item"               = "Magdagdag ng Item";
+"inventory.edit_item"              = "I-edit ang Item";
+"inventory.item_name"              = "Pangalan";
+"inventory.item_category"          = "Kategorya";
+"inventory.item_quantity"          = "Dami";
+"inventory.category_custom"        = "Magdagdag ng custom\u2026";
+"inventory.action_stock"           = "Stock";
+"inventory.action_use"             = "Gamitin";
+"inventory.action_edit"            = "I-edit";
 
 // Camera
 "camera.title"                     = "Magdagdag ng Mga Item";

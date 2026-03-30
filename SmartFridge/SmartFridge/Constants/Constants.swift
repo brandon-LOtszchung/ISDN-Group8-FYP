@@ -50,6 +50,11 @@ enum Constants {
         (value: "high",   label: "Premium",         description: "Above HK$200 per meal"),
     ]
 
+    static let inventoryCategories: [String] = [
+        "Protein", "Vegetable", "Fruit", "Dairy",
+        "Grain", "Condiment", "Beverage", "Other"
+    ]
+
     // UserDefaults keys (match web app STORAGE_KEYS)
     enum StorageKeys {
         static let hasCompletedOnboarding = "smart-fridge-onboarding"
