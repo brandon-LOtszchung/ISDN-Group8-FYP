@@ -35,6 +35,8 @@
 "camera.choose_library"            = "Pumili mula sa Library";
 "camera.cancel"                    = "Kanselahin";
 "camera.scanning"                  = "Ina-scan ang ref...";
+"camera.scan_success"              = "Matagumpay na na-scan";
+"camera.items_found"               = "%lld item ang naidagdag sa iyong ref";
 
 // Planning / Food Ideas
 "planning.title"                   = "Mga Ideya sa Pagkain";

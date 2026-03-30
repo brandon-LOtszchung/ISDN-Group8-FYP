@@ -12,6 +12,7 @@ struct CameraPickerView: View {
     @State private var showCamera = false
     @State private var isUploading = false
     @State private var uploadError: String?
+    @State private var uploadResult: Int?
 
     var body: some View {
         NavigationStack {
@@ -19,6 +20,23 @@ struct CameraPickerView: View {
                 if isUploading {
                     ProgressView(String(localized: "camera.scanning"))
                         .padding(.top, 60)
+                } else if let count = uploadResult {
+                    VStack(spacing: 16) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 64))
+                            .foregroundStyle(theme.colors.success)
+                            .symbolEffect(.bounce)
+                        Text(String(format: String(localized: "camera.items_found"), count))
+                            .font(.title3.bold())
+                        Text(String(localized: "camera.scan_success"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 60)
+                    .task(id: count) {
+                        try? await Task.sleep(for: .seconds(1.5))
+                        isPresented = false
+                    }
                 } else {
                     // Camera button
                     Button {
@@ -100,8 +118,10 @@ struct CameraPickerView: View {
             )
             for item in detected { appVM.addItem(item) }
             appVM.fridgeInitialized = true
-            isPresented = false
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            uploadResult = detected.count
         } catch {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
             uploadError = error.localizedDescription
         }
     }

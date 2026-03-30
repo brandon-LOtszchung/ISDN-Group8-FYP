@@ -35,6 +35,8 @@
 "camera.choose_library"            = "從相簿選擇";
 "camera.cancel"                    = "取消";
 "camera.scanning"                  = "正在掃描雪櫃...";
+"camera.scan_success"              = "掃描完成";
+"camera.items_found"               = "已將 %lld 種食材加入雪櫃";
 
 // Planning / Food Ideas
 "planning.title"                   = "食物點子";

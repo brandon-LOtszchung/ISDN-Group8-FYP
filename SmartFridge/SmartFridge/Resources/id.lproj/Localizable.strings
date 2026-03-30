@@ -35,6 +35,8 @@
 "camera.choose_library"            = "Pilih dari Galeri";
 "camera.cancel"                    = "Batal";
 "camera.scanning"                  = "Memindai kulkas...";
+"camera.scan_success"              = "Pemindaian selesai";
+"camera.items_found"               = "%lld item ditambahkan ke kulkas Anda";
 
 // Planning / Food Ideas
 "planning.title"                   = "Ide Makanan";

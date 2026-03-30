@@ -35,6 +35,8 @@
 "camera.choose_library"            = "Choose from Library";
 "camera.cancel"                    = "Cancel";
 "camera.scanning"                  = "Scanning fridge...";
+"camera.scan_success"              = "Scan complete";
+"camera.items_found"               = "%lld items added to your fridge";
 
 // Planning / Food Ideas
 "planning.title"                   = "Food Ideas";
