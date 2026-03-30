@@ -2,6 +2,7 @@
 "tab.fridge"    = "Kulkas";
 "tab.plan"      = "Rencana";
 "tab.shopping"  = "Belanja";
+"tab.profile"   = "Profil";
 
 // Onboarding
 "onboarding.summary.family"        = "Keluarga";

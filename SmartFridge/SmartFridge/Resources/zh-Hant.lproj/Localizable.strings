@@ -2,6 +2,7 @@
 "tab.fridge"    = "雪櫃";
 "tab.plan"      = "計劃";
 "tab.shopping"  = "購物";
+"tab.profile"   = "個人資料";
 
 // Onboarding
 "onboarding.summary.family"        = "家庭";

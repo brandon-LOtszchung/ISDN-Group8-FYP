@@ -4,7 +4,6 @@ import SwiftUI
 struct TopBarView: View {
     @Environment(ThemeManager.self) private var theme
     @Environment(LanguageManager.self) private var languageManager
-    @State private var showProfileDrawer = false
 
     var body: some View {
         HStack {
@@ -30,25 +29,15 @@ struct TopBarView: View {
                 Image(systemName: "globe")
                     .foregroundStyle(theme.colors.primary)
             }
-            // Profile button
-            Button { showProfileDrawer = true } label: {
-                Image(systemName: "person.circle")
-                    .foregroundStyle(theme.colors.primary)
-            }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .sheet(isPresented: $showProfileDrawer) {
-            ProfileDrawerView()
-                .presentationDetents([.medium])
-        }
     }
 }
 
 struct TopBarToolbarModifier: ViewModifier {
     @Environment(ThemeManager.self) private var theme
     @Environment(LanguageManager.self) private var languageManager
-    @State private var showProfileDrawer = false
 
     func body(content: Content) -> some View {
         content
@@ -71,16 +60,6 @@ struct TopBarToolbarModifier: ViewModifier {
                     }
                     .accessibilityLabel("Select language")
                 }
-                ToolbarItem(placement: .topBarLeading) {
-                    Button { showProfileDrawer = true } label: {
-                        Image(systemName: "person.circle")
-                    }
-                    .accessibilityLabel("Profile")
-                }
-            }
-            .sheet(isPresented: $showProfileDrawer) {
-                ProfileDrawerView()
-                    .presentationDetents([.medium])
             }
     }
 }
