@@ -70,6 +70,24 @@
 "shopping.items"                   = "%d na item";
 "shopping.bought"                  = "%d nabili";
 
+// Profile
+"profile.title"                    = "Profile";
+"profile.family"                   = "Pamilya";
+"profile.members"                  = "Mga Miyembro";
+"profile.member.title"             = "Miyembro";
+"profile.member.section.basic"     = "Pangunahing Impormasyon";
+"profile.member.name"              = "Pangalan";
+"profile.member.age"               = "Edad";
+"profile.member.age.hint"          = "Opsyonal";
+"profile.member.dietary"           = "Mga Limitasyon sa Pagkain";
+"profile.member.allergies"         = "Mga Alerhiya";
+"profile.member.health"            = "Mga Kondisyong Pangkalusugan";
+"profile.member.preferences"       = "Mga Kagustuhan";
+"profile.member.spice"             = "Antas ng Anghang";
+"profile.member.cuisines"          = "Paboritong Lutuin";
+"profile.member.disliked"          = "Mga Hindi Gusto sa Pagkain";
+"profile.member.add_disliked"      = "Magdagdag ng sangkap...";
+
 // Common
 "common.loading"                   = "Naglo-load...";
 "common.error"                     = "May nangyaring mali";

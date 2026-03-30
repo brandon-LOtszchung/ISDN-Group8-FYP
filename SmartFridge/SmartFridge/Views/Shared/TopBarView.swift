@@ -91,7 +91,7 @@ extension View {
     }
 }
 
-// Minimal profile drawer — shows family name and member list
+// Profile drawer — shows family name and tappable member list
 struct ProfileDrawerView: View {
     @Environment(AppViewModel.self) private var appVM
     @Environment(ThemeManager.self) private var theme
@@ -100,18 +100,40 @@ struct ProfileDrawerView: View {
         NavigationStack {
             List {
                 if let family = appVM.family {
-                    Section("Family") {
+                    Section(String(localized: "profile.family")) {
                         Text(family.name).font(.headline)
                     }
                 }
-                Section("Members") {
+                Section(String(localized: "profile.members")) {
                     ForEach(appVM.members) { member in
-                        Text(member.name)
+                        NavigationLink(value: member.id) {
+                            ProfileMemberRow(member: member)
+                        }
                     }
                 }
             }
-            .navigationTitle("Profile")
+            .navigationTitle(String(localized: "profile.title"))
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: UUID.self) { memberId in
+                MemberProfileView(memberId: memberId)
+            }
         }
+    }
+}
+
+private struct ProfileMemberRow: View {
+    let member: FamilyMember
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(member.name)
+                .font(.body)
+            if let age = member.age {
+                Text("\(String(localized: "profile.member.age")): \(age)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
     }
 }

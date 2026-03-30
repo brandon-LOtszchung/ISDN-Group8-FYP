@@ -70,6 +70,24 @@
 "shopping.items"                   = "%d items";
 "shopping.bought"                  = "%d bought";
 
+// Profile
+"profile.title"                    = "Profile";
+"profile.family"                   = "Family";
+"profile.members"                  = "Members";
+"profile.member.title"             = "Member";
+"profile.member.section.basic"     = "Basic Info";
+"profile.member.name"              = "Name";
+"profile.member.age"               = "Age";
+"profile.member.age.hint"          = "Optional";
+"profile.member.dietary"           = "Dietary Restrictions";
+"profile.member.allergies"         = "Allergies";
+"profile.member.health"            = "Health Conditions";
+"profile.member.preferences"       = "Preferences";
+"profile.member.spice"             = "Spice Level";
+"profile.member.cuisines"          = "Favourite Cuisines";
+"profile.member.disliked"          = "Disliked Ingredients";
+"profile.member.add_disliked"      = "Add ingredient...";
+
 // Common
 "common.loading"                   = "Loading...";
 "common.error"                     = "Something went wrong";

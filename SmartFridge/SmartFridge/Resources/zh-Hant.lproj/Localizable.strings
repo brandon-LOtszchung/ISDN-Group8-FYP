@@ -70,6 +70,24 @@
 "shopping.items"                   = "%d 件";
 "shopping.bought"                  = "%d 已購";
 
+// Profile
+"profile.title"                    = "個人資料";
+"profile.family"                   = "家庭";
+"profile.members"                  = "成員";
+"profile.member.title"             = "成員";
+"profile.member.section.basic"     = "基本資料";
+"profile.member.name"              = "姓名";
+"profile.member.age"               = "年齡";
+"profile.member.age.hint"          = "選填";
+"profile.member.dietary"           = "飲食限制";
+"profile.member.allergies"         = "過敏";
+"profile.member.health"            = "健康狀況";
+"profile.member.preferences"       = "偏好";
+"profile.member.spice"             = "辣度";
+"profile.member.cuisines"          = "喜愛菜系";
+"profile.member.disliked"          = "不喜歡的食材";
+"profile.member.add_disliked"      = "新增食材...";
+
 // Common
 "common.loading"                   = "載入中...";
 "common.error"                     = "出現問題";

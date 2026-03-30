@@ -80,6 +80,16 @@ final class AppViewModel {
         }
     }
 
+    func updateMember(_ member: FamilyMember) {
+        if let idx = members.firstIndex(where: { $0.id == member.id }) {
+            members[idx] = member
+        }
+        Task {
+            do { try await supabase.upsertMember(member) }
+            catch { self.error = error.localizedDescription }
+        }
+    }
+
     func saveFamily(_ f: Family, members m: [FamilyMember]) {
         family  = f
         members = m

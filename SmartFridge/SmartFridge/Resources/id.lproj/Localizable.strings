@@ -70,6 +70,24 @@
 "shopping.items"                   = "%d item";
 "shopping.bought"                  = "%d dibeli";
 
+// Profile
+"profile.title"                    = "Profil";
+"profile.family"                   = "Keluarga";
+"profile.members"                  = "Anggota";
+"profile.member.title"             = "Anggota";
+"profile.member.section.basic"     = "Informasi Dasar";
+"profile.member.name"              = "Nama";
+"profile.member.age"               = "Usia";
+"profile.member.age.hint"          = "Opsional";
+"profile.member.dietary"           = "Pembatasan Diet";
+"profile.member.allergies"         = "Alergi";
+"profile.member.health"            = "Kondisi Kesehatan";
+"profile.member.preferences"       = "Preferensi";
+"profile.member.spice"             = "Tingkat Kepedasan";
+"profile.member.cuisines"          = "Masakan Favorit";
+"profile.member.disliked"          = "Bahan yang Tidak Disukai";
+"profile.member.add_disliked"      = "Tambah bahan...";
+
 // Common
 "common.loading"                   = "Memuat...";
 "common.error"                     = "Terjadi kesalahan";
