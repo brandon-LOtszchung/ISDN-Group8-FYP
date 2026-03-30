@@ -29,6 +29,7 @@
 "inventory.scan_prompt.scan"       = "I-scan ang Aking Ref";
 "inventory.scan_prompt.empty"      = "Walang Laman ang Aking Ref";
 "inventory.delete_confirm"         = "Alisin ang Item";
+"inventory.delete_confirm.message" = "Hindi na mababawi ang aksyong ito.";
 "inventory.add_item"               = "Magdagdag ng Item";
 "inventory.edit_item"              = "I-edit ang Item";
 "inventory.item_name"              = "Pangalan";

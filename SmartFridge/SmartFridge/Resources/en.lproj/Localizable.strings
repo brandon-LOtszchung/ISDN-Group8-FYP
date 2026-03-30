@@ -29,6 +29,7 @@
 "inventory.scan_prompt.scan"       = "Scan My Fridge";
 "inventory.scan_prompt.empty"      = "My Fridge is Empty";
 "inventory.delete_confirm"         = "Remove Item";
+"inventory.delete_confirm.message" = "This action cannot be undone.";
 "inventory.add_item"               = "Add Item";
 "inventory.edit_item"              = "Edit Item";
 "inventory.item_name"              = "Name";

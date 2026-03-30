@@ -29,6 +29,7 @@
 "inventory.scan_prompt.scan"       = "掃描我的雪櫃";
 "inventory.scan_prompt.empty"      = "我的雪櫃是空的";
 "inventory.delete_confirm"         = "移除項目";
+"inventory.delete_confirm.message" = "此操作無法復原。";
 "inventory.add_item"               = "新增食材";
 "inventory.edit_item"              = "編輯食材";
 "inventory.item_name"              = "名稱";

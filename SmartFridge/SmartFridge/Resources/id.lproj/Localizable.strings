@@ -29,6 +29,7 @@
 "inventory.scan_prompt.scan"       = "Pindai Kulkas Saya";
 "inventory.scan_prompt.empty"      = "Kulkas Saya Kosong";
 "inventory.delete_confirm"         = "Hapus Item";
+"inventory.delete_confirm.message" = "Tindakan ini tidak dapat dibatalkan.";
 "inventory.add_item"               = "Tambah Item";
 "inventory.edit_item"              = "Edit Item";
 "inventory.item_name"              = "Nama";

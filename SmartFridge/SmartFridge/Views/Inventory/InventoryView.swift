@@ -10,6 +10,7 @@ struct InventoryView: View {
     @State private var showScanPromptInline = false
     @State private var showAddForm = false
     @State private var editingItem: InventoryItem?
+    @State private var itemToDelete: InventoryItem?
 
     private var groupedInventory: [String: [InventoryItem]] {
         let filtered = searchText.isEmpty
@@ -72,9 +73,9 @@ struct InventoryView: View {
                 Section(category) {
                     ForEach(groupedInventory[category] ?? []) { item in
                         InventoryItemRow(item: item, onEdit: { editingItem = item })
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
-                                    appVM.removeItem(id: item.id)
+                                    itemToDelete = item
                                 } label: {
                                     Label(String(localized: "common.delete"), systemImage: "trash")
                                 }
@@ -86,6 +87,23 @@ struct InventoryView: View {
         .listStyle(.insetGrouped)
         .refreshable {
             await appVM.loadAll()
+        }
+        .alert(
+            String(localized: "inventory.delete_confirm"),
+            isPresented: Binding(
+                get: { itemToDelete != nil },
+                set: { if !$0 { itemToDelete = nil } }
+            ),
+            presenting: itemToDelete
+        ) { item in
+            Button(role: .destructive) {
+                appVM.removeItem(id: item.id)
+            } label: {
+                Text(String(localized: "common.delete"))
+            }
+            Button(String(localized: "common.cancel"), role: .cancel) {}
+        } message: { _ in
+            Text(String(localized: "inventory.delete_confirm.message"))
         }
     }
 }
