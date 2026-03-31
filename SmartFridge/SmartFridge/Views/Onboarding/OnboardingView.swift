@@ -10,6 +10,8 @@ struct OnboardingView: View {
     @Environment(AppViewModel.self) private var appVM
     @Environment(ThemeManager.self) private var theme
 
+    @ScaledMetric private var emojiSize: CGFloat = 52
+
     @State private var step: OnboardingStep = .name
     @State private var familyName = ""
     @State private var selectedSkill = ""
@@ -22,20 +24,49 @@ struct OnboardingView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Back button row
+            HStack {
+                if step.rawValue > 0 {
+                    Button {
+                        if let prev = OnboardingStep(rawValue: step.rawValue - 1) {
+                            step = prev
+                        }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.body.bold())
+                            .foregroundStyle(theme.colors.primary)
+                    }
+                    .accessibilityLabel("Back")
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 16)
             // Progress dots
             progressDots
-            // Step content
-            ScrollView {
-                stepContent
-                    .padding(.horizontal, 24)
-                    .padding(.top, 20)
+            // Step content — paged with swipe support
+            TabView(selection: Binding(
+                get: { step.rawValue },
+                set: { newVal in
+                    if let s = OnboardingStep(rawValue: newVal) { step = s }
+                }
+            )) {
+                ForEach(OnboardingStep.allCases, id: \.rawValue) { s in
+                    ScrollView {
+                        stepContentFor(s)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 20)
+                    }
+                    .tag(s.rawValue)
+                }
             }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .animation(.easeInOut, value: step)
             // Continue button
-            if shouldShowContinue {
-                continueButton
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 32)
-            }
+            continueButton
+                .padding(.horizontal, 24)
+                .padding(.bottom, 32)
+                .disabled(!shouldShowContinue)
         }
         .background(theme.colors.background.ignoresSafeArea())
         .onChange(of: step) { _, newStep in startTypewriter(for: newStep) }
@@ -53,15 +84,15 @@ struct OnboardingView: View {
                     .animation(.spring(), value: step)
             }
         }
-        .padding(.top, 60)
+        .padding(.top, 12)
         .padding(.bottom, 12)
     }
 
     // MARK: - Step routing
 
     @ViewBuilder
-    private var stepContent: some View {
-        switch step {
+    private func stepContentFor(_ s: OnboardingStep) -> some View {
+        switch s {
         case .name:            nameStep
         case .cookingIntro:    typewriterStep(text: "Let's talk about how your family cooks.", emoji: "🍳")
         case .cooking:         cookingStep
@@ -73,21 +104,28 @@ struct OnboardingView: View {
         }
     }
 
+    @ViewBuilder
+    private var stepContent: some View {
+        stepContentFor(step)
+    }
+
     // MARK: - Individual Steps
 
     private var nameStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("👨‍👩‍👧‍👦").font(.system(size: 52))
+            Text("👨‍👩‍👧‍👦").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.family_name.title")).font(.title.bold())
             TextField(String(localized: "onboarding.family_name.hint"), text: $familyName)
-                .textFieldStyle(.roundedBorder)
+                .padding(10)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
                 .font(.body)
         }
     }
 
     private var cookingStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("🍽️").font(.system(size: 52))
+            Text("🍽️").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.cooking.title")).font(.title.bold())
             FlowLayout(spacing: 8) {
                 ForEach(Constants.cookingSkillLevels, id: \.self) { skill in
@@ -101,7 +139,7 @@ struct OnboardingView: View {
 
     private var budgetStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("💵").font(.system(size: 52))
+            Text("💵").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.budget.title")).font(.title.bold())
             FlowLayout(spacing: 8) {
                 ForEach(Constants.budgetRanges, id: \.value) { budget in
@@ -115,8 +153,11 @@ struct OnboardingView: View {
 
     private var membersStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("👥").font(.system(size: 52))
+            Text("👥").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.members.title")).font(.title.bold())
+            Text(String(localized: "onboarding.members.dietary_hint"))
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
             ForEach(members.indices, id: \.self) { i in
                 MemberRowView(member: $members[i]) {
                     members.remove(at: i)
@@ -137,13 +178,14 @@ struct OnboardingView: View {
 
     private var summaryStep: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("🎉").font(.system(size: 52))
+            Text("🎉").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.summary.title")).font(.title.bold())
             Group {
-                LabeledContent("Family", value: familyName)
-                LabeledContent("Cooking skill", value: selectedSkill.capitalized)
-                LabeledContent("Budget", value: Constants.budgetRanges.first(where: { $0.value == selectedBudget })?.label ?? selectedBudget)
-                LabeledContent("Members", value: "\(members.count)")
+                LabeledContent(String(localized: "onboarding.summary.family"), value: familyName)
+                LabeledContent(String(localized: "onboarding.summary.cooking_skill"), value: selectedSkill.capitalized)
+                LabeledContent(String(localized: "onboarding.summary.budget"),
+                               value: Constants.budgetRanges.first(where: { $0.value == selectedBudget })?.label ?? selectedBudget)
+                LabeledContent(String(localized: "onboarding.summary.members"), value: "\(members.count)")
             }
             .font(.body)
         }
@@ -153,10 +195,11 @@ struct OnboardingView: View {
 
     private func typewriterStep(text: String, emoji: String) -> some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(emoji).font(.system(size: 52))
+            Text(emoji).font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(typewriterText)
                 .font(.title2.bold())
                 .animation(nil)
+                .accessibilityLabel(text)
         }
     }
 
@@ -214,10 +257,9 @@ struct OnboardingView: View {
         }
         .font(.body.bold())
         .frame(maxWidth: .infinity)
-        .padding()
-        .background(theme.colors.primary)
-        .foregroundStyle(.white)
-        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .buttonStyle(.borderedProminent)
+        .tint(theme.colors.primary)
+        .controlSize(.large)
     }
 
     // MARK: - Finish
@@ -249,7 +291,9 @@ private struct MemberRowView: View {
     var body: some View {
         HStack {
             TextField("Name", text: $member.name)
-                .textFieldStyle(.roundedBorder)
+                .padding(10)
+                .background(Color(.secondarySystemBackground))
+                .clipShape(RoundedRectangle(cornerRadius: 8))
             Button(role: .destructive, action: onDelete) {
                 Image(systemName: "minus.circle.fill")
                     .foregroundStyle(theme.colors.danger)
@@ -258,45 +302,3 @@ private struct MemberRowView: View {
     }
 }
 
-// MARK: - FlowLayout (wrapping pill row)
-
-private struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let rows = computeRows(proposal: proposal, subviews: subviews)
-        let height = rows.map { $0.map { $0.sizeThatFits(.unspecified).height }.max() ?? 0 }.reduce(0) { $0 + $1 + spacing }
-        return CGSize(width: proposal.width ?? 0, height: max(height - spacing, 0))
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let rows = computeRows(proposal: proposal, subviews: subviews)
-        var y = bounds.minY
-        for row in rows {
-            var x = bounds.minX
-            let rowHeight = row.map { $0.sizeThatFits(.unspecified).height }.max() ?? 0
-            for subview in row {
-                let size = subview.sizeThatFits(.unspecified)
-                subview.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
-                x += size.width + spacing
-            }
-            y += rowHeight + spacing
-        }
-    }
-
-    private func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [[LayoutSubview]] {
-        var rows: [[LayoutSubview]] = [[]]
-        var x: CGFloat = 0
-        let maxWidth = proposal.width ?? .infinity
-        for subview in subviews {
-            let w = subview.sizeThatFits(.unspecified).width
-            if x + w > maxWidth, !rows[rows.count - 1].isEmpty {
-                rows.append([])
-                x = 0
-            }
-            rows[rows.count - 1].append(subview)
-            x += w + spacing
-        }
-        return rows
-    }
-}

@@ -58,20 +58,23 @@ struct FoodIdeaView: View {
                     Text(String(localized: "planning.get_ideas"))
                         .font(.body.bold())
                         .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(
-                            (planningVM.selectedCuisine == nil || planningVM.selectedMemberIds.isEmpty)
-                                ? theme.colors.border : theme.colors.primary
-                        )
-                        .foregroundStyle(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
                 }
+                .buttonStyle(.borderedProminent)
+                .tint(theme.colors.primary)
+                .controlSize(.large)
                 .disabled(planningVM.selectedCuisine == nil || planningVM.selectedMemberIds.isEmpty)
                 .padding(.horizontal)
 
                 // Recipe list
                 if planningVM.isLoadingRecommendations {
                     ProgressView().frame(maxWidth: .infinity).padding(.top, 40)
+                } else if planningVM.recommendations.isEmpty && planningVM.hasFetched {
+                    ContentUnavailableView(
+                        String(localized: "planning.no_results.title"),
+                        systemImage: "fork.knife",
+                        description: Text(String(localized: "planning.no_results.description"))
+                    )
+                    .padding(.top, 40)
                 } else {
                     ForEach(planningVM.recommendations) { rec in
                         NavigationLink {
@@ -80,14 +83,17 @@ struct FoodIdeaView: View {
                             RecipeCardView(recommendation: rec)
                                 .padding(.horizontal)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
             }
             .padding(.top)
         }
         .navigationTitle(String(localized: "planning.title"))
-        .alert(String(localized: "common.error"), isPresented: .constant(planningVM.error != nil)) {
+        .topBarToolbar()
+        .alert(String(localized: "common.error"), isPresented: Binding(
+            get: { planningVM.error != nil },
+            set: { if !$0 { planningVM.error = nil } }
+        )) {
             Button(String(localized: "common.done")) { planningVM.error = nil }
         } message: { Text(planningVM.error ?? "") }
     }
@@ -106,38 +112,26 @@ private struct RecipeCardView: View {
                 Rectangle()
                     .fill(theme.colors.surfaceAlt)
                     .frame(height: 80)
-                    .overlay(Text("🍽️").font(.largeTitle))
+                    .overlay(Text("🍽️").font(.largeTitle).accessibilityHidden(true))
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
                         Text(recommendation.name).font(.body.bold()).foregroundStyle(theme.colors.text)
                         Spacer()
-                        ShareLink(item: "Check out this recipe: \(recommendation.name)") {
-                            Image(systemName: "square.and.arrow.up")
-                                .foregroundStyle(theme.colors.primary)
-                        }
                     }
                     Text(recommendation.cuisineStyle).font(.caption).foregroundStyle(.secondary)
                     // Match bar
                     HStack(spacing: 6) {
-                        GeometryReader { geo in
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(theme.colors.border)
-                                    .frame(height: 4)
-                                RoundedRectangle(cornerRadius: 2)
-                                    .fill(Color.green)
-                                    .frame(width: geo.size.width * CGFloat(recommendation.matchPercentage) / 100, height: 4)
-                            }
-                        }
-                        .frame(height: 4)
+                        ProgressView(value: Double(recommendation.matchPercentage), total: 100)
+                            .tint(theme.colors.success)
+                            .scaleEffect(x: 1, y: 0.6, anchor: .center)
                         Text("\(recommendation.matchPercentage)%")
                             .font(.caption.bold())
-                            .foregroundStyle(.green)
+                            .foregroundStyle(theme.colors.success)
                     }
                     Text("\(recommendation.missingCount) missing")
                         .font(.caption)
-                        .foregroundStyle(recommendation.missingCount == 0 ? .green : theme.colors.danger)
+                        .foregroundStyle(recommendation.missingCount == 0 ? theme.colors.success : theme.colors.danger)
                 }
                 .padding(10)
             }

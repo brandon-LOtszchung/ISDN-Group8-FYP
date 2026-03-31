@@ -4,7 +4,6 @@ import SwiftUI
 struct TopBarView: View {
     @Environment(ThemeManager.self) private var theme
     @Environment(LanguageManager.self) private var languageManager
-    @State private var showProfileDrawer = false
 
     var body: some View {
         HStack {
@@ -30,23 +29,49 @@ struct TopBarView: View {
                 Image(systemName: "globe")
                     .foregroundStyle(theme.colors.primary)
             }
-            // Profile button
-            Button { showProfileDrawer = true } label: {
-                Image(systemName: "person.circle")
-                    .foregroundStyle(theme.colors.primary)
-            }
         }
         .padding(.horizontal)
         .padding(.vertical, 8)
-        .sheet(isPresented: $showProfileDrawer) {
-            ProfileDrawerView()
-                .presentationDetents([.medium])
-        }
     }
 }
 
-// Minimal profile drawer — shows family name and member list
-private struct ProfileDrawerView: View {
+struct TopBarToolbarModifier: ViewModifier {
+    @Environment(ThemeManager.self) private var theme
+    @Environment(LanguageManager.self) private var languageManager
+
+    func body(content: Content) -> some View {
+        content
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        theme.setTheme(theme.theme == .warm ? .cool : .warm)
+                    } label: {
+                        Image(systemName: theme.theme == .warm ? "sun.max.fill" : "snowflake")
+                    }
+                    .accessibilityLabel("Toggle theme")
+                }
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        ForEach(AppLanguage.allCases) { lang in
+                            Button(lang.displayName) { languageManager.setLanguage(lang) }
+                        }
+                    } label: {
+                        Image(systemName: "globe")
+                    }
+                    .accessibilityLabel("Select language")
+                }
+            }
+    }
+}
+
+extension View {
+    func topBarToolbar() -> some View {
+        modifier(TopBarToolbarModifier())
+    }
+}
+
+// Profile drawer — shows family name and tappable member list
+struct ProfileDrawerView: View {
     @Environment(AppViewModel.self) private var appVM
     @Environment(ThemeManager.self) private var theme
 
@@ -54,18 +79,40 @@ private struct ProfileDrawerView: View {
         NavigationStack {
             List {
                 if let family = appVM.family {
-                    Section("Family") {
+                    Section(String(localized: "profile.family")) {
                         Text(family.name).font(.headline)
                     }
                 }
-                Section("Members") {
+                Section(String(localized: "profile.members")) {
                     ForEach(appVM.members) { member in
-                        Text(member.name)
+                        NavigationLink(value: member.id) {
+                            ProfileMemberRow(member: member)
+                        }
                     }
                 }
             }
-            .navigationTitle("Profile")
+            .navigationTitle(String(localized: "profile.title"))
             .navigationBarTitleDisplayMode(.inline)
+            .navigationDestination(for: UUID.self) { memberId in
+                MemberProfileView(memberId: memberId)
+            }
         }
+    }
+}
+
+private struct ProfileMemberRow: View {
+    let member: FamilyMember
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(member.name)
+                .font(.body)
+            if let age = member.age {
+                Text("\(String(localized: "profile.member.age")): \(age)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
     }
 }

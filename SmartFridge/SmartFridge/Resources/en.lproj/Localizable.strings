@@ -2,14 +2,20 @@
 "tab.fridge"    = "Fridge";
 "tab.plan"      = "Plan";
 "tab.shopping"  = "Shopping";
+"tab.profile"   = "Profile";
 
 // Onboarding
+"onboarding.summary.family"        = "Family";
+"onboarding.summary.cooking_skill" = "Cooking skill";
+"onboarding.summary.budget"        = "Budget";
+"onboarding.summary.members"       = "Members";
 "onboarding.family_name.title"     = "What's your family name?";
 "onboarding.family_name.hint"      = "e.g. The Chan Family";
 "onboarding.cooking_intro.title"   = "Let's talk about cooking";
 "onboarding.cooking.title"         = "What's your cooking skill level?";
 "onboarding.budget.title"          = "What's your weekly food budget?";
 "onboarding.members.title"         = "Who's in your family?";
+"onboarding.members.dietary_hint"  = "Dietary preferences and allergies can be set for each member in their profile after setup.";
 "onboarding.summary.title"         = "You're all set!";
 "onboarding.continue"              = "Continue";
 "onboarding.add_member"            = "Add Member";
@@ -23,12 +29,26 @@
 "inventory.scan_prompt.scan"       = "Scan My Fridge";
 "inventory.scan_prompt.empty"      = "My Fridge is Empty";
 "inventory.delete_confirm"         = "Remove Item";
+"inventory.delete_confirm.message" = "This action cannot be undone.";
+"inventory.add_item"               = "Add Item";
+"inventory.edit_item"              = "Edit Item";
+"inventory.item_name"              = "Name";
+"inventory.item_category"          = "Category";
+"inventory.item_quantity"          = "Quantity";
+"inventory.category_custom"        = "Add custom\u2026";
+"inventory.action_stock"           = "Stock";
+"inventory.action_use"             = "Use";
+"inventory.action_edit"            = "Edit";
 
 // Camera
+"camera.title"                     = "Add Items";
+"camera.upload_error"              = "Upload Error";
 "camera.take_photo"                = "Take Photo";
 "camera.choose_library"            = "Choose from Library";
 "camera.cancel"                    = "Cancel";
 "camera.scanning"                  = "Scanning fridge...";
+"camera.scan_success"              = "Scan complete";
+"camera.items_found"               = "%lld items added to your fridge";
 
 // Planning / Food Ideas
 "planning.title"                   = "Food Ideas";
@@ -37,6 +57,13 @@
 "planning.get_ideas"               = "Get Ideas";
 "planning.match"                   = "%d/%d ingredients matched";
 "planning.missing"                 = "%d missing";
+
+// Planning empty state
+"planning.no_results.title"        = "No matching recipes";
+"planning.no_results.description"  = "Try selecting a different cuisine or add more items to your fridge.";
+
+// Recipe added to shopping
+"recipe.added_to_shopping"         = "Added to Shopping List";
 
 // Recipe Detail
 "recipe.ingredients"               = "Ingredients";
@@ -47,11 +74,34 @@
 "recipe.share"                     = "Share Recipe";
 
 // Shopping
+"shopping.hint.mark"               = "Marks item as bought";
+"shopping.hint.unmark"             = "Marks item as not bought";
+"shopping.clear_bought_confirm.title"   = "Clear Bought Items";
+"shopping.clear_bought_confirm.message" = "This will permanently remove all purchased items.";
 "shopping.title"                   = "Shopping";
 "shopping.clear_bought"            = "Clear Bought";
 "shopping.total"                   = "Estimated Total";
 "shopping.items"                   = "%d items";
 "shopping.bought"                  = "%d bought";
+"shopping.share"                   = "Share List";
+
+// Profile
+"profile.title"                    = "Profile";
+"profile.family"                   = "Family";
+"profile.members"                  = "Members";
+"profile.member.title"             = "Member";
+"profile.member.section.basic"     = "Basic Info";
+"profile.member.name"              = "Name";
+"profile.member.age"               = "Age";
+"profile.member.age.hint"          = "Optional";
+"profile.member.dietary"           = "Dietary Restrictions";
+"profile.member.allergies"         = "Allergies";
+"profile.member.health"            = "Health Conditions";
+"profile.member.preferences"       = "Preferences";
+"profile.member.spice"             = "Spice Level";
+"profile.member.cuisines"          = "Favourite Cuisines";
+"profile.member.disliked"          = "Disliked Ingredients";
+"profile.member.add_disliked"      = "Add ingredient...";
 
 // Common
 "common.loading"                   = "Loading...";

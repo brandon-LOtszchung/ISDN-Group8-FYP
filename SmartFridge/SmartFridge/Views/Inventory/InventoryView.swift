@@ -7,7 +7,10 @@ struct InventoryView: View {
 
     @State private var searchText = ""
     @State private var showCamera = false
-    @State private var showScanPrompt = false
+    @State private var showScanPromptInline = false
+    @State private var showAddForm = false
+    @State private var editingItem: InventoryItem?
+    @State private var itemToDelete: InventoryItem?
 
     private var groupedInventory: [String: [InventoryItem]] {
         let filtered = searchText.isEmpty
@@ -17,41 +20,51 @@ struct InventoryView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if appVM.inventory.isEmpty && !appVM.isLoading {
+        Group {
+            if appVM.isLoading && appVM.inventory.isEmpty {
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if appVM.inventory.isEmpty {
+                if !appVM.fridgeInitialized {
+                    ScanPromptView(showCamera: $showCamera, isPresented: $showScanPromptInline)
+                } else {
                     ContentUnavailableView(
                         String(localized: "inventory.empty"),
                         systemImage: "refrigerator",
                         description: Text("Tap the camera icon to scan your fridge.")
                     )
-                } else {
-                    inventoryList
                 }
+            } else {
+                inventoryList
             }
-            .navigationTitle(String(localized: "inventory.title"))
-            .searchable(text: $searchText, prompt: String(localized: "inventory.search"))
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
+        }
+        .navigationTitle(String(localized: "inventory.title"))
+        .searchable(text: $searchText, prompt: String(localized: "inventory.search"))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 16) {
+                    Button { showAddForm = true } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel(String(localized: "inventory.add_item"))
+
                     Button { showCamera = true } label: {
                         Image(systemName: "camera.fill").foregroundStyle(theme.colors.scan)
                     }
                     .accessibilityLabel("Scan fridge")
                 }
             }
-            .sheet(isPresented: $showCamera) {
-                CameraPickerView(isPresented: $showCamera)
-            }
-            .sheet(isPresented: $showScanPrompt) {
-                ScanPromptView(showCamera: $showCamera, isPresented: $showScanPrompt)
-                    .presentationDetents([.medium])
-            }
-            .onAppear {
-                if !appVM.fridgeInitialized && appVM.inventory.isEmpty {
-                    showScanPrompt = true
-                }
-            }
         }
+        .sheet(isPresented: $showCamera) {
+            CameraPickerView(isPresented: $showCamera)
+        }
+        .sheet(isPresented: $showAddForm) {
+            InventoryItemFormView(item: nil)
+        }
+        .sheet(item: $editingItem) { item in
+            InventoryItemFormView(item: item)
+        }
+        .topBarToolbar()
     }
 
     private var inventoryList: some View {
@@ -59,10 +72,10 @@ struct InventoryView: View {
             ForEach(groupedInventory.keys.sorted(), id: \.self) { category in
                 Section(category) {
                     ForEach(groupedInventory[category] ?? []) { item in
-                        InventoryItemRow(item: item)
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        InventoryItemRow(item: item, onEdit: { editingItem = item })
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) {
-                                    appVM.removeItem(id: item.id)
+                                    itemToDelete = item
                                 } label: {
                                     Label(String(localized: "common.delete"), systemImage: "trash")
                                 }
@@ -72,5 +85,25 @@ struct InventoryView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .refreshable {
+            await appVM.loadAll()
+        }
+        .alert(
+            String(localized: "inventory.delete_confirm"),
+            isPresented: Binding(
+                get: { itemToDelete != nil },
+                set: { if !$0 { itemToDelete = nil } }
+            ),
+            presenting: itemToDelete
+        ) { item in
+            Button(role: .destructive) {
+                appVM.removeItem(id: item.id)
+            } label: {
+                Text(String(localized: "common.delete"))
+            }
+            Button(String(localized: "common.cancel"), role: .cancel) {}
+        } message: { _ in
+            Text(String(localized: "inventory.delete_confirm.message"))
+        }
     }
 }

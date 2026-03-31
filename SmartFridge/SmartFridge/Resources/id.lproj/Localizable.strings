@@ -2,14 +2,20 @@
 "tab.fridge"    = "Kulkas";
 "tab.plan"      = "Rencana";
 "tab.shopping"  = "Belanja";
+"tab.profile"   = "Profil";
 
 // Onboarding
+"onboarding.summary.family"        = "Keluarga";
+"onboarding.summary.cooking_skill" = "Kemampuan Memasak";
+"onboarding.summary.budget"        = "Anggaran";
+"onboarding.summary.members"       = "Anggota";
 "onboarding.family_name.title"     = "Apa nama keluarga Anda?";
 "onboarding.family_name.hint"      = "mis. Keluarga Chan";
 "onboarding.cooking_intro.title"   = "Mari bicara tentang memasak";
 "onboarding.cooking.title"         = "Apa tingkat kemampuan memasak Anda?";
 "onboarding.budget.title"          = "Berapa anggaran makanan mingguan Anda?";
 "onboarding.members.title"         = "Siapa saja yang ada di keluarga Anda?";
+"onboarding.members.dietary_hint"  = "Preferensi makanan dan alergi setiap anggota dapat diatur di profil mereka setelah setup selesai.";
 "onboarding.summary.title"         = "Semuanya siap!";
 "onboarding.continue"              = "Lanjut";
 "onboarding.add_member"            = "Tambah Anggota";
@@ -23,12 +29,26 @@
 "inventory.scan_prompt.scan"       = "Pindai Kulkas Saya";
 "inventory.scan_prompt.empty"      = "Kulkas Saya Kosong";
 "inventory.delete_confirm"         = "Hapus Item";
+"inventory.delete_confirm.message" = "Tindakan ini tidak dapat dibatalkan.";
+"inventory.add_item"               = "Tambah Item";
+"inventory.edit_item"              = "Edit Item";
+"inventory.item_name"              = "Nama";
+"inventory.item_category"          = "Kategori";
+"inventory.item_quantity"          = "Jumlah";
+"inventory.category_custom"        = "Tambah kustom\u2026";
+"inventory.action_stock"           = "Tambah Stok";
+"inventory.action_use"             = "Gunakan";
+"inventory.action_edit"            = "Edit";
 
 // Camera
+"camera.title"                     = "Tambah Item";
+"camera.upload_error"              = "Error Unggahan";
 "camera.take_photo"                = "Ambil Foto";
 "camera.choose_library"            = "Pilih dari Galeri";
 "camera.cancel"                    = "Batal";
 "camera.scanning"                  = "Memindai kulkas...";
+"camera.scan_success"              = "Pemindaian selesai";
+"camera.items_found"               = "%lld item ditambahkan ke kulkas Anda";
 
 // Planning / Food Ideas
 "planning.title"                   = "Ide Makanan";
@@ -37,6 +57,13 @@
 "planning.get_ideas"               = "Dapatkan Ide";
 "planning.match"                   = "%d/%d bahan cocok";
 "planning.missing"                 = "%d kurang";
+
+// Planning empty state
+"planning.no_results.title"        = "Tidak ada resep yang cocok";
+"planning.no_results.description"  = "Coba pilih masakan lain atau tambahkan lebih banyak item ke kulkas Anda.";
+
+// Recipe added to shopping
+"recipe.added_to_shopping"         = "Ditambahkan ke Daftar Belanja";
 
 // Recipe Detail
 "recipe.ingredients"               = "Bahan-bahan";
@@ -47,11 +74,34 @@
 "recipe.share"                     = "Bagikan Resep";
 
 // Shopping
+"shopping.hint.mark"               = "Tandai sebagai sudah dibeli";
+"shopping.hint.unmark"             = "Tandai sebagai belum dibeli";
+"shopping.clear_bought_confirm.title"   = "Hapus Item yang Dibeli";
+"shopping.clear_bought_confirm.message" = "Ini akan menghapus semua item yang sudah dibeli secara permanen.";
 "shopping.title"                   = "Belanja";
 "shopping.clear_bought"            = "Hapus yang Dibeli";
 "shopping.total"                   = "Total Perkiraan";
 "shopping.items"                   = "%d item";
 "shopping.bought"                  = "%d dibeli";
+"shopping.share"                   = "Bagikan Daftar";
+
+// Profile
+"profile.title"                    = "Profil";
+"profile.family"                   = "Keluarga";
+"profile.members"                  = "Anggota";
+"profile.member.title"             = "Anggota";
+"profile.member.section.basic"     = "Informasi Dasar";
+"profile.member.name"              = "Nama";
+"profile.member.age"               = "Usia";
+"profile.member.age.hint"          = "Opsional";
+"profile.member.dietary"           = "Pembatasan Diet";
+"profile.member.allergies"         = "Alergi";
+"profile.member.health"            = "Kondisi Kesehatan";
+"profile.member.preferences"       = "Preferensi";
+"profile.member.spice"             = "Tingkat Kepedasan";
+"profile.member.cuisines"          = "Masakan Favorit";
+"profile.member.disliked"          = "Bahan yang Tidak Disukai";
+"profile.member.add_disliked"      = "Tambah bahan...";
 
 // Common
 "common.loading"                   = "Memuat...";

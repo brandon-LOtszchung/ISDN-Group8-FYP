@@ -2,14 +2,20 @@
 "tab.fridge"    = "Ref";
 "tab.plan"      = "Plano";
 "tab.shopping"  = "Pamimili";
+"tab.profile"   = "Profile";
 
 // Onboarding
+"onboarding.summary.family"        = "Pamilya";
+"onboarding.summary.cooking_skill" = "Kasanayan sa Pagluluto";
+"onboarding.summary.budget"        = "Badyet";
+"onboarding.summary.members"       = "Mga Miyembro";
 "onboarding.family_name.title"     = "Ano ang pangalan ng iyong pamilya?";
 "onboarding.family_name.hint"      = "hal. Ang Pamilyang Chan";
 "onboarding.cooking_intro.title"   = "Pag-usapan natin ang pagluluto";
 "onboarding.cooking.title"         = "Ano ang iyong antas ng kasanayan sa pagluluto?";
 "onboarding.budget.title"          = "Ano ang iyong lingguhang badyet sa pagkain?";
 "onboarding.members.title"         = "Sino ang nasa iyong pamilya?";
+"onboarding.members.dietary_hint"  = "Maaaring itakda ang mga kagustuhan sa pagkain at allergy ng bawat miyembro sa kanilang profile pagkatapos ng setup.";
 "onboarding.summary.title"         = "Handa na ang lahat!";
 "onboarding.continue"              = "Magpatuloy";
 "onboarding.add_member"            = "Magdagdag ng Miyembro";
@@ -23,12 +29,26 @@
 "inventory.scan_prompt.scan"       = "I-scan ang Aking Ref";
 "inventory.scan_prompt.empty"      = "Walang Laman ang Aking Ref";
 "inventory.delete_confirm"         = "Alisin ang Item";
+"inventory.delete_confirm.message" = "Hindi na mababawi ang aksyong ito.";
+"inventory.add_item"               = "Magdagdag ng Item";
+"inventory.edit_item"              = "I-edit ang Item";
+"inventory.item_name"              = "Pangalan";
+"inventory.item_category"          = "Kategorya";
+"inventory.item_quantity"          = "Dami";
+"inventory.category_custom"        = "Magdagdag ng custom\u2026";
+"inventory.action_stock"           = "Stock";
+"inventory.action_use"             = "Gamitin";
+"inventory.action_edit"            = "I-edit";
 
 // Camera
+"camera.title"                     = "Magdagdag ng Mga Item";
+"camera.upload_error"              = "Error sa Pag-upload";
 "camera.take_photo"                = "Kumuha ng Litrato";
 "camera.choose_library"            = "Pumili mula sa Library";
 "camera.cancel"                    = "Kanselahin";
 "camera.scanning"                  = "Ina-scan ang ref...";
+"camera.scan_success"              = "Matagumpay na na-scan";
+"camera.items_found"               = "%lld item ang naidagdag sa iyong ref";
 
 // Planning / Food Ideas
 "planning.title"                   = "Mga Ideya sa Pagkain";
@@ -37,6 +57,13 @@
 "planning.get_ideas"               = "Kumuha ng mga Ideya";
 "planning.match"                   = "%d/%d na sangkap ang nagtugma";
 "planning.missing"                 = "%d kulang";
+
+// Planning empty state
+"planning.no_results.title"        = "Walang nahanap na recipe";
+"planning.no_results.description"  = "Subukan ang ibang lutuin o magdagdag ng mga item sa inyong ref.";
+
+// Recipe added to shopping
+"recipe.added_to_shopping"         = "Naidagdag sa Shopping List";
 
 // Recipe Detail
 "recipe.ingredients"               = "Mga Sangkap";
@@ -47,11 +74,34 @@
 "recipe.share"                     = "Ibahagi ang Resipe";
 
 // Shopping
+"shopping.hint.mark"               = "Markahan bilang binili";
+"shopping.hint.unmark"             = "Markahan bilang hindi binili";
+"shopping.clear_bought_confirm.title"   = "Tanggalin ang Mga Biniling Item";
+"shopping.clear_bought_confirm.message" = "Permanenteng tatanggalin ang lahat ng biniling item.";
 "shopping.title"                   = "Pamimili";
 "shopping.clear_bought"            = "I-clear ang Nabili";
 "shopping.total"                   = "Tinatayang Kabuuan";
 "shopping.items"                   = "%d na item";
 "shopping.bought"                  = "%d nabili";
+"shopping.share"                   = "I-share ang Listahan";
+
+// Profile
+"profile.title"                    = "Profile";
+"profile.family"                   = "Pamilya";
+"profile.members"                  = "Mga Miyembro";
+"profile.member.title"             = "Miyembro";
+"profile.member.section.basic"     = "Pangunahing Impormasyon";
+"profile.member.name"              = "Pangalan";
+"profile.member.age"               = "Edad";
+"profile.member.age.hint"          = "Opsyonal";
+"profile.member.dietary"           = "Mga Limitasyon sa Pagkain";
+"profile.member.allergies"         = "Mga Alerhiya";
+"profile.member.health"            = "Mga Kondisyong Pangkalusugan";
+"profile.member.preferences"       = "Mga Kagustuhan";
+"profile.member.spice"             = "Antas ng Anghang";
+"profile.member.cuisines"          = "Paboritong Lutuin";
+"profile.member.disliked"          = "Mga Hindi Gusto sa Pagkain";
+"profile.member.add_disliked"      = "Magdagdag ng sangkap...";
 
 // Common
 "common.loading"                   = "Naglo-load...";

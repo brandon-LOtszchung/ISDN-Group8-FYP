@@ -27,7 +27,7 @@ enum Constants {
 
     static let dietaryRestrictions: [String] = [
         "Vegetarian", "Vegan", "Pescatarian", "Halal", "Kosher",
-        "Low Sodium", "Low Sugar", "Low Fat", "Keto", "Gluten Free"
+        "Low Sodium", "Low Sugar", "Low Fat", "Keto", "Gluten Free", "Fasting"
     ]
 
     static let allergies: [String] = [
@@ -48,6 +48,11 @@ enum Constants {
         (value: "low",    label: "Budget-Friendly", description: "Under HK$100 per meal"),
         (value: "medium", label: "Moderate",        description: "HK$100–200 per meal"),
         (value: "high",   label: "Premium",         description: "Above HK$200 per meal"),
+    ]
+
+    static let inventoryCategories: [String] = [
+        "Protein", "Vegetable", "Fruit", "Dairy",
+        "Grain", "Condiment", "Beverage", "Other"
     ]
 
     // UserDefaults keys (match web app STORAGE_KEYS)

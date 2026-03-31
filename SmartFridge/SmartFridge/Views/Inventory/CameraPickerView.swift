@@ -12,6 +12,7 @@ struct CameraPickerView: View {
     @State private var showCamera = false
     @State private var isUploading = false
     @State private var uploadError: String?
+    @State private var uploadResult: Int?
 
     var body: some View {
         NavigationStack {
@@ -19,6 +20,23 @@ struct CameraPickerView: View {
                 if isUploading {
                     ProgressView(String(localized: "camera.scanning"))
                         .padding(.top, 60)
+                } else if let count = uploadResult {
+                    VStack(spacing: 16) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 64))
+                            .foregroundStyle(theme.colors.success)
+                            .symbolEffect(.bounce)
+                        Text(String(format: String(localized: "camera.items_found"), count))
+                            .font(.title3.bold())
+                        Text(String(localized: "camera.scan_success"))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 60)
+                    .task(id: count) {
+                        try? await Task.sleep(for: .seconds(1.5))
+                        isPresented = false
+                    }
                 } else {
                     // Camera button
                     Button {
@@ -27,11 +45,10 @@ struct CameraPickerView: View {
                         Label(String(localized: "camera.take_photo"), systemImage: "camera.fill")
                             .font(.body.bold())
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(theme.colors.scan)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(theme.colors.scan)
+                    .controlSize(.large)
 
                     // Library picker (supports up to 3 images)
                     PhotosPicker(
@@ -42,11 +59,10 @@ struct CameraPickerView: View {
                         Label(String(localized: "camera.choose_library"), systemImage: "photo.on.rectangle")
                             .font(.body.bold())
                             .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(theme.colors.primary)
-                            .foregroundStyle(.white)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(theme.colors.primary)
+                    .controlSize(.large)
                     .onChange(of: photoPickerItems) { _, items in
                         guard !items.isEmpty else { return }
                         Task { await uploadLibraryPhotos(items) }
@@ -54,21 +70,24 @@ struct CameraPickerView: View {
                 }
             }
             .padding(.horizontal, 24)
-            .navigationTitle(String(localized: "inventory.title"))
+            .navigationTitle(String(localized: "camera.title"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button(String(localized: "camera.cancel")) { isPresented = false }
                 }
             }
-            .alert("Upload Error", isPresented: .constant(uploadError != nil)) {
+            .alert(String(localized: "camera.upload_error"), isPresented: Binding(
+                get: { uploadError != nil },
+                set: { if !$0 { uploadError = nil } }
+            )) {
                 Button(String(localized: "common.done")) { uploadError = nil }
             } message: {
                 Text(uploadError ?? "")
             }
         }
         // Camera sheet — UIImagePickerController (sourceType: .camera)
-        .fullScreenCover(isPresented: $showCamera) {
+        .sheet(isPresented: $showCamera) {
             CameraCaptureBridge { image in
                 showCamera = false
                 Task { await upload(images: [image]) }
@@ -99,8 +118,10 @@ struct CameraPickerView: View {
             )
             for item in detected { appVM.addItem(item) }
             appVM.fridgeInitialized = true
-            isPresented = false
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            uploadResult = detected.count
         } catch {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
             uploadError = error.localizedDescription
         }
     }

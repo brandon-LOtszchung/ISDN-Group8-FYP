@@ -4,31 +4,80 @@ import SwiftUI
 struct ShoppingListView: View {
     @Environment(ShoppingViewModel.self) private var shoppingVM
     @Environment(ThemeManager.self) private var theme
+    @State private var showClearConfirmation = false
+
+    fileprivate static let hkdFormatter: NumberFormatter = {
+        let f = NumberFormatter()
+        f.numberStyle = .currency
+        f.currencyCode = "HKD"
+        f.maximumFractionDigits = 0
+        return f
+    }()
+
+    private var shareText: String {
+        var lines: [String] = []
+        lines.append(String(localized: "shopping.title"))
+        if let total = Self.hkdFormatter.string(from: NSNumber(value: shoppingVM.totalEstimatedCost)) {
+            lines.append("\(String(localized: "shopping.total")): \(total)")
+        }
+        lines.append("")
+        for recipe in shoppingVM.itemsGroupedByRecipe.keys.sorted() {
+            lines.append("\(recipe):")
+            for item in shoppingVM.itemsGroupedByRecipe[recipe] ?? [] {
+                let status = item.isPurchased ? "✓" : "○"
+                var row = "\(status) \(item.name) – \(Int(item.quantity)) \(item.unit)"
+                if let cost = item.estimatedUnitCost,
+                   let formatted = Self.hkdFormatter.string(from: NSNumber(value: cost)) {
+                    row += " (\(formatted))"
+                }
+                lines.append(row)
+            }
+            lines.append("")
+        }
+        return lines.joined(separator: "\n").trimmingCharacters(in: .newlines)
+    }
 
     var body: some View {
-        NavigationStack {
-            Group {
-                if shoppingVM.items.isEmpty {
-                    ContentUnavailableView(
-                        "No items",
-                        systemImage: "cart",
-                        description: Text("Add missing ingredients from a recipe.")
-                    )
-                } else {
-                    shoppingList
-                }
-            }
-            .navigationTitle(String(localized: "shopping.title"))
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(String(localized: "shopping.clear_bought")) {
-                        shoppingVM.clearBought()
-                    }
-                    .disabled(shoppingVM.purchasedItemIDs.isEmpty)
-                    .foregroundStyle(theme.colors.danger)
-                }
+        Group {
+            if shoppingVM.items.isEmpty {
+                ContentUnavailableView(
+                    "No items",
+                    systemImage: "cart",
+                    description: Text("Add missing ingredients from a recipe.")
+                )
+            } else {
+                shoppingList
             }
         }
+        .navigationTitle(String(localized: "shopping.title"))
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ShareLink(item: shareText) {
+                    Label(String(localized: "shopping.share"), systemImage: "square.and.arrow.up")
+                }
+                .disabled(shoppingVM.items.isEmpty)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(String(localized: "shopping.clear_bought")) {
+                    showClearConfirmation = true
+                }
+                .disabled(shoppingVM.purchasedItemIDs.isEmpty)
+                .tint(theme.colors.danger)
+            }
+        }
+        .confirmationDialog(
+            String(localized: "shopping.clear_bought_confirm.title"),
+            isPresented: $showClearConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button(String(localized: "shopping.clear_bought"), role: .destructive) {
+                shoppingVM.clearBought()
+            }
+            Button(String(localized: "common.cancel"), role: .cancel) {}
+        } message: {
+            Text(String(localized: "shopping.clear_bought_confirm.message"))
+        }
+        .topBarToolbar()
     }
 
     private var shoppingList: some View {
@@ -40,16 +89,16 @@ struct ShoppingListView: View {
                         Text(String(localized: "shopping.total"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Text("HK$\(shoppingVM.totalEstimatedCost, specifier: "%.0f")")
+                        Text(ShoppingListView.hkdFormatter.string(from: NSNumber(value: shoppingVM.totalEstimatedCost)) ?? "")
                             .font(.title2.bold())
                             .foregroundStyle(theme.colors.primary)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(String(format: NSLocalizedString("shopping.items", comment: ""), shoppingVM.items.count))
+                        Text(String(format: String(localized: "shopping.items"), shoppingVM.items.count))
                             .font(.caption).foregroundStyle(.secondary)
-                        Text(String(format: NSLocalizedString("shopping.bought", comment: ""), shoppingVM.purchasedItemIDs.count))
-                            .font(.caption).foregroundStyle(.green)
+                        Text(String(format: String(localized: "shopping.bought"), shoppingVM.purchasedItemIDs.count))
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .padding(.vertical, 4)
@@ -61,6 +110,13 @@ struct ShoppingListView: View {
                     ForEach(shoppingVM.itemsGroupedByRecipe[recipe] ?? []) { item in
                         ShoppingItemRow(item: item) {
                             shoppingVM.togglePurchased(item)
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                shoppingVM.removeItem(id: item.id)
+                            } label: {
+                                Label(String(localized: "common.delete"), systemImage: "trash")
+                            }
                         }
                     }
                 }
@@ -81,7 +137,7 @@ private struct ShoppingItemRow: View {
         Button(action: onToggle) {
             HStack(spacing: 12) {
                 Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(item.isPurchased ? .green : theme.colors.border)
+                    .foregroundStyle(item.isPurchased ? theme.colors.success : theme.colors.border)
                     .font(.title3)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
@@ -94,12 +150,20 @@ private struct ShoppingItemRow: View {
                 }
                 Spacer()
                 if let cost = item.estimatedUnitCost {
-                    Text("HK$\(cost, specifier: "%.0f")")
+                    Text(ShoppingListView.hkdFormatter.string(from: NSNumber(value: cost)) ?? "—")
                         .font(.subheadline.bold())
                         .foregroundStyle(theme.colors.primary)
+                } else {
+                    Text("—")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.secondary)
                 }
             }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(item.name)
+        .accessibilityHint(item.isPurchased
+            ? String(localized: "shopping.hint.unmark")
+            : String(localized: "shopping.hint.mark"))
     }
 }

@@ -23,14 +23,14 @@ struct MainTabView: View {
 
     var body: some View {
         TabView {
-            InventoryView()
+            NavigationStack { InventoryView() }
                 .tabItem { Label(String(localized: "tab.fridge"), systemImage: "refrigerator") }
-            NavigationStack {
-                FoodIdeaView()
-            }
-            .tabItem { Label(String(localized: "tab.plan"), systemImage: "lightbulb") }
-            ShoppingListView()
+            NavigationStack { FoodIdeaView() }
+                .tabItem { Label(String(localized: "tab.plan"), systemImage: "lightbulb") }
+            NavigationStack { ShoppingListView() }
                 .tabItem { Label(String(localized: "tab.shopping"), systemImage: "cart") }
+            ProfileDrawerView()
+                .tabItem { Label(String(localized: "tab.profile"), systemImage: "person.circle") }
         }
     }
 }

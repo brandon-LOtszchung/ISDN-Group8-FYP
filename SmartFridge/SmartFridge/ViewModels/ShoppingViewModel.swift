@@ -45,6 +45,14 @@ final class ShoppingViewModel {
         }
     }
 
+    func removeItem(id: UUID) {
+        items.removeAll { $0.id == id }
+        Task {
+            do { try await supabase.deleteShoppingListItems(ids: [id]) }
+            catch { self.error = error.localizedDescription }
+        }
+    }
+
     func clearBought() {
         let ids = purchasedItemIDs
         items.removeAll { $0.isPurchased }

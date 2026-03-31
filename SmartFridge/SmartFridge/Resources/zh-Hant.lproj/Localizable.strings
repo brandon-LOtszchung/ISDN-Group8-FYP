@@ -2,14 +2,20 @@
 "tab.fridge"    = "雪櫃";
 "tab.plan"      = "計劃";
 "tab.shopping"  = "購物";
+"tab.profile"   = "個人資料";
 
 // Onboarding
+"onboarding.summary.family"        = "家庭";
+"onboarding.summary.cooking_skill" = "烹飪技巧";
+"onboarding.summary.budget"        = "預算";
+"onboarding.summary.members"       = "成員";
 "onboarding.family_name.title"     = "你的家庭叫什麼名字？";
 "onboarding.family_name.hint"      = "例如：陳氏家庭";
 "onboarding.cooking_intro.title"   = "讓我們談談烹飪";
 "onboarding.cooking.title"         = "您的烹飪技術水平如何？";
 "onboarding.budget.title"          = "您每週的食物預算是多少？";
 "onboarding.members.title"         = "您家有哪些成員？";
+"onboarding.members.dietary_hint"  = "設置完成後，可在每位成員的個人資料中設定飲食偏好與過敏資訊。";
 "onboarding.summary.title"         = "一切準備就緒！";
 "onboarding.continue"              = "繼續";
 "onboarding.add_member"            = "新增成員";
@@ -23,12 +29,26 @@
 "inventory.scan_prompt.scan"       = "掃描我的雪櫃";
 "inventory.scan_prompt.empty"      = "我的雪櫃是空的";
 "inventory.delete_confirm"         = "移除項目";
+"inventory.delete_confirm.message" = "此操作無法復原。";
+"inventory.add_item"               = "新增食材";
+"inventory.edit_item"              = "編輯食材";
+"inventory.item_name"              = "名稱";
+"inventory.item_category"          = "類別";
+"inventory.item_quantity"          = "數量";
+"inventory.category_custom"        = "自訂\u2026";
+"inventory.action_stock"           = "補貨";
+"inventory.action_use"             = "使用";
+"inventory.action_edit"            = "編輯";
 
 // Camera
+"camera.title"                     = "新增食材";
+"camera.upload_error"              = "上傳錯誤";
 "camera.take_photo"                = "拍照";
 "camera.choose_library"            = "從相簿選擇";
 "camera.cancel"                    = "取消";
 "camera.scanning"                  = "正在掃描雪櫃...";
+"camera.scan_success"              = "掃描完成";
+"camera.items_found"               = "已將 %lld 種食材加入雪櫃";
 
 // Planning / Food Ideas
 "planning.title"                   = "食物點子";
@@ -37,6 +57,13 @@
 "planning.get_ideas"               = "獲取點子";
 "planning.match"                   = "%d/%d 食材已配對";
 "planning.missing"                 = "%d 缺少";
+
+// Planning empty state
+"planning.no_results.title"        = "沒有符合的食譜";
+"planning.no_results.description"  = "嘗試選擇其他菜系，或在冰箱中添加更多食材。";
+
+// Recipe added to shopping
+"recipe.added_to_shopping"         = "已加入購物清單";
 
 // Recipe Detail
 "recipe.ingredients"               = "食材";
@@ -47,11 +74,34 @@
 "recipe.share"                     = "分享食譜";
 
 // Shopping
+"shopping.hint.mark"               = "標記為已購買";
+"shopping.hint.unmark"             = "標記為未購買";
+"shopping.clear_bought_confirm.title"   = "清除已購買項目";
+"shopping.clear_bought_confirm.message" = "這將永久刪除所有已購買的項目。";
 "shopping.title"                   = "購物";
 "shopping.clear_bought"            = "清除已購";
 "shopping.total"                   = "預計總額";
 "shopping.items"                   = "%d 件";
 "shopping.bought"                  = "%d 已購";
+"shopping.share"                   = "分享清單";
+
+// Profile
+"profile.title"                    = "個人資料";
+"profile.family"                   = "家庭";
+"profile.members"                  = "成員";
+"profile.member.title"             = "成員";
+"profile.member.section.basic"     = "基本資料";
+"profile.member.name"              = "姓名";
+"profile.member.age"               = "年齡";
+"profile.member.age.hint"          = "選填";
+"profile.member.dietary"           = "飲食限制";
+"profile.member.allergies"         = "過敏";
+"profile.member.health"            = "健康狀況";
+"profile.member.preferences"       = "偏好";
+"profile.member.spice"             = "辣度";
+"profile.member.cuisines"          = "喜愛菜系";
+"profile.member.disliked"          = "不喜歡的食材";
+"profile.member.add_disliked"      = "新增食材...";
 
 // Common
 "common.loading"                   = "載入中...";

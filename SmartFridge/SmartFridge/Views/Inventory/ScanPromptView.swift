@@ -7,9 +7,11 @@ struct ScanPromptView: View {
     @Binding var showCamera: Bool
     @Binding var isPresented: Bool
 
+    @ScaledMetric private var emojiSize: CGFloat = 60
+
     var body: some View {
         VStack(spacing: 20) {
-            Text("📷").font(.system(size: 60))
+            Text("📷").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "inventory.scan_prompt.title"))
                 .font(.title2.bold())
             Text(String(localized: "inventory.scan_prompt.subtitle"))
@@ -25,11 +27,10 @@ struct ScanPromptView: View {
                 Text(String(localized: "inventory.scan_prompt.scan"))
                     .font(.body.bold())
                     .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(theme.colors.scan)
-                    .foregroundStyle(.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 14))
             }
+            .buttonStyle(.borderedProminent)
+            .tint(theme.colors.scan)
+            .controlSize(.large)
 
             Button {
                 appVM.fridgeInitialized = true
