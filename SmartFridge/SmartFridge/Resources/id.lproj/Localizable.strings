@@ -102,6 +102,9 @@
 "profile.member.cuisines"          = "Masakan Favorit";
 "profile.member.disliked"          = "Bahan yang Tidak Disukai";
 "profile.member.add_disliked"      = "Tambah bahan...";
+"profile.member.add_title"             = "Anggota Baru";
+"profile.member.delete_confirm_title"  = "Hapus Anggota?";
+"profile.member.delete_confirm_message" = "Anggota ini dan preferensinya akan dihapus secara permanen.";
 
 // Common
 "common.loading"                   = "Memuat...";

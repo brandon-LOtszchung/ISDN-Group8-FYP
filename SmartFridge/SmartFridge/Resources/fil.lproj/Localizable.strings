@@ -102,6 +102,9 @@
 "profile.member.cuisines"          = "Paboritong Lutuin";
 "profile.member.disliked"          = "Mga Hindi Gusto sa Pagkain";
 "profile.member.add_disliked"      = "Magdagdag ng sangkap...";
+"profile.member.add_title"             = "Bagong Miyembro";
+"profile.member.delete_confirm_title"  = "Alisin ang Miyembro?";
+"profile.member.delete_confirm_message" = "Ang miyembro at kanilang mga kagustuhan ay permanenteng maaalis.";
 
 // Common
 "common.loading"                   = "Naglo-load...";

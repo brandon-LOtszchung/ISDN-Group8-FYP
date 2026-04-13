@@ -102,6 +102,9 @@
 "profile.member.cuisines"          = "喜愛菜系";
 "profile.member.disliked"          = "不喜歡的食材";
 "profile.member.add_disliked"      = "新增食材...";
+"profile.member.add_title"             = "新成員";
+"profile.member.delete_confirm_title"  = "移除成員？";
+"profile.member.delete_confirm_message" = "此成員及其偏好設定將被永久移除。";
 
 // Common
 "common.loading"                   = "載入中...";

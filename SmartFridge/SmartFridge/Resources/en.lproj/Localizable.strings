@@ -102,6 +102,9 @@
 "profile.member.cuisines"          = "Favourite Cuisines";
 "profile.member.disliked"          = "Disliked Ingredients";
 "profile.member.add_disliked"      = "Add ingredient...";
+"profile.member.add_title"             = "New Member";
+"profile.member.delete_confirm_title"  = "Remove Member?";
+"profile.member.delete_confirm_message" = "This member and their preferences will be permanently removed.";
 
 // Common
 "common.loading"                   = "Loading...";
