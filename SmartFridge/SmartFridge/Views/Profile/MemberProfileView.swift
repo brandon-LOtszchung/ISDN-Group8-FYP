@@ -6,7 +6,8 @@ struct MemberProfileView: View {
     @Environment(ThemeManager.self) private var theme
     @Environment(\.dismiss) private var dismiss
 
-    let memberId: UUID
+    /// nil = create mode, non-nil = edit mode
+    let memberId: UUID?
 
     @State private var name = ""
     @State private var ageText = ""
@@ -115,9 +116,10 @@ struct MemberProfileView: View {
                 }
             }
         }
-        .navigationTitle(name.isEmpty ? String(localized: "profile.member.title") : name)
+        .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            cancelButtonIfNeeded
             ToolbarItem(placement: .confirmationAction) {
                 Button(String(localized: "common.save"), action: save)
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -128,8 +130,26 @@ struct MemberProfileView: View {
 
     // MARK: - Private
 
+    private var navigationTitle: String {
+        if memberId == nil {
+            return String(localized: "profile.member.add_title")
+        }
+        return name.isEmpty ? String(localized: "profile.member.title") : name
+    }
+
+    /// In create mode, show a Cancel button so the sheet can be dismissed without saving.
+    @ToolbarContentBuilder
+    private var cancelButtonIfNeeded: some ToolbarContent {
+        if memberId == nil {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(String(localized: "common.cancel")) { dismiss() }
+            }
+        }
+    }
+
     private func load() {
-        guard let m = appVM.members.first(where: { $0.id == memberId }) else { return }
+        guard let id = memberId,
+              let m = appVM.members.first(where: { $0.id == id }) else { return }
         name = m.name
         ageText = m.age.map(String.init) ?? ""
         dietaryRestrictions = Set(m.dietaryRestrictions)
@@ -152,18 +172,37 @@ struct MemberProfileView: View {
     }
 
     private func save() {
-        guard var member = appVM.members.first(where: { $0.id == memberId }) else { return }
-        member.name = name.trimmingCharacters(in: .whitespaces)
-        member.age = Int(ageText)
-        member.dietaryRestrictions = Array(dietaryRestrictions)
-        member.allergies = Array(allergies)
-        member.healthConditions = Array(healthConditions)
-        member.preferences = MemberPreferences(
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        let prefs = MemberPreferences(
             spiceLevel: spiceLevel,
             favoriteCuisines: Array(favoriteCuisines),
             dislikedIngredients: dislikedIngredients
         )
-        appVM.updateMember(member)
+
+        if let id = memberId {
+            // Edit mode
+            guard var member = appVM.members.first(where: { $0.id == id }) else { return }
+            member.name = trimmedName
+            member.age = Int(ageText)
+            member.dietaryRestrictions = Array(dietaryRestrictions)
+            member.allergies = Array(allergies)
+            member.healthConditions = Array(healthConditions)
+            member.preferences = prefs
+            appVM.updateMember(member)
+        } else {
+            // Create mode
+            let member = FamilyMember(
+                id: UUID(),
+                familyId: Constants.defaultFamilyID,
+                name: trimmedName,
+                age: Int(ageText),
+                dietaryRestrictions: Array(dietaryRestrictions),
+                allergies: Array(allergies),
+                healthConditions: Array(healthConditions),
+                preferences: prefs
+            )
+            appVM.addMember(member)
+        }
         dismiss()
     }
 }
