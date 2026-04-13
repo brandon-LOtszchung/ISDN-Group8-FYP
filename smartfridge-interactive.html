@@ -1,0 +1,2041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartFridge — Interactive Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700&display=swap');
+
+:root {
+  --p: #FF6B35; --surface: #FFF8F5; --surface-alt: #FFF0E8;
+  --text: #2C3E50; --gray: #8E8E93; --gray-light: #F2F2F7;
+  --success: #27AE60; --danger: #C0392B; --scan: #F39C12;
+  --border: #E0E0E0; --white: #fff;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-btn: 0 4px 12px rgba(255,107,53,0.3);
+}
+
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 24px; gap: 40px;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  color: rgba(255,255,255,0.85); width: 220px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sidebar h2 { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+.flow-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; opacity: 0.45; transition: all 0.2s; cursor: pointer;
+}
+.flow-item .fi-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); flex-shrink: 0; transition: all 0.2s; }
+.flow-item.active { background: rgba(255,255,255,0.1); opacity: 1; }
+.flow-item.active .fi-dot { background: var(--p); box-shadow: 0 0 6px var(--p); }
+.flow-item.done { opacity: 0.7; }
+.flow-item.done .fi-dot { background: var(--success); }
+.sidebar-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
+.hint-box {
+  margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.06); border-radius: 10px;
+  font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5;
+}
+.hint-box strong { color: rgba(255,255,255,0.8); }
+
+/* ── PHONE FRAME ── */
+.phone-wrap { position: relative; }
+.phone {
+  width: 390px; height: 844px; background: var(--white); border-radius: 50px;
+  overflow: hidden; display: flex; flex-direction: column; position: relative;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.15), 0 0 0 10px #1c1c1e, 0 30px 80px rgba(0,0,0,0.5), 0 0 40px rgba(255,107,53,0.1);
+}
+.island {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 34px; background: #000; border-radius: 20px; z-index: 100;
+}
+
+/* ── STATUS BAR ── */
+.status {
+  height: 54px; display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 28px 8px; flex-shrink: 0; position: relative; z-index: 5;
+}
+.status-time { font-size: 16px; font-weight: 700; color: var(--text); }
+.status-icons { display: flex; align-items: center; gap: 5px; }
+.status-icons svg { fill: var(--text); }
+
+/* ── SCREEN SYSTEM ── */
+.screen {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; background: var(--white);
+  transition: opacity 0.25s, transform 0.3s;
+  opacity: 0; pointer-events: none; transform: translateX(30px);
+}
+.screen.active { opacity: 1; pointer-events: all; transform: translateX(0); z-index: 10; }
+
+.screen-inner { padding-top: 54px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+/* ── NAVIGATION BAR (detail screen) ── */
+.nav {
+  height: 44px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; position: relative; padding: 0 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.1);
+}
+.nav-title { font-size: 17px; font-weight: 600; color: var(--text); }
+.nav-back {
+  position: absolute; left: 8px; display: flex; align-items: center; gap: 2px;
+  color: var(--p); font-size: 17px; font-weight: 500; cursor: pointer;
+  background: none; border: none; font-family: inherit; padding: 8px;
+}
+
+/* ── TAB NAV BAR (toolbar icons above large title) ── */
+.tab-nav {
+  height: 44px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 8px; flex-shrink: 0;
+}
+.tab-nav-leading, .tab-nav-trailing { display: flex; align-items: center; }
+.icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border: none; background: none;
+  cursor: pointer; border-radius: 8px; color: var(--p);
+  transition: background 0.15s;
+}
+.icon-btn:active { background: rgba(0,0,0,0.05); }
+.icon-btn.scan-color { color: var(--scan); }
+
+/* ── LARGE TITLE ── */
+.ltitle { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); padding: 0 20px 10px; flex-shrink: 0; }
+
+/* ── SEARCH ── */
+.search {
+  margin: 0 16px 10px; height: 36px; background: rgba(118,118,128,0.12);
+  border-radius: 10px; display: flex; align-items: center; gap: 7px; padding: 0 10px; flex-shrink: 0;
+}
+.search svg { flex-shrink: 0; opacity: 0.5; }
+.search input {
+  flex: 1; border: none; background: none; font: 15px/1 'Inter', sans-serif; color: var(--text); outline: none;
+}
+.search input::placeholder { color: var(--gray); }
+
+/* ── SCROLL ── */
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ── GROUPED LIST ── */
+.list-bg { background: var(--gray-light); }
+.sec-hdr {
+  padding: 20px 20px 6px; font-size: 12px; font-weight: 600; color: var(--gray);
+  font-variant: small-caps; background: var(--gray-light);
+}
+.inset { margin: 0 16px; border-radius: 12px; overflow: hidden; background: var(--white); }
+.inset + .sec-hdr { padding-top: 8px; }
+.row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07); background: var(--white);
+  transition: background 0.1s;
+}
+.row:last-child { border-bottom: none; }
+.row:active { background: #f8f8f8; }
+.row-em { font-size: 26px; flex-shrink: 0; width: 36px; text-align: center; }
+.row-info { flex: 1; min-width: 0; }
+.row-title { font-size: 16px; font-weight: 600; color: var(--text); }
+.row-sub { font-size: 13px; color: var(--gray); margin-top: 1px; }
+.row-badge { margin-left: auto; font-weight: 700; font-size: 16px; color: var(--p); flex-shrink: 0; }
+.list-footer { padding: 8px 0 20px; text-align: center; font-size: 12px; color: var(--gray); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: block; width: 100%; padding: 16px; border-radius: 14px; border: none;
+  font: 600 16px/1 'Inter',sans-serif; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active:not(:disabled) { opacity: 0.85; transform: scale(0.98); }
+.btn-p { background: var(--p); color: #fff; box-shadow: var(--shadow-btn); }
+.btn-p:disabled { background: #E0E0E0; color: #aaa; box-shadow: none; cursor: default; }
+.btn-scan { background: var(--scan); color: #fff; box-shadow: 0 4px 12px rgba(243,156,18,0.3); }
+.btn-ghost { background: none; color: var(--p); font-size: 15px; padding: 12px; box-shadow: none; }
+.btn-danger-ghost { background: none; color: var(--danger); font-size: 15px; padding: 12px; box-shadow: none; }
+
+/* ── PILLS ── */
+.pill-scroller { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
+.pill-scroller::-webkit-scrollbar { display: none; }
+.pill-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  padding: 7px 14px; border-radius: 20px; font: 600 14px/1 'Inter',sans-serif;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; user-select: none;
+}
+.pill:active { transform: scale(0.95); }
+.pill.on { background: var(--p); border-color: var(--p); color: #fff; }
+
+/* ── PROGRESS DOTS ── */
+.dots { display: flex; gap: 6px; justify-content: center; padding: 6px 0; flex-shrink: 0; }
+.dot { width: 8px; height: 6px; border-radius: 3px; background: var(--border); transition: all 0.35s cubic-bezier(.4,0,.2,1); }
+.dot.cur { width: 20px; background: var(--p); }
+.dot.done { background: var(--p); }
+
+/* ── RECIPE CARD ── */
+.recipe-card {
+  background: var(--surface); border-radius: 12px; overflow: hidden;
+  box-shadow: var(--shadow-card); margin: 0 16px 12px; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.recipe-card:active { transform: scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.card-hero { height: 80px; background: var(--surface-alt); display: flex; align-items: center; justify-content: center; font-size: 38px; }
+.card-body { padding: 10px 12px 12px; }
+.card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.card-sub { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.match-track { height: 4px; background: #E0E0E0; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.match-fill { height: 4px; border-radius: 2px; background: var(--success); transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+
+/* ── SEGMENTED ── */
+.seg { display: flex; background: rgba(118,118,128,0.12); border-radius: 9px; padding: 2px; }
+.seg-btn {
+  flex: 1; text-align: center; padding: 8px 0; font: 600 13px/1 'Inter',sans-serif;
+  color: var(--gray); border: none; background: none; border-radius: 8px;
+  cursor: pointer; font-family: inherit; transition: all 0.2s;
+}
+.seg-btn.on { background: var(--white); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
+/* ── INFO PILLS ── */
+.ipill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px;
+  background: var(--surface-alt); border-radius: 20px; font: 600 12px/1 'Inter',sans-serif; color: var(--text);
+}
+.ipill.green { background: #E8F8EE; color: var(--success); }
+.ipill.red { background: #FDEAEA; color: var(--danger); }
+
+/* ── INGREDIENT ROW ── */
+.ing-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 0.5px solid rgba(0,0,0,0.06);
+}
+.ing-row:last-child { border-bottom: none; }
+.ing-icon { display: flex; align-items: center; flex-shrink: 0; }
+.ing-name { flex: 1; font-size: 15px; color: var(--text); }
+.ing-qty { font-size: 13px; color: var(--gray); }
+.ing-tag { font: 700 11px/1 'Inter',sans-serif; padding: 3px 8px; border-radius: 8px; }
+.ing-tag.have { background: #E8F8EE; color: var(--success); }
+.ing-tag.need { background: #FDEAEA; color: var(--danger); }
+
+/* ── STEP ROW ── */
+.step-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--p); color: #fff; font: 700 12px/1 'Inter',sans-serif; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-txt { font-size: 15px; line-height: 1.55; color: var(--text); }
+
+/* ── SHOPPING ROW ── */
+.shop-row {
+  display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07); cursor: pointer; background: var(--white);
+  transition: background 0.1s;
+}
+.shop-row:last-child { border-bottom: none; }
+.shop-row:active { background: #f8f8f8; }
+.shop-check { display: flex; align-items: center; flex-shrink: 0; transition: color 0.2s; }
+.shop-info { flex: 1; }
+.shop-name { font-size: 16px; font-weight: 500; color: var(--text); transition: all 0.2s; }
+.shop-qty { font-size: 13px; color: var(--gray); margin-top: 1px; }
+.shop-cost { font: 700 15px/1 'Inter',sans-serif; color: var(--p); flex-shrink: 0; }
+.shop-row.bought .shop-name { text-decoration: line-through; color: var(--gray); }
+
+/* ── COST CARD ── */
+.cost-card {
+  margin: 8px 16px; background: var(--white); border-radius: 12px;
+  padding: 16px; box-shadow: var(--shadow-card); display: flex; align-items: center; justify-content: space-between;
+}
+.cost-lhs .label { font-size: 12px; color: var(--gray); font-weight: 500; }
+.cost-lhs .amount { font: 700 26px/1 'Inter',sans-serif; color: var(--p); margin-top: 2px; letter-spacing: -0.5px; }
+.cost-rhs { text-align: right; display: flex; flex-direction: column; gap: 3px; }
+
+/* ── EMPTY STATE ── */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 8px; padding: 40px; }
+.empty-icon { font-size: 52px; opacity: 0.3; }
+.empty-title { font: 700 20px/1 'Inter',sans-serif; color: #555; }
+.empty-desc { font-size: 14px; color: var(--gray); text-align: center; line-height: 1.5; }
+
+/* ── SCAN PROMPT (inline, matches ScanPromptView) ── */
+.scan-prompt {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 1; gap: 16px; padding: 32px 24px; text-align: center;
+}
+.scan-prompt-icon { font-size: 60px; line-height: 1; }
+.scan-prompt-title { font: 700 22px/1.3 'Inter',sans-serif; color: var(--text); }
+.scan-prompt-sub { font-size: 15px; color: var(--gray); line-height: 1.5; max-width: 280px; }
+.scan-prompt-actions { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 320px; }
+
+/* ── TAB BAR ── */
+.tabbar {
+  height: 83px; border-top: 0.5px solid rgba(0,0,0,0.12);
+  display: flex; align-items: flex-start; justify-content: space-around;
+  padding-top: 10px; background: rgba(250,250,250,0.94);
+  backdrop-filter: blur(20px); flex-shrink: 0;
+}
+.tab-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font: 500 10px/1 'Inter',sans-serif; color: var(--gray); cursor: pointer;
+  border: none; background: none; font-family: inherit; padding: 4px 16px; border-radius: 8px;
+  transition: color 0.15s;
+}
+.tab-btn.on { color: var(--p); }
+
+/* ── SHEET ── */
+.sheet-wrap {
+  position: absolute; inset: 0; z-index: 200;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.sheet-wrap.open { opacity: 1; pointer-events: all; }
+.sheet-dim { flex: 1; background: rgba(0,0,0,0.4); cursor: pointer; }
+.sheet {
+  background: var(--white); border-radius: 20px 20px 0 0; padding: 0 24px 34px;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+.sheet-wrap.open .sheet { transform: translateY(0); }
+.handle { width: 38px; height: 5px; background: #ddd; border-radius: 3px; margin: 10px auto 20px; }
+
+/* ── ADD ITEM MODAL ── */
+.modal-wrap {
+  position: absolute; inset: 0; z-index: 300; display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.modal-wrap.open { opacity: 1; pointer-events: all; }
+.modal-dim { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+.modal {
+  position: relative; background: var(--white); width: 100%; border-radius: 20px 20px 0 0;
+  padding: 0 20px 34px; z-index: 1;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+.modal-wrap.open .modal { transform: translateY(0); }
+
+/* ── FORMS ── */
+.field {
+  width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px;
+  font: 16px/1 'Inter',sans-serif; color: var(--text); outline: none; transition: border-color 0.2s;
+  background: var(--white);
+}
+.field:focus { border-color: var(--p); }
+.field-label { font: 600 13px/1 'Inter',sans-serif; color: var(--gray); margin-bottom: 6px; display: block; }
+
+/* ── MEMBER ROW ── */
+.mem-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.mem-input {
+  flex: 1; padding: 12px 14px; border-radius: 10px;
+  font: 15px/1 'Inter',sans-serif; color: var(--text); outline: none; transition: border-color 0.2s;
+  background: #F2F2F7; border: 1.5px solid transparent;
+}
+.mem-input:focus { border-color: var(--p); background: var(--white); }
+.mem-del { font-size: 22px; color: var(--danger); cursor: pointer; background: none; border: none; padding: 4px 6px; display: flex; align-items: center; }
+
+/* ── SUMMARY ROWS ── */
+.sum-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 0; border-bottom: 0.5px solid rgba(0,0,0,0.07);
+}
+.sum-row:last-child { border-bottom: none; }
+.sum-key { font-size: 16px; color: var(--gray); }
+.sum-val { font: 700 16px/1 'Inter',sans-serif; color: var(--text); }
+
+/* ── TYPEWRITER ── */
+.cursor { border-right: 2px solid var(--text); animation: blink 0.7s steps(1) infinite; }
+@keyframes blink { 0%,100%{border-color:var(--text)} 50%{border-color:transparent} }
+
+/* ── TOAST ── */
+.toast {
+  position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(30,30,30,0.92); color: #fff; padding: 10px 18px; border-radius: 20px;
+  font: 600 14px/1 'Inter',sans-serif; white-space: nowrap; z-index: 500;
+  opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font: 700 12px/1 'Inter',sans-serif; color: var(--gray);
+  font-variant: small-caps; padding: 16px 16px 8px;
+}
+
+/* ── FAB ── */
+.fab {
+  position: absolute; bottom: 96px; right: 16px; width: 50px; height: 50px;
+  border-radius: 50%; background: var(--p); box-shadow: var(--shadow-btn);
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  cursor: pointer; border: none; transition: transform 0.15s; z-index: 5; color: #fff;
+}
+.fab:active { transform: scale(0.93); }
+
+@media (max-width: 700px) {
+  body { padding: 0; }
+  .sidebar { display: none; }
+  .phone { border-radius: 0; box-shadow: none; width: 100vw; height: 100dvh; }
+}
+
+/* ── SWIPE ROW ── */
+.swipe-row-wrap {
+  position: relative; overflow: hidden;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07);
+  touch-action: pan-y; /* let browser scroll vertically; script handles horizontal swipe */
+}
+.swipe-row-wrap:last-child { border-bottom: none; }
+.swipe-row-leading {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 240px;
+  display: flex; align-items: stretch;
+}
+.swipe-row-trailing {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+  display: flex; align-items: stretch;
+}
+.swipe-action-btn {
+  flex: 1; border: none; cursor: pointer; color: #fff;
+  font: 700 11px/1.3 'Inter',sans-serif;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; user-select: none; -webkit-user-select: none;
+}
+.swipe-action-btn:active { filter: brightness(0.9); }
+.swipe-action-btn svg { flex-shrink: 0; }
+.swipe-row-content {
+  position: relative; background: var(--white); will-change: transform;
+  touch-action: pan-y; /* allow vertical scroll, intercept horizontal */
+}
+.swipe-row-content.row { border-bottom: none; cursor: default; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <h2>App Flow</h2>
+  <div class="flow-item active" id="fi-onboard"><div class="fi-dot"></div>Onboarding</div>
+  <div class="sidebar-divider"></div>
+  <div class="flow-item" id="fi-fridge"><div class="fi-dot"></div>Fridge Inventory</div>
+  <div class="flow-item" id="fi-plan"><div class="fi-dot"></div>Food Ideas</div>
+  <div class="flow-item" id="fi-detail"><div class="fi-dot"></div>Recipe Detail</div>
+  <div class="flow-item" id="fi-shop"><div class="fi-dot"></div>Shopping List</div>
+  <div class="flow-item" id="fi-profile"><div class="fi-dot"></div>Profile</div>
+  <div class="hint-box" id="hint-box">
+    <strong>Start here →</strong><br>Enter your family name to begin the setup flow.
+  </div>
+</div>
+
+<!-- PHONE -->
+<div class="phone-wrap">
+<div class="phone" id="phone">
+  <div class="island"></div>
+
+  <!-- STATUS BAR -->
+  <div class="status" id="status-bar" style="position:absolute;top:0;left:0;right:0;z-index:50;">
+    <span class="status-time" id="clock">9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.3"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 4.5a5 5 0 0 1 3.54 1.46L13 4.5A7 7 0 0 0 8 2.5a7 7 0 0 0-5 2l1.46 1.46A5 5 0 0 1 8 4.5zm0 3a2 2 0 0 1 1.42.59L11 6.5A4 4 0 0 0 8 5.5a4 4 0 0 0-3 1l1.58 1.59A2 2 0 0 1 8 7.5zm0 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
+      <svg width="26" height="13" viewBox="0 0 26 13"><rect x="0.5" y="0.5" width="21" height="12" rx="3.5" stroke="currentColor" fill="none" stroke-opacity="0.35"/><rect x="22.5" y="4" width="3" height="5" rx="1.5" fill="currentColor" fill-opacity="0.4"/><rect x="2" y="2" width="17" height="9" rx="2" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <!-- ════════ ONBOARDING ════════ -->
+  <div class="screen active" id="s-onboard">
+    <div class="screen-inner" style="padding-bottom:0;">
+      <!-- Back button row (matches OnboardingView HStack with chevron.left) -->
+      <div style="display:flex;align-items:center;padding:16px 24px 0;flex-shrink:0;min-height:44px;">
+        <button id="ob-back" onclick="obBack()" style="display:none;background:none;border:none;cursor:pointer;color:var(--p);padding:4px 0;display:flex;align-items:center;" aria-label="Back">
+          <svg width="10" height="17" viewBox="0 0 10 17" fill="none"><path d="M9 1L1 8.5L9 16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="dots" id="ob-dots"></div>
+      <div class="scroll" style="padding: 0 24px 24px;" id="ob-body"></div>
+      <div style="padding: 8px 24px 40px; flex-shrink:0;">
+        <button class="btn btn-p" id="ob-btn" onclick="obNext()" disabled>Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MAIN (tabs) ════════ -->
+  <div class="screen" id="s-main">
+    <div class="screen-inner" style="padding-bottom:0;">
+      <!-- TAB PANES -->
+      <div id="pane-fridge"  style="flex:1;min-height:0;display:flex;flex-direction:column;"></div>
+      <div id="pane-plan"    style="flex:1;min-height:0;display:none;flex-direction:column;"></div>
+      <div id="pane-shop"    style="flex:1;min-height:0;display:none;flex-direction:column;"></div>
+      <div id="pane-profile" style="flex:1;min-height:0;display:none;flex-direction:column;"></div>
+
+      <div class="tabbar">
+        <button class="tab-btn on" id="tb-0" onclick="goTab(0)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <line x1="5" y1="9" x2="19" y2="9"/>
+            <line x1="10" y1="5" x2="10" y2="7"/>
+            <line x1="10" y1="13" x2="10" y2="16"/>
+          </svg>
+          Fridge
+        </button>
+        <button class="tab-btn" id="tb-1" onclick="goTab(1)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21h6"/>
+            <path d="M12 3C8.7 3 6 5.7 6 9c0 2.4 1.3 4.5 3.2 5.7.5.3.8.8.8 1.3V18h4v-2c0-.5.3-1 .8-1.3C16.7 13.5 18 11.4 18 9c0-3.3-2.7-6-6-6z"/>
+          </svg>
+          Plan
+        </button>
+        <button class="tab-btn" id="tb-2" onclick="goTab(2)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/>
+            <circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>
+          </svg>
+          Shopping
+        </button>
+        <button class="tab-btn" id="tb-3" onclick="goTab(3)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            <circle cx="12" cy="8" r="4"/>
+          </svg>
+          Profile
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ RECIPE DETAIL ════════ -->
+  <div class="screen" id="s-detail">
+    <div class="screen-inner" id="detail-inner" style="padding-bottom:0;"></div>
+  </div>
+
+  <!-- ════════ MEMBER PROFILE SCREEN ════════ -->
+  <div class="screen" id="s-member-profile">
+    <div class="screen-inner" id="member-profile-inner" style="padding-bottom:0;"></div>
+  </div>
+
+  <!-- ════════ CAMERA SHEET ════════ -->
+  <div class="sheet-wrap" id="sheet-camera">
+    <div class="sheet-dim" onclick="closeSheet('sheet-camera')"></div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div style="font:600 17px/1 Inter,sans-serif;text-align:center;margin-bottom:20px;">Add Items</div>
+      <button class="btn btn-scan" style="margin-bottom:12px;" onclick="simulateScan()">Take Photo</button>
+      <button class="btn btn-p"    style="margin-bottom:4px;"  onclick="simulateScan()">Choose from Library</button>
+      <button class="btn btn-ghost" onclick="closeSheet('sheet-camera')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ════════ DELETE CONFIRM SHEET ════════ -->
+  <div class="sheet-wrap" id="sheet-delete-confirm">
+    <div class="sheet-dim" onclick="cancelDeleteItem()"></div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div style="text-align:center;padding-bottom:20px;">
+        <div id="delete-confirm-title" style="font:600 17px/1.4 Inter,sans-serif;color:var(--text);margin-bottom:6px;"></div>
+        <div style="font:15px/1.4 Inter,sans-serif;color:var(--gray)">This will remove the item from your fridge.</div>
+      </div>
+      <button class="btn" style="background:#FF3B30;color:#fff;box-shadow:0 4px 12px rgba(255,59,48,0.3);margin-bottom:10px" onclick="confirmDeleteItem()">Delete</button>
+      <button class="btn btn-ghost" onclick="cancelDeleteItem()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ════════ ADD ITEM MODAL ════════ -->
+  <div class="modal-wrap" id="modal-add">
+    <div class="modal-dim" onclick="closeModal()"></div>
+    <div class="modal">
+      <div class="handle"></div>
+      <div id="modal-add-title" style="font:600 17px/1 Inter,sans-serif;text-align:center;margin-bottom:20px;">Add Item</div>
+      <div style="margin-bottom:14px;">
+        <label class="field-label">Item Name</label>
+        <input class="field" id="add-name" placeholder="e.g. Tofu" autocomplete="off">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div>
+          <label class="field-label">Category</label>
+          <select class="field" id="add-cat" style="appearance:none;">
+            <option>Protein</option><option>Vegetable</option><option>Fruit</option>
+            <option>Dairy</option><option>Grain</option><option>Condiment</option>
+            <option>Beverage</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label class="field-label">Quantity</label>
+          <input class="field" id="add-qty" type="number" min="0" value="1">
+        </div>
+      </div>
+      <button class="btn btn-p" id="modal-save-btn" onclick="addItemManually()">Add to Fridge</button>
+      <button class="btn btn-ghost" onclick="closeModal()" style="margin-top:4px">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ════════ ADD MEMBER SHEET ════════ -->
+  <div class="sheet-wrap" id="sheet-add-member">
+    <div class="sheet-dim" onclick="closeAddMemberSheet()"></div>
+    <div class="sheet" style="max-height:82%;overflow:hidden;display:flex;flex-direction:column;padding-left:0;padding-right:0;padding-bottom:0;">
+      <div class="handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 12px;flex-shrink:0;">
+        <button onclick="closeAddMemberSheet()" style="background:none;border:none;cursor:pointer;color:var(--p);font:16px/1 Inter,sans-serif;padding:4px 0;">Cancel</button>
+        <span style="font:600 17px/1 Inter,sans-serif;">New Member</span>
+        <button id="am-save-btn" onclick="submitAddMember()" disabled style="background:none;border:none;cursor:pointer;color:var(--p);font:600 16px/1 Inter,sans-serif;padding:4px 0;opacity:0.4;transition:opacity 0.15s;">Save</button>
+      </div>
+      <div class="scroll list-bg" id="add-member-body" style="flex:1;padding-bottom:34px;"></div>
+    </div>
+  </div>
+
+  <!-- ════════ DELETE MEMBER CONFIRM SHEET ════════ -->
+  <div class="sheet-wrap" id="sheet-delete-member">
+    <div class="sheet-dim" onclick="cancelDeleteMember()"></div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div style="text-align:center;padding-bottom:20px;">
+        <div id="delete-member-name" style="font:600 17px/1.4 Inter,sans-serif;color:var(--text);margin-bottom:6px;"></div>
+        <div style="font:15px/1.4 Inter,sans-serif;color:var(--gray)">This member and their preferences will be permanently removed.</div>
+      </div>
+      <button class="btn" style="background:#FF3B30;color:#fff;box-shadow:0 4px 12px rgba(255,59,48,0.3);margin-bottom:10px" onclick="confirmDeleteMember()">Delete</button>
+      <button class="btn btn-ghost" onclick="cancelDeleteMember()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+</div><!-- /phone -->
+</div><!-- /phone-wrap -->
+
+<script>
+// ══════════════════════════════════
+//  STATE
+// ══════════════════════════════════
+const S = {
+  obStep: 0,
+  familyName: '', skill: '', budget: '', members: ['Mom', 'Dad'],
+  inventory: [],
+  fridgeInitialized: false,
+  selectedMembers: new Set(),
+  selectedCuisine: null,
+  recipes: [],
+  shopping: [],
+  activeTab: 0,
+  searchText: '',
+  currentRecipeId: null,
+  detailTab: 0,
+  _editingItemId: null,
+};
+
+// ══════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════
+const SKILLS  = ['beginner', 'intermediate', 'advanced'];
+const BUDGETS = [{v:'low',l:'Budget-Friendly'},{v:'medium',l:'Moderate'},{v:'high',l:'Premium'}];
+// Matches iOS Constants.cuisineOptions order
+const CUISINES = ['Chinese','Cantonese','Sichuan','Western','Italian','Japanese','Korean','Thai','Vietnamese','Indian','Mexican','Fusion'];
+
+const EMOJI_MAP = { protein:'🥩', meat:'🥩', seafood:'🥩', vegetable:'🥦', fruit:'🍎', dairy:'🥛', grain:'🌾', condiment:'🫙' };
+const catE = c => EMOJI_MAP[c.toLowerCase()] || '🍽️';
+
+const FRIDGE_DEFAULT = [
+  {id:1, name:'Chicken Thigh',  cat:'Protein',   qty:2},
+  {id:2, name:'Pork Belly',     cat:'Protein',   qty:1},
+  {id:3, name:'Salmon Fillet',  cat:'Seafood',   qty:1},
+  {id:4, name:'Bok Choy',       cat:'Vegetable', qty:3},
+  {id:5, name:'Gai Lan',        cat:'Vegetable', qty:2},
+  {id:6, name:'Spring Onion',   cat:'Vegetable', qty:4},
+  {id:7, name:'Garlic',         cat:'Vegetable', qty:5},
+  {id:8, name:'Soy Sauce',      cat:'Condiment', qty:1},
+  {id:9, name:'Oyster Sauce',   cat:'Condiment', qty:1},
+  {id:10,name:'Sesame Oil',     cat:'Condiment', qty:1},
+  {id:11,name:'Rice',           cat:'Grain',     qty:1},
+  {id:12,name:'Eggs',           cat:'Dairy',     qty:6},
+];
+
+const RECIPES = [
+  { id:'r1', name:'Steamed Chicken with Ginger', cuisine:'Cantonese', match:85,
+    ingredients:[
+      {name:'Chicken Thigh',qty:'500g',   have:true },
+      {name:'Ginger',       qty:'30g',    have:false},
+      {name:'Soy Sauce',    qty:'2 tbsp', have:true },
+      {name:'Sesame Oil',   qty:'1 tsp',  have:true },
+      {name:'Spring Onion', qty:'3',      have:true },
+    ],
+    steps:[
+      'Clean and pat dry the chicken thighs. Score lightly on both sides.',
+      'Julienne the ginger and slice spring onions into 2-inch pieces.',
+      'Rub chicken with soy sauce and sesame oil. Marinate 15 minutes.',
+      'Place chicken on a heatproof plate. Top with ginger and spring onion.',
+      'Steam over high heat for 18–20 minutes until cooked through.',
+      'Drizzle with hot oil and remaining soy sauce. Serve immediately.',
+    ],
+    buy:[{name:'Ginger', qty:1, unit:'piece', cost:8, recipe:'Steamed Chicken'}],
+  },
+  { id:'r2', name:'Bok Choy with Oyster Sauce', cuisine:'Cantonese', match:100,
+    ingredients:[
+      {name:'Bok Choy',     qty:'300g',   have:true},
+      {name:'Oyster Sauce', qty:'2 tbsp', have:true},
+      {name:'Garlic',       qty:'3 cloves',have:true},
+      {name:'Sesame Oil',   qty:'1 tsp',  have:true},
+    ],
+    steps:[
+      'Wash bok choy and halve lengthwise if large.',
+      'Mince the garlic finely.',
+      'Blanch bok choy in boiling salted water for 2 minutes. Drain.',
+      'Heat oil in wok. Sauté garlic until golden and fragrant.',
+      'Add oyster sauce and a splash of water. Stir to combine.',
+      'Pour over bok choy and serve immediately.',
+    ],
+    buy:[],
+  },
+  { id:'r3', name:'Mapo Tofu', cuisine:'Sichuan', match:60,
+    ingredients:[
+      {name:'Silken Tofu',      qty:'1 block',have:false},
+      {name:'Pork Belly',       qty:'150g',  have:true },
+      {name:'Doubanjiang',      qty:'2 tbsp',have:false},
+      {name:'Sichuan Peppercorn',qty:'1 tsp',have:false},
+      {name:'Garlic',           qty:'4 cloves',have:true},
+      {name:'Spring Onion',     qty:'2',     have:true },
+      {name:'Soy Sauce',        qty:'1 tbsp',have:true },
+    ],
+    steps:[
+      'Cut tofu into 2cm cubes. Blanch in salted boiling water 2 minutes.',
+      'Mince pork belly. Finely chop garlic and spring onion.',
+      'Heat oil in wok. Fry pork until browned and fragrant.',
+      'Add doubanjiang and Sichuan peppercorn. Stir-fry 1 minute.',
+      'Add garlic, soy sauce and 1 cup water. Bring to a simmer.',
+      'Gently add tofu. Simmer 5 minutes.',
+      'Thicken with cornstarch slurry. Garnish with spring onion.',
+    ],
+    buy:[
+      {name:'Silken Tofu',       qty:1,unit:'block', cost:15, recipe:'Mapo Tofu'},
+      {name:'Doubanjiang',       qty:1,unit:'jar',   cost:22, recipe:'Mapo Tofu'},
+      {name:'Sichuan Peppercorn',qty:1,unit:'pack',  cost:12, recipe:'Mapo Tofu'},
+    ],
+  },
+  { id:'r4', name:'Garlic Fried Rice', cuisine:'Chinese', match:95,
+    ingredients:[
+      {name:'Rice',        qty:'2 cups', have:true},
+      {name:'Eggs',        qty:'2',      have:true},
+      {name:'Garlic',      qty:'5 cloves',have:true},
+      {name:'Soy Sauce',   qty:'1 tbsp', have:true},
+      {name:'Spring Onion',qty:'2',      have:true},
+      {name:'Sesame Oil',  qty:'1 tsp',  have:true},
+    ],
+    steps:[
+      'Use day-old rice for best results. Break up any clumps.',
+      'Mince garlic. Slice spring onions. Beat eggs.',
+      'Scramble eggs in hot oiled wok, set aside.',
+      'Add more oil. Sauté garlic until golden.',
+      'Add rice; stir-fry 3–4 minutes, pressing against the wok.',
+      'Return eggs. Add soy sauce, sesame oil. Toss well.',
+      'Garnish with spring onions. Serve immediately.',
+    ],
+    buy:[],
+  },
+  { id:'r5', name:'Teriyaki Salmon', cuisine:'Japanese', match:70,
+    ingredients:[
+      {name:'Salmon Fillet',qty:'200g',  have:true },
+      {name:'Soy Sauce',    qty:'3 tbsp',have:true },
+      {name:'Mirin',        qty:'2 tbsp',have:false},
+      {name:'Brown Sugar',  qty:'1 tbsp',have:false},
+      {name:'Garlic',       qty:'2 cloves',have:true},
+      {name:'Sesame Oil',   qty:'1 tsp', have:true },
+    ],
+    steps:[
+      'Combine soy sauce, mirin, brown sugar, and garlic for the sauce.',
+      'Pat salmon dry. Season with salt and pepper.',
+      'Heat sesame oil in a pan over medium-high heat.',
+      'Sear salmon skin-side down for 3 minutes until crispy.',
+      'Flip and cook 2 more minutes.',
+      'Pour teriyaki sauce over. Simmer until it thickens.',
+      'Serve over rice with steamed vegetables.',
+    ],
+    buy:[
+      {name:'Mirin',       qty:1,unit:'bottle',cost:28,recipe:'Teriyaki Salmon'},
+      {name:'Brown Sugar', qty:1,unit:'pack',  cost:12,recipe:'Teriyaki Salmon'},
+    ],
+  },
+  { id:'r6', name:'Bibimbap', cuisine:'Korean', match:55,
+    ingredients:[
+      {name:'Rice',         qty:'2 cups', have:true },
+      {name:'Gochujang',    qty:'2 tbsp', have:false},
+      {name:'Eggs',         qty:'2',      have:true },
+      {name:'Sesame Oil',   qty:'2 tsp',  have:true },
+      {name:'Garlic',       qty:'3 cloves',have:true},
+      {name:'Spinach',      qty:'100g',   have:false},
+      {name:'Carrots',      qty:'1',      have:false},
+    ],
+    steps:[
+      'Cook rice and keep warm.',
+      'Blanch and season spinach with sesame oil, garlic, soy sauce.',
+      'Julienne carrots, sauté briefly in sesame oil.',
+      'Fry eggs sunny-side up.',
+      'Arrange all toppings over rice in a bowl.',
+      'Top with gochujang to taste. Mix well before eating.',
+    ],
+    buy:[
+      {name:'Gochujang',qty:1,unit:'jar',  cost:25,recipe:'Bibimbap'},
+      {name:'Spinach',  qty:1,unit:'bunch',cost:12,recipe:'Bibimbap'},
+      {name:'Carrots',  qty:2,unit:'pcs',  cost:6, recipe:'Bibimbap'},
+    ],
+  },
+  { id:'r7', name:'Chicken Adobo', cuisine:'Filipino', match:75,
+    ingredients:[
+      {name:'Chicken Thigh',qty:'500g',   have:true },
+      {name:'Soy Sauce',    qty:'4 tbsp', have:true },
+      {name:'White Vinegar',qty:'3 tbsp', have:false},
+      {name:'Garlic',       qty:'6 cloves',have:true},
+      {name:'Bay Leaves',   qty:'3',      have:false},
+      {name:'Black Pepper', qty:'1 tsp',  have:false},
+    ],
+    steps:[
+      'Combine soy sauce, vinegar, garlic, bay leaves and pepper.',
+      'Marinate chicken in the sauce for at least 30 minutes.',
+      'Heat oil in a heavy pan or wok.',
+      'Brown the chicken pieces on all sides.',
+      'Add the marinade. Bring to a boil.',
+      'Simmer uncovered 30–40 minutes until sauce reduces.',
+      'Serve over steamed white rice.',
+    ],
+    buy:[
+      {name:'White Vinegar',qty:1,unit:'bottle',cost:15,recipe:'Chicken Adobo'},
+      {name:'Bay Leaves',   qty:1,unit:'pack',  cost:8, recipe:'Chicken Adobo'},
+      {name:'Black Pepper', qty:1,unit:'jar',   cost:18,recipe:'Chicken Adobo'},
+    ],
+  },
+  { id:'r8', name:'Nasi Goreng', cuisine:'Indonesian', match:65,
+    ingredients:[
+      {name:'Rice',         qty:'2 cups', have:true },
+      {name:'Eggs',         qty:'2',      have:true },
+      {name:'Kecap Manis',  qty:'2 tbsp', have:false},
+      {name:'Garlic',       qty:'4 cloves',have:true},
+      {name:'Shrimp Paste', qty:'1 tsp',  have:false},
+      {name:'Spring Onion', qty:'3',      have:true },
+    ],
+    steps:[
+      'Use cold leftover rice for best results.',
+      'Fry eggs and set aside.',
+      'Sauté garlic and shrimp paste until fragrant.',
+      'Add rice and stir-fry on high heat.',
+      'Add kecap manis and mix thoroughly.',
+      'Top with fried egg, sliced spring onion, and crackers.',
+    ],
+    buy:[
+      {name:'Kecap Manis', qty:1,unit:'bottle',cost:20,recipe:'Nasi Goreng'},
+      {name:'Shrimp Paste',qty:1,unit:'jar',   cost:18,recipe:'Nasi Goreng'},
+    ],
+  },
+];
+
+// ══════════════════════════════════
+//  SVG ICONS (SF Symbol style)
+// ══════════════════════════════════
+const IC = {
+  sun:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>`,
+  globe:  `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  person: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+  camera: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+  checkFill: `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5-3.5-3.5 1.41-1.41L10 13.67l6.09-6.09L17.5 9 10 16.5z"/></svg>`,
+  circle: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/></svg>`,
+  forkKnife: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="21" y1="15" x2="21" y2="22"/><path d="M21 2a4 4 0 0 0-4 4v5h4"/></svg>`,
+  checkCircle: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>`,
+  cartPlus: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/><line x1="19" y1="3" x2="19" y2="9"/><line x1="16" y1="6" x2="22" y2="6"/></svg>`,
+  chevronBack: `<svg width="10" height="17" viewBox="0 0 10 17" fill="none"><path d="M9 1L1 8.5L9 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  share: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`,
+  plus: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+};
+
+// Leading toolbar icons for all tab views (matches topBarToolbar modifier — profile is now a dedicated tab)
+const TAB_NAV_LEADING = `
+  <div class="tab-nav-leading">
+    <button class="icon-btn" title="Toggle theme">${IC.sun}</button>
+    <button class="icon-btn" title="Select language">${IC.globe}</button>
+  </div>`;
+
+// ══════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════
+function updateClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent =
+    d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ══════════════════════════════════
+//  SCREEN TRANSITIONS
+// ══════════════════════════════════
+let prevScreen = null;
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  prevScreen = id;
+}
+
+// ══════════════════════════════════
+//  SIDEBAR HIGHLIGHTS
+// ══════════════════════════════════
+const HINTS = {
+  'fi-profile':  '<strong>Profile tab:</strong> View family info and tap a member to edit their dietary restrictions, allergies, and preferences.',
+  'fi-onboard': '<strong>Step 1:</strong> Set up your family profile — name, cooking level, budget, and members.',
+  'fi-fridge':  '<strong>Fridge tab:</strong> Scan or tap + to add items. Tap ⋯ on a row to stock, use, edit, or delete.',
+  'fi-plan':    '<strong>Plan tab:</strong> Pick who you\'re cooking for and a cuisine, then get AI recipe ideas.',
+  'fi-detail':  '<strong>Recipe Detail:</strong> View ingredients (with fridge matches) and step-by-step instructions.',
+  'fi-shop':    '<strong>Shopping tab:</strong> Missing ingredients land here. Share, swipe to delete, or tap to mark as purchased.',
+};
+function setFlow(id) {
+  document.querySelectorAll('.flow-item').forEach(el => {
+    el.classList.remove('active');
+    if (el.id !== id) el.classList.add('done');
+  });
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); el.classList.remove('done'); }
+  const hint = document.getElementById('hint-box');
+  if (hint) hint.innerHTML = HINTS[id] || '';
+}
+
+// ══════════════════════════════════
+//  SHEETS / MODALS
+// ══════════════════════════════════
+function openSheet(id)  { document.getElementById(id).classList.add('open'); }
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+function openProfileSheet() {
+  // Profile is now a dedicated tab — switch to it
+  goTab(3);
+}
+function openModal() {
+  S._editingItemId = null;
+  document.getElementById('modal-add-title').textContent = 'Add Item';
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-cat').value = 'Protein';
+  document.getElementById('add-qty').value = '1';
+  document.getElementById('modal-save-btn').textContent = 'Add to Fridge';
+  document.getElementById('modal-add').classList.add('open');
+  setTimeout(() => document.getElementById('add-name').focus({ preventScroll: true }), 50);
+}
+function closeModal()   { document.getElementById('modal-add').classList.remove('open'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ══════════════════════════════════
+//  ONBOARDING
+// ══════════════════════════════════
+const OB = [
+  {type:'name'},
+  {type:'tw', emoji:'🍳', text:"Let's talk about how your family cooks."},
+  {type:'cooking'},
+  {type:'tw', emoji:'⭐', textFn:() => ({
+    beginner: "No worries — we'll keep the recipes simple and easy to follow.",
+    intermediate: "Nice! You'll have plenty of variety to choose from.",
+    advanced: "Impressive! Get ready for some complex and exciting dishes.",
+  }[S.skill] || 'Great choice!')},
+  {type:'budget'},
+  {type:'tw', emoji:'💰', text:"Great! We'll find recipes that fit your budget."},
+  {type:'members'},
+  {type:'summary'},
+];
+
+let twT = null;
+function renderOB() {
+  const step = OB[S.obStep];
+  document.getElementById('ob-dots').innerHTML = OB.map((_,i) =>
+    `<div class="dot ${i < S.obStep?'done':''} ${i===S.obStep?'cur':''}"></div>`).join('');
+
+  if (twT) { clearTimeout(twT); twT = null; }
+  const body = document.getElementById('ob-body');
+  const btn  = document.getElementById('ob-btn');
+  btn.textContent = S.obStep === OB.length-1 ? 'Get Started' : 'Continue';
+
+  switch (step.type) {
+    case 'name':
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">👨‍👩‍👧‍👦</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">${'What\'s your family name?'}</div>
+          <input class="field" id="fname" placeholder="e.g. The Chan Family" value="${S.familyName}" style="margin-top:20px" autocomplete="off">
+        </div>`;
+      setTimeout(() => {
+        const inp = document.getElementById('fname');
+        inp.addEventListener('input', e => { S.familyName = e.target.value; updateOBBtn(); });
+        inp.focus();
+      }, 50);
+      break;
+
+    case 'tw':
+      const txt = step.textFn ? step.textFn() : step.text;
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">${step.emoji}</div>
+          <div style="font:700 22px/1.4 Inter,sans-serif;margin-top:18px;min-height:62px" id="tw"></div>
+        </div>`;
+      typewrite(txt);
+      break;
+
+    case 'cooking':
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">🍽️</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">What's your cooking skill level?</div>
+          <div class="pill-wrap" style="margin-top:20px" id="skill-pills"></div>
+        </div>`;
+      SKILLS.forEach(s => {
+        const p = mkPill(s.charAt(0).toUpperCase()+s.slice(1), S.skill===s, ()=>{S.skill=s;renderOB();});
+        document.getElementById('skill-pills').appendChild(p);
+      });
+      break;
+
+    case 'budget':
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">💵</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">What's your weekly food budget?</div>
+          <div class="pill-wrap" style="margin-top:20px" id="budget-pills"></div>
+        </div>`;
+      BUDGETS.forEach(b => {
+        const p = mkPill(b.l, S.budget===b.v, ()=>{S.budget=b.v;renderOB();});
+        document.getElementById('budget-pills').appendChild(p);
+      });
+      break;
+
+    case 'members':
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">👥</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">Who's in your family?</div>
+          <div style="font-size:15px;color:var(--gray);margin-top:8px;line-height:1.5">Dietary preferences and allergies can be set for each member in their profile after setup.</div>
+          <div id="mem-list" style="margin-top:20px"></div>
+          <button class="btn btn-ghost" style="text-align:left;padding-left:0;margin-top:4px;color:var(--p)" onclick="addMember()">Add Member</button>
+        </div>`;
+      renderMembers();
+      break;
+
+    case 'summary':
+      const bl = BUDGETS.find(b=>b.v===S.budget)?.l || S.budget;
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">🎉</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">You're all set!</div>
+          <div style="margin-top:20px;background:var(--gray-light);border-radius:12px;padding:4px 16px">
+            <div class="sum-row"><span class="sum-key">Family</span><span class="sum-val">${S.familyName}</span></div>
+            <div class="sum-row"><span class="sum-key">Cooking skill</span><span class="sum-val">${S.skill.charAt(0).toUpperCase()+S.skill.slice(1)}</span></div>
+            <div class="sum-row"><span class="sum-key">Budget</span><span class="sum-val">${bl}</span></div>
+            <div class="sum-row"><span class="sum-key">Members</span><span class="sum-val">${S.members.length} people</span></div>
+          </div>
+        </div>`;
+      break;
+  }
+  updateOBBtn();
+}
+
+function mkPill(label, on, fn) {
+  const el = document.createElement('span');
+  el.className = 'pill' + (on?' on':'');
+  el.textContent = label;
+  el.onclick = fn;
+  return el;
+}
+
+function typewrite(text) {
+  const el = document.getElementById('tw');
+  let i = 0;
+  function tick() {
+    if (!el) return;
+    if (i <= text.length) {
+      el.innerHTML = text.slice(0,i) + (i<text.length?'<span class="cursor">&nbsp;</span>':'');
+      i++;
+      twT = setTimeout(tick, 28);
+    } else {
+      twT = null;
+      updateOBBtn();
+    }
+  }
+  tick();
+}
+
+function obBack() {
+  if (S.obStep > 0) {
+    S.obStep--;
+    renderOB();
+  }
+}
+
+function updateOBBtn() {
+  const btn = document.getElementById('ob-btn');
+  // Show/hide back button — hidden on first step (matches iOS chevron.left visibility)
+  const backBtn = document.getElementById('ob-back');
+  if (backBtn) backBtn.style.display = S.obStep > 0 ? 'flex' : 'none';
+  const step = OB[S.obStep];
+  const ok = {
+    name: S.familyName.trim().length > 0,
+    tw: twT === null,
+    cooking: S.skill !== '',
+    budget: S.budget !== '',
+    members: true,
+    summary: true,
+  }[step.type] ?? true;
+  btn.disabled = !ok;
+}
+
+function obNext() {
+  if (S.obStep < OB.length - 1) {
+    S.obStep++;
+    renderOB();
+  } else {
+    // Done — launch app; show inline scan prompt in fridge tab
+    S.selectedMembers = new Set(S.members);
+    goScreen('s-main');
+    setFlow('fi-fridge');
+    renderFridge(); // renders inline scan prompt since fridgeInitialized=false
+    renderPlan();
+    renderShop();
+  }
+}
+
+function renderMembers() {
+  const el = document.getElementById('mem-list');
+  if (!el) return;
+  el.innerHTML = S.members.map((m,i) => `
+    <div class="mem-row">
+      <input class="mem-input" value="${m}" placeholder="Name"
+             oninput="S.members[${i}]=this.value" autocomplete="off">
+      <button class="mem-del" onclick="S.members.splice(${i},1);renderMembers()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function addMember() {
+  S.members.push('');
+  renderMembers();
+  const inputs = document.querySelectorAll('.mem-input');
+  if (inputs.length) inputs[inputs.length-1].focus();
+}
+
+// ══════════════════════════════════
+//  TABS
+// ══════════════════════════════════
+const PANES = ['pane-fridge','pane-plan','pane-shop','pane-profile'];
+const FLOW_IDS = ['fi-fridge','fi-plan','fi-shop','fi-profile'];
+function goTab(i) {
+  S.activeTab = i;
+  PANES.forEach((id,j) => {
+    document.getElementById(id).style.display = j===i ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((b,j) => b.classList.toggle('on', j===i));
+  setFlow(FLOW_IDS[i] || 'fi-fridge');
+  if (i===2) renderShop();
+  if (i===3) renderProfile();
+}
+
+// ══════════════════════════════════
+//  FRIDGE
+// ══════════════════════════════════
+function renderFridge() {
+  openSwipeId = null; openSwipeDir = null;
+  const el = document.getElementById('pane-fridge');
+
+  // ── Inline scan prompt (matches ScanPromptView) ──
+  if (!S.fridgeInitialized && S.inventory.length === 0) {
+    el.innerHTML = `
+      <div class="tab-nav">
+        ${TAB_NAV_LEADING}
+        <div class="tab-nav-trailing">
+          <button class="icon-btn" onclick="openModal()" title="Add item">${IC.plus}</button>
+          <button class="icon-btn scan-color" onclick="openSheet('sheet-camera')" title="Scan fridge">${IC.camera}</button>
+        </div>
+      </div>
+      <div class="ltitle">My Fridge</div>
+      <div class="scan-prompt">
+        <div class="scan-prompt-icon">📷</div>
+        <div class="scan-prompt-title">Set up your fridge</div>
+        <div class="scan-prompt-sub">Scan your fridge or mark it as empty to get started</div>
+        <div class="scan-prompt-actions">
+          <button class="btn btn-scan" onclick="doScan()">Scan My Fridge</button>
+          <button class="btn btn-ghost" onclick="skipScan()">My Fridge is Empty</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const inv = S.searchText
+    ? S.inventory.filter(x => x.name.toLowerCase().includes(S.searchText.toLowerCase()))
+    : S.inventory;
+
+  const groups = {};
+  inv.forEach(x => (groups[x.cat] = groups[x.cat]||[]).push(x));
+
+  let h = `
+    <div class="tab-nav">
+      ${TAB_NAV_LEADING}
+      <div class="tab-nav-trailing">
+        <button class="icon-btn" onclick="openModal()" title="Add item">${IC.plus}</button>
+        <button class="icon-btn scan-color" onclick="openSheet('sheet-camera')" title="Scan fridge">${IC.camera}</button>
+      </div>
+    </div>
+    <div class="ltitle">My Fridge</div>
+    <div class="search" style="flex-shrink:0">
+      <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="5" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="10" y1="10" x2="13.5" y2="13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input placeholder="Search ingredients..." value="${S.searchText}" oninput="S.searchText=this.value;renderFridge()">
+    </div>`;
+
+  if (S.inventory.length === 0) {
+    // Fridge initialized but empty
+    h += `<div class="empty" style="flex:1">
+      <div class="empty-icon">🧊</div>
+      <div class="empty-title">Your fridge is empty</div>
+      <div class="empty-desc">Tap the camera icon to scan your fridge.</div>
+    </div>`;
+  } else if (inv.length === 0) {
+    h += `<div class="empty" style="flex:1">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">No results</div>
+      <div class="empty-desc">No items match "${S.searchText}"</div>
+    </div>`;
+  } else {
+    h += `<div class="scroll list-bg" style="padding-bottom:80px">`;
+    Object.keys(groups).sort().forEach(cat => {
+      h += `<div class="sec-hdr">${cat}</div><div class="inset">`;
+      groups[cat].forEach(item => {
+        const useDisabled = item.qty <= 0 ? 'disabled style="opacity:0.4;cursor:not-allowed"' : '';
+        h += `
+        <div class="swipe-row-wrap" data-swipe-id="${item.id}">
+          <div class="swipe-row-leading">
+            <button class="swipe-action-btn" style="background:#34C759" onclick="stockItem(${item.id})">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Stock
+            </button>
+            <button class="swipe-action-btn" style="background:#FF9500" onclick="useItem(${item.id})" ${useDisabled}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Use
+            </button>
+            <button class="swipe-action-btn" style="background:#007AFF" onclick="editItemModal(${item.id})">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Edit
+            </button>
+          </div>
+          <div class="swipe-row-trailing">
+            <button class="swipe-action-btn" style="background:#FF3B30" onclick="removeItem(${item.id})">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              Delete
+            </button>
+          </div>
+          <div class="swipe-row-content row">
+            <span class="row-em">${catE(item.cat)}</span>
+            <div class="row-info">
+              <div class="row-title">${item.name}</div>
+              <div class="row-sub">${item.cat}</div>
+            </div>
+            <span class="row-badge">${item.qty}</span>
+            <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style="margin-left:8px;color:#C7C7CC;flex-shrink:0"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>`;
+      });
+      h += `</div>`;
+    });
+    h += `<div class="list-footer">${S.inventory.length} item${S.inventory.length!==1?'s':''} · swipe right to stock/use/edit · swipe left to delete</div></div>`;
+  }
+
+  el.innerHTML = h;
+  // Attach swipe listeners to all rendered rows
+  el.querySelectorAll('.swipe-row-wrap').forEach(wrap => {
+    initSwipeRow(parseInt(wrap.dataset.swipeId));
+  });
+}
+
+let _pendingDeleteId = null;
+
+function removeItem(id) {
+  _pendingDeleteId = id;
+  const item = S.inventory.find(x => x.id === id);
+  document.getElementById('delete-confirm-title').textContent =
+    item ? `Remove "${item.name}"?` : 'Remove item?';
+  if (openSwipeId === id) closeSwipeRow(id);
+  openSheet('sheet-delete-confirm');
+}
+
+function confirmDeleteItem() {
+  closeSheet('sheet-delete-confirm');
+  if (_pendingDeleteId == null) return;
+  const id = _pendingDeleteId;
+  _pendingDeleteId = null;
+  openSwipeId = null; openSwipeDir = null;
+  S.inventory = S.inventory.filter(x => x.id !== id);
+  renderFridge();
+  showToast('Item removed');
+}
+
+function cancelDeleteItem() {
+  _pendingDeleteId = null;
+  closeSheet('sheet-delete-confirm');
+}
+
+function addItemManually() {
+  const name = document.getElementById('add-name').value.trim();
+  const cat  = document.getElementById('add-cat').value;
+  const qty  = parseInt(document.getElementById('add-qty').value) || 0;
+  if (!name) { document.getElementById('add-name').focus(); return; }
+  S.fridgeInitialized = true;
+  if (S._editingItemId != null) {
+    const item = S.inventory.find(x => x.id === S._editingItemId);
+    if (item) { item.name = name; item.cat = cat; item.qty = qty; }
+    S._editingItemId = null;
+    closeModal();
+    renderFridge();
+    showToast(`${name} updated`);
+  } else {
+    S.inventory.push({ id: Date.now(), name, cat, qty });
+    closeModal();
+    renderFridge();
+    showToast(`${name} added to fridge`);
+  }
+}
+
+// ══════════════════════════════════
+//  SWIPE ROWS
+// ══════════════════════════════════
+const LEAD_W = 240, TRAIL_W = 80, SNAP_PX = 60, CLOSE_PX = 20;
+let openSwipeId = null, openSwipeDir = null;
+let _swipe = null;
+
+function initSwipeRow(id) {
+  const wrap = document.querySelector(`.swipe-row-wrap[data-swipe-id="${id}"]`);
+  if (!wrap) return;
+  const content = wrap.querySelector('.swipe-row-content');
+
+  function getBase() {
+    if (openSwipeId !== id) return 0;
+    return openSwipeDir === 'leading' ? LEAD_W : -TRAIL_W;
+  }
+
+  function snapTo(offset) {
+    content.style.transition = 'transform 0.22s cubic-bezier(.4,0,.2,1)';
+    content.style.transform = offset ? `translateX(${offset}px)` : '';
+    if (offset > 0)       { openSwipeId = id; openSwipeDir = 'leading'; }
+    else if (offset < 0)  { openSwipeId = id; openSwipeDir = 'trailing'; }
+    else if (openSwipeId === id) { openSwipeId = null; openSwipeDir = null; }
+  }
+
+  wrap.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // Let clicks on action buttons pass through unintercepted
+    if (e.target.closest('.swipe-action-btn')) return;
+    if (openSwipeId && openSwipeId !== id) closeSwipeRow(openSwipeId);
+    _swipe = { id, startX: e.clientX, startY: e.clientY, base: getBase(), moved: false, cancelled: false };
+    wrap.setPointerCapture(e.pointerId);
+  });
+
+  wrap.addEventListener('pointermove', e => {
+    if (!_swipe || _swipe.id !== id || _swipe.cancelled) return;
+    const dx = e.clientX - _swipe.startX;
+    const dy = e.clientY - _swipe.startY;
+    if (!_swipe.moved && Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 8) {
+      _swipe.cancelled = true; return;
+    }
+    _swipe.moved = true;
+    let x = Math.max(-TRAIL_W, Math.min(LEAD_W, _swipe.base + dx));
+    content.style.transition = 'none';
+    content.style.transform = x ? `translateX(${x}px)` : '';
+  });
+
+  wrap.addEventListener('pointerup', e => {
+    if (!_swipe || _swipe.id !== id) return;
+    const dx = e.clientX - _swipe.startX;
+    const { base, moved, cancelled } = _swipe;
+    _swipe = null;
+    if (!moved || cancelled) { if (openSwipeId === id) snapTo(0); return; }
+    const total = base + dx;
+    if (base === 0) {
+      if (total > SNAP_PX) snapTo(LEAD_W);
+      else if (total < -SNAP_PX) snapTo(-TRAIL_W);
+      else snapTo(0);
+    } else if (base > 0) {
+      snapTo(dx < -CLOSE_PX ? 0 : LEAD_W);
+    } else {
+      snapTo(dx > CLOSE_PX ? 0 : -TRAIL_W);
+    }
+  });
+
+  wrap.addEventListener('pointercancel', () => {
+    if (_swipe && _swipe.id === id) { _swipe = null; snapTo(getBase()); }
+  });
+}
+
+function closeSwipeRow(id) {
+  const wrap = document.querySelector(`.swipe-row-wrap[data-swipe-id="${id}"]`);
+  if (!wrap) return;
+  const content = wrap.querySelector('.swipe-row-content');
+  if (content) { content.style.transition = 'transform 0.22s cubic-bezier(.4,0,.2,1)'; content.style.transform = ''; }
+  if (openSwipeId === id) { openSwipeId = null; openSwipeDir = null; }
+}
+
+// Close open row when tapping outside it
+document.addEventListener('pointerdown', e => {
+  if (openSwipeId == null) return;
+  const wrap = document.querySelector(`.swipe-row-wrap[data-swipe-id="${openSwipeId}"]`);
+  if (wrap && !wrap.contains(e.target)) closeSwipeRow(openSwipeId);
+});
+
+function stockItem(id) {
+  const item = S.inventory.find(x => x.id === id);
+  if (!item) return;
+  item.qty++;
+  openSwipeId = null; openSwipeDir = null;
+  renderFridge();
+  showToast(`${item.name}: ${item.qty}`);
+}
+
+function useItem(id) {
+  const item = S.inventory.find(x => x.id === id);
+  if (!item || item.qty <= 0) return;
+  item.qty--;
+  openSwipeId = null; openSwipeDir = null;
+  renderFridge();
+  showToast(`${item.name}: ${item.qty}`);
+}
+
+function editItemModal(id) {
+  const item = S.inventory.find(x => x.id === id);
+  if (!item) return;
+  if (openSwipeId) closeSwipeRow(openSwipeId);
+  S._editingItemId = id;
+  document.getElementById('modal-add-title').textContent = 'Edit Item';
+  document.getElementById('add-name').value = item.name;
+  document.getElementById('add-cat').value = item.cat;
+  document.getElementById('add-qty').value = item.qty;
+  document.getElementById('modal-save-btn').textContent = 'Save Changes';
+  document.getElementById('modal-add').classList.add('open');
+  setTimeout(() => document.getElementById('add-name').focus({ preventScroll: true }), 50);
+}
+
+// ══════════════════════════════════
+//  SCAN
+// ══════════════════════════════════
+function doScan() {
+  openSheet('sheet-camera');
+}
+
+function skipScan() {
+  S.fridgeInitialized = true;
+  renderFridge();
+}
+
+function simulateScan() {
+  closeSheet('sheet-camera');
+  const el = document.getElementById('pane-fridge');
+  // inject keyframes if not already present
+  if (!document.getElementById('spin-kf')) {
+    const style = document.createElement('style');
+    style.id = 'spin-kf';
+    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}';
+    document.head.appendChild(style);
+  }
+  // Phase 1: scanning spinner
+  el.innerHTML = `
+    <div class="tab-nav">
+      ${TAB_NAV_LEADING}
+      <div class="tab-nav-trailing"></div>
+    </div>
+    <div class="ltitle">My Fridge</div>
+    <div class="empty" style="flex:1;gap:16px">
+      <div style="width:44px;height:44px;border:3px solid var(--p);border-top-color:transparent;border-radius:50%;animation:spin 0.9s linear infinite"></div>
+      <div style="font:600 17px/1 Inter,sans-serif;color:var(--text)">Scanning fridge…</div>
+      <div style="color:var(--gray);font-size:14px">AI is identifying items</div>
+    </div>`;
+  // Phase 2: success feedback (matches CameraPickerView uploadResult state)
+  setTimeout(() => {
+    S.inventory = JSON.parse(JSON.stringify(FRIDGE_DEFAULT));
+    S.fridgeInitialized = true;
+    el.innerHTML = `
+      <div class="tab-nav">
+        ${TAB_NAV_LEADING}
+        <div class="tab-nav-trailing"></div>
+      </div>
+      <div class="ltitle">My Fridge</div>
+      <div class="empty" style="flex:1;gap:16px">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none" style="animation:pop 0.4s cubic-bezier(.4,0,.2,1) both;color:var(--success)">
+          <circle cx="12" cy="12" r="10" fill="currentColor"/>
+          <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div style="font:700 18px/1 Inter,sans-serif;color:var(--text)">${FRIDGE_DEFAULT.length} items found</div>
+        <div style="color:var(--gray);font-size:14px">Your fridge has been updated</div>
+      </div>`;
+    // Phase 3: show inventory list after short delay (auto-dismiss)
+    setTimeout(() => renderFridge(), 1500);
+  }, 1600);
+}
+
+// ══════════════════════════════════
+//  PLANNING
+// ══════════════════════════════════
+function renderPlan() {
+  const el = document.getElementById('pane-plan');
+  const canSearch = S.selectedMembers.size > 0 && S.selectedCuisine;
+
+  el.innerHTML = `
+    <div class="tab-nav">
+      ${TAB_NAV_LEADING}
+      <div class="tab-nav-trailing"></div>
+    </div>
+    <div class="ltitle" style="flex-shrink:0">Food Ideas</div>
+    <div class="scroll" style="padding-bottom:20px">
+      <div class="sec-label">Cooking for</div>
+      <div class="pill-scroller" id="member-pills">
+        ${S.members.map(m => `
+          <span class="pill ${S.selectedMembers.has(m)?'on':''}" onclick="toggleMember('${esc(m)}')">${m}</span>
+        `).join('')}
+      </div>
+
+      <div class="sec-label" style="margin-top:6px">Cuisine</div>
+      <div class="pill-scroller" id="cuisine-pills">
+        ${CUISINES.map(c => `
+          <span class="pill ${S.selectedCuisine===c?'on':''}" onclick="selectCuisine('${c}')">${c}</span>
+        `).join('')}
+      </div>
+
+      <div style="padding:16px 16px 8px">
+        <button class="btn btn-p" ${canSearch?'':'disabled'} onclick="fetchRecipes()">
+          Get Ideas
+        </button>
+      </div>
+
+      <div id="recipe-list"></div>
+    </div>`;
+
+  renderRecipeList();
+}
+
+function esc(s) { return s.replace(/'/g,"\\'"); }
+
+function toggleMember(name) {
+  if (S.selectedMembers.has(name)) S.selectedMembers.delete(name);
+  else S.selectedMembers.add(name);
+  renderPlan();
+}
+
+function selectCuisine(c) {
+  S.selectedCuisine = c;
+  renderPlan();
+}
+
+function fetchRecipes() {
+  const list = document.getElementById('recipe-list');
+  list.innerHTML = `<div class="empty" style="min-height:160px;gap:14px">
+    <div style="width:36px;height:36px;border:3px solid var(--p);border-top-color:transparent;border-radius:50%;animation:spin 0.9s linear infinite"></div>
+    <div style="font:600 15px/1 Inter,sans-serif;color:var(--text)">Finding recipes…</div>
+  </div>`;
+  setTimeout(() => {
+    let results = RECIPES.filter(r => r.cuisine.toLowerCase() === S.selectedCuisine.toLowerCase());
+    if (results.length === 0) results = RECIPES.slice(0,3);
+    S.recipes = results;
+    renderRecipeList();
+    setFlow('fi-detail');
+  }, 900);
+}
+
+function renderRecipeList() {
+  const list = document.getElementById('recipe-list');
+  if (!list || S.recipes.length === 0) { if(list) list.innerHTML=''; return; }
+
+  list.innerHTML = S.recipes.map(r => {
+    const missingCount = r.ingredients.filter(i=>!i.have).length;
+    return `<div class="recipe-card" onclick="showDetail('${r.id}')">
+      <div class="card-hero">🍽️</div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <span class="card-title" style="flex:1">${r.name}</span>
+          <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style="color:#C7C7CC;flex-shrink:0;margin-top:3px"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="card-sub">${r.cuisine}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <div class="match-track" style="flex:1"><div class="match-fill" style="width:${r.match}%"></div></div>
+          <span style="font:700 12px/1 Inter,sans-serif;color:var(--success)">${r.match}%</span>
+        </div>
+        <div style="font-size:12px;margin-top:4px;color:${missingCount===0?'var(--success)':'var(--danger)'}">
+          ${missingCount} missing
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════
+//  RECIPE DETAIL
+// ══════════════════════════════════
+function showDetail(id) {
+  S.currentRecipeId = id;
+  S.detailTab = 0;
+  setFlow('fi-detail');
+  goScreen('s-detail');
+  renderDetail();
+}
+
+function renderDetail() {
+  const r = RECIPES.find(x=>x.id===S.currentRecipeId);
+  if (!r) return;
+  const missing = r.ingredients.filter(i=>!i.have);
+  const el = document.getElementById('detail-inner');
+
+  let tabContent = '';
+  if (S.detailTab === 0) {
+    tabContent = r.ingredients.map(ing => `
+      <div class="ing-row">
+        <span class="ing-icon" style="color:${ing.have?'var(--success)':'var(--border)'}">
+          ${ing.have ? IC.checkFill : IC.circle}
+        </span>
+        <span class="ing-name">${ing.name}</span>
+        <span class="ing-qty">${ing.qty}</span>
+        <span class="ing-tag ${ing.have?'have':'need'}">${ing.have?'In fridge':'Need to buy'}</span>
+      </div>`).join('');
+  } else {
+    tabContent = r.steps.map((s,i) => `
+      <div class="step-row">
+        <div class="step-num">${i+1}</div>
+        <div class="step-txt">${s}</div>
+      </div>`).join('');
+  }
+
+  el.innerHTML = `
+    <div class="nav" style="flex-shrink:0">
+      <button class="nav-back" onclick="backFromDetail()">
+        ${IC.chevronBack}
+        Back
+      </button>
+      <span class="nav-title" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+    </div>
+    <div class="scroll" style="padding-bottom:24px">
+      <div style="height:160px;background:var(--surface-alt);display:flex;align-items:center;justify-content:center;font-size:64px">🍽️</div>
+      <div style="padding:16px">
+        <div style="font:700 22px/1.3 Inter,sans-serif;letter-spacing:-0.3px">${r.name}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <span class="ipill">${IC.forkKnife}&nbsp;${r.cuisine}</span>
+          <span class="ipill">${IC.checkCircle}&nbsp;${r.match}% match</span>
+          <span class="ipill">${IC.cartPlus}&nbsp;${missing.length} missing</span>
+        </div>
+        <div class="seg" style="margin-top:16px">
+          <button class="seg-btn ${S.detailTab===0?'on':''}" onclick="S.detailTab=0;renderDetail()">Ingredients</button>
+          <button class="seg-btn ${S.detailTab===1?'on':''}" onclick="S.detailTab=1;renderDetail()">Steps</button>
+        </div>
+        <div style="margin-top:14px">${tabContent}</div>
+        <button class="btn btn-p" style="margin-top:20px" onclick="addMissingToShop('${r.id}')">Add Missing to Shopping List</button>
+      </div>
+    </div>
+    <div style="height:34px;flex-shrink:0"></div>`;
+}
+
+function backFromDetail() {
+  goScreen('s-main');
+  setFlow('fi-plan');
+}
+
+function addMissingToShop(recipeId) {
+  const r = RECIPES.find(x=>x.id===recipeId);
+  if (!r) return;
+  let added = 0;
+  r.buy.forEach(item => {
+    if (!S.shopping.find(s=>s.name===item.name)) {
+      S.shopping.push({...item, purchased:false, id:Date.now()+Math.random()});
+      added++;
+    }
+  });
+  renderShop();
+  backFromDetail();
+  setTimeout(() => {
+    goTab(2);
+    showToast(added > 0 ? `${added} item${added>1?'s':''} added to shopping list` : 'Items already in list');
+    setFlow('fi-shop');
+  }, 250);
+}
+
+// ══════════════════════════════════
+//  SHOPPING
+// ══════════════════════════════════
+function renderShop() {
+  const el = document.getElementById('pane-shop');
+  if (S.shopping.length === 0) {
+    el.innerHTML = `
+      <div class="tab-nav">
+        ${TAB_NAV_LEADING}
+        <div class="tab-nav-trailing"></div>
+      </div>
+      <div class="ltitle">Shopping</div>
+      <div class="empty" style="flex:1">
+        <div class="empty-icon">🛒</div>
+        <div class="empty-title">No items</div>
+        <div class="empty-desc">Add missing ingredients from a recipe in the Plan tab.</div>
+      </div>`;
+    return;
+  }
+
+  const bought = S.shopping.filter(i=>i.purchased).length;
+  const totalAll  = S.shopping.reduce((s,i)=>s+i.cost,0);
+
+  const groups = {};
+  S.shopping.forEach(i => (groups[i.recipe]=groups[i.recipe]||[]).push(i));
+
+  let h = `
+    <div class="tab-nav">
+      ${TAB_NAV_LEADING}
+      <div class="tab-nav-trailing" style="gap:4px">
+        <button class="icon-btn" title="Share shopping list" onclick="shareShoppingList()">${IC.share}</button>
+        ${bought>0?`<button class="icon-btn" style="color:var(--danger);font:600 13px/1 Inter,sans-serif;width:auto;padding:0 8px;white-space:nowrap" onclick="clearBoughtConfirm()">Clear Bought</button>`:''}
+      </div>
+    </div>
+    <div class="ltitle">Shopping</div>
+    <div class="scroll list-bg" style="padding-bottom:20px">
+      <div style="margin:8px 16px 0">
+        <div class="cost-card">
+          <div class="cost-lhs">
+            <div class="label">Estimated Total</div>
+            <div class="amount">HK$${totalAll}</div>
+          </div>
+          <div class="cost-rhs">
+            <span style="font:500 12px/1 Inter,sans-serif;color:var(--gray)">${S.shopping.length} item${S.shopping.length!==1?'s':''}</span>
+            ${bought>0?`<span style="font:600 12px/1 Inter,sans-serif;color:var(--gray)">${bought} bought</span>`:''}
+          </div>
+        </div>
+      </div>`;
+
+  Object.keys(groups).sort().forEach(recipe => {
+    h += `<div class="sec-hdr">${recipe}</div><div class="inset">`;
+    groups[recipe].forEach(item => {
+      h += `<div class="shop-row ${item.purchased?'bought':''}" onclick="togglePurchased(${JSON.stringify(item.id)})">
+        <span class="shop-check" style="color:${item.purchased?'var(--success)':'var(--border)'}">
+          ${item.purchased ? IC.checkFill : IC.circle}
+        </span>
+        <div class="shop-info">
+          <div class="shop-name">${item.name}</div>
+          <div class="shop-qty">${item.qty} ${item.unit}</div>
+        </div>
+        <span class="shop-cost">${item.cost != null ? 'HK$'+item.cost : '—'}</span>
+      </div>`;
+    });
+    h += `</div>`;
+  });
+  h += `</div>`;
+  el.innerHTML = h;
+}
+
+function togglePurchased(id) {
+  const item = S.shopping.find(i=>i.id===id);
+  if (item) { item.purchased = !item.purchased; renderShop(); }
+}
+
+function clearBoughtConfirm() {
+  // Matches iOS confirmationDialog before destructive clear
+  if (confirm('Remove all purchased items from the list?\n\nThis cannot be undone.')) {
+    S.shopping = S.shopping.filter(i=>!i.purchased);
+    renderShop();
+    showToast('Bought items cleared');
+  }
+}
+
+function shareShoppingList() {
+  // Matches iOS ShareLink — builds share text then opens native share sheet (or alerts in browser)
+  const lines = ['Shopping List'];
+  const totalAll = S.shopping.reduce((s,i)=>s+(i.cost||0),0);
+  if (totalAll > 0) lines.push('Total: HK$' + totalAll);
+  lines.push('');
+  const groups = {};
+  S.shopping.forEach(i => (groups[i.recipe]=groups[i.recipe]||[]).push(i));
+  Object.keys(groups).sort().forEach(recipe => {
+    lines.push(recipe + ':');
+    groups[recipe].forEach(item => {
+      const status = item.purchased ? '✓' : '○';
+      let row = `${status} ${item.name} – ${item.qty} ${item.unit}`;
+      if (item.cost != null) row += ` (HK$${item.cost})`;
+      lines.push(row);
+    });
+    lines.push('');
+  });
+  const text = lines.join('\n').trim();
+  if (navigator.share) {
+    navigator.share({ title: 'Shopping List', text }).catch(() => {});
+  } else {
+    navigator.clipboard?.writeText(text).then(() => showToast('Copied to clipboard')).catch(() => showToast('Share not supported'));
+  }
+}
+
+// ══════════════════════════════════
+//  PROFILE
+// ══════════════════════════════════
+const DIETARY = ['Vegetarian','Vegan','Pescatarian','Halal','Kosher','Low Sodium','Low Sugar','Low Fat','Keto','Gluten Free','Fasting'];
+const ALLERGIES = ['Tree Nuts','Peanuts','Dairy','Eggs','Shellfish','Fish','Soy','Wheat','Sesame'];
+const HEALTH_CONDITIONS = ['Diabetes','High Blood Pressure','Heart Disease','Kidney Disease','High Cholesterol','Gout'];
+const SPICE_LEVELS = ['None','Mild','Medium','Hot'];
+
+// Member profile state (editing)
+const MP = { index: -1, dietary: new Set(), allergies: new Set(), health: new Set(), spice: '' };
+
+function renderProfile() {
+  const el = document.getElementById('pane-profile');
+  const memberRows = S.members.map((m, i) => `
+    <div class="swipe-row-wrap" data-swipe-id="mem-${i}">
+      <div class="swipe-row-trailing">
+        <button class="swipe-action-btn" style="background:#FF3B30" onclick="promptDeleteMember(${i})">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          Delete
+        </button>
+      </div>
+      <div class="swipe-row-content row" onclick="showMemberProfile(${i})" style="cursor:pointer">
+        <span class="row-em">👤</span>
+        <div class="row-info"><div class="row-title">${m || '(unnamed)'}</div></div>
+        <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style="color:#C7C7CC"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="nav" style="flex-shrink:0;border-bottom:0.5px solid rgba(0,0,0,0.1)">
+      <span class="nav-title">Profile</span>
+      <button onclick="openAddMemberSheet()" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--p);font-size:26px;line-height:1;padding:6px;display:flex;align-items:center;" aria-label="Add member">+</button>
+    </div>
+    <div class="scroll list-bg">
+      <div class="sec-hdr">Family</div>
+      <div class="inset" style="margin-bottom:0">
+        <div class="row">
+          <div class="row-info"><div class="row-title">${S.familyName || '—'}</div></div>
+        </div>
+      </div>
+      <div class="sec-hdr">Members</div>
+      <div class="inset">
+        ${memberRows || '<div class="row"><span class="row-title" style="color:var(--gray)">No members yet</span></div>'}
+      </div>
+      ${S.members.length > 0 ? '<div style="padding:8px 16px 20px;font-size:12px;color:var(--gray);text-align:center">Swipe left to delete · tap to edit</div>' : ''}
+    </div>`;
+
+  S.members.forEach((_, i) => initTrailingOnlySwipeRow(`mem-${i}`));
+}
+
+function showMemberProfile(index) {
+  MP.index = index;
+  MP.dietary = new Set();
+  MP.allergies = new Set();
+  MP.health = new Set();
+  MP.spice = '';
+  goScreen('s-member-profile');
+  renderMemberProfile();
+}
+
+function renderMemberProfile() {
+  const name = S.members[MP.index] || '(unnamed)';
+  const el = document.getElementById('member-profile-inner');
+
+  const pillRow = (arr, activeSet, toggleFn) => arr.map(opt => {
+    const on = activeSet.has(opt);
+    return `<span class="pill ${on?'on':''}" style="margin-bottom:6px" onclick="${toggleFn}('${esc(opt)}')">${opt}</span>`;
+  }).join(' ');
+
+  el.innerHTML = `
+    <div class="nav" style="flex-shrink:0">
+      <button class="nav-back" onclick="backFromMemberProfile()">
+        ${IC.chevronBack} Back
+      </button>
+      <span class="nav-title" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+      <button onclick="saveMemberProfile()" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--p);font:600 17px/1 Inter,sans-serif;padding:8px">Save</button>
+    </div>
+    <div class="scroll list-bg">
+      <div class="sec-hdr">Basic Info</div>
+      <div class="inset">
+        <div class="row">
+          <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">Name</div></div>
+          <input id="mp-name" value="${name}" style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" autocomplete="off">
+        </div>
+        <div class="row">
+          <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">Age</div></div>
+          <input id="mp-age" type="number" placeholder="Optional" style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" min="1" max="120">
+        </div>
+      </div>
+
+      <div class="sec-hdr">Dietary Restrictions</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${pillRow(DIETARY, MP.dietary, 'toggleMPDietary')}</div>
+      </div>
+
+      <div class="sec-hdr">Allergies</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${pillRow(ALLERGIES, MP.allergies, 'toggleMPAllergy')}</div>
+      </div>
+
+      <div class="sec-hdr">Health Conditions</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${pillRow(HEALTH_CONDITIONS, MP.health, 'toggleMPHealth')}</div>
+      </div>
+
+      <div class="sec-hdr">Spice Preference</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${SPICE_LEVELS.map(s => `<span class="pill ${MP.spice===s?'on':''}" style="margin-bottom:6px" onclick="setMPSpice('${s}')">${s}</span>`).join(' ')}</div>
+      </div>
+    </div>`;
+}
+
+function toggleMPDietary(opt) { MP.dietary.has(opt) ? MP.dietary.delete(opt) : MP.dietary.add(opt); renderMemberProfile(); }
+function toggleMPAllergy(opt) { MP.allergies.has(opt) ? MP.allergies.delete(opt) : MP.allergies.add(opt); renderMemberProfile(); }
+function toggleMPHealth(opt)  { MP.health.has(opt) ? MP.health.delete(opt) : MP.health.add(opt); renderMemberProfile(); }
+function setMPSpice(s) { MP.spice = MP.spice === s ? '' : s; renderMemberProfile(); }
+
+function saveMemberProfile() {
+  const nameEl = document.getElementById('mp-name');
+  if (nameEl && nameEl.value.trim()) S.members[MP.index] = nameEl.value.trim();
+  showToast('Profile saved');
+  backFromMemberProfile();
+}
+
+function backFromMemberProfile() {
+  goScreen('s-main');
+  goTab(3);
+}
+
+// ══════════════════════════════════
+//  ADD MEMBER
+// ══════════════════════════════════
+const AM = { dietary: new Set(), allergies: new Set(), health: new Set(), spice: '' };
+
+function openAddMemberSheet() {
+  AM.dietary = new Set(); AM.allergies = new Set(); AM.health = new Set(); AM.spice = '';
+  renderAddMemberForm();
+  openSheet('sheet-add-member');
+}
+
+function closeAddMemberSheet() { closeSheet('sheet-add-member'); }
+
+function renderAddMemberForm() {
+  const pillRow = (arr, activeSet, toggleFn) => arr.map(opt => {
+    const on = activeSet.has(opt);
+    return `<span class="pill ${on?'on':''}" style="margin-bottom:6px" onclick="${toggleFn}('${esc(opt)}')">${opt}</span>`;
+  }).join(' ');
+
+  document.getElementById('add-member-body').innerHTML = `
+    <div class="sec-hdr">Basic Info</div>
+    <div class="inset">
+      <div class="row">
+        <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">Name</div></div>
+        <input id="am-name" placeholder="Required"
+          oninput="var b=document.getElementById('am-save-btn');b.disabled=!this.value.trim();b.style.opacity=this.value.trim()?'1':'0.4';"
+          style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" autocomplete="off">
+      </div>
+      <div class="row">
+        <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">Age</div></div>
+        <input id="am-age" type="number" placeholder="Optional"
+          style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" min="1" max="120">
+      </div>
+    </div>
+    <div class="sec-hdr">Dietary Restrictions</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${pillRow(DIETARY, AM.dietary, 'toggleAMDietary')}</div>
+    </div>
+    <div class="sec-hdr">Allergies</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${pillRow(ALLERGIES, AM.allergies, 'toggleAMAllergy')}</div>
+    </div>
+    <div class="sec-hdr">Health Conditions</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${pillRow(HEALTH_CONDITIONS, AM.health, 'toggleAMHealth')}</div>
+    </div>
+    <div class="sec-hdr">Spice Preference</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${SPICE_LEVELS.map(s => `<span class="pill ${AM.spice===s?'on':''}" style="margin-bottom:6px" onclick="setAMSpice('${s}')">${s}</span>`).join(' ')}</div>
+    </div>
+    <div style="height:8px"></div>`;
+}
+
+function toggleAMDietary(opt) { AM.dietary.has(opt) ? AM.dietary.delete(opt) : AM.dietary.add(opt); renderAddMemberForm(); }
+function toggleAMAllergy(opt)  { AM.allergies.has(opt) ? AM.allergies.delete(opt) : AM.allergies.add(opt); renderAddMemberForm(); }
+function toggleAMHealth(opt)   { AM.health.has(opt) ? AM.health.delete(opt) : AM.health.add(opt); renderAddMemberForm(); }
+function setAMSpice(s) { AM.spice = AM.spice === s ? '' : s; renderAddMemberForm(); }
+
+function submitAddMember() {
+  const nameEl = document.getElementById('am-name');
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (!name) return;
+  S.members.push(name);
+  S.selectedMembers.add(name);
+  closeAddMemberSheet();
+  renderProfile();
+  showToast(`${name} added`);
+}
+
+// ══════════════════════════════════
+//  DELETE MEMBER
+// ══════════════════════════════════
+let _pendingDeleteMemberIdx = null;
+
+function promptDeleteMember(idx) {
+  _pendingDeleteMemberIdx = idx;
+  const name = S.members[idx] || 'this member';
+  document.getElementById('delete-member-name').textContent = `Remove "${name}"?`;
+  openSheet('sheet-delete-member');
+}
+
+function confirmDeleteMember() {
+  closeSheet('sheet-delete-member');
+  if (_pendingDeleteMemberIdx == null) return;
+  const idx = _pendingDeleteMemberIdx;
+  _pendingDeleteMemberIdx = null;
+  openSwipeId = null; openSwipeDir = null;
+  const name = S.members[idx];
+  S.selectedMembers.delete(name);
+  S.members.splice(idx, 1);
+  renderProfile();
+  showToast('Member removed');
+}
+
+function cancelDeleteMember() {
+  _pendingDeleteMemberIdx = null;
+  closeSheet('sheet-delete-member');
+}
+
+// ══════════════════════════════════
+//  TRAILING-ONLY SWIPE ROWS (members)
+// ══════════════════════════════════
+function initTrailingOnlySwipeRow(id) {
+  const wrap = document.querySelector(`.swipe-row-wrap[data-swipe-id="${id}"]`);
+  if (!wrap) return;
+  const content = wrap.querySelector('.swipe-row-content');
+
+  function getBase() { return (openSwipeId === id && openSwipeDir === 'trailing') ? -TRAIL_W : 0; }
+  function snapTo(offset) {
+    content.style.transition = 'transform 0.22s cubic-bezier(.4,0,.2,1)';
+    content.style.transform = offset ? `translateX(${offset}px)` : '';
+    if (offset < 0)          { openSwipeId = id; openSwipeDir = 'trailing'; }
+    else if (openSwipeId === id) { openSwipeId = null; openSwipeDir = null; }
+  }
+
+  wrap.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.target.closest('.swipe-action-btn')) return;
+    if (openSwipeId && openSwipeId !== id) closeSwipeRow(openSwipeId);
+    _swipe = { id, startX: e.clientX, startY: e.clientY, base: getBase(), moved: false, cancelled: false };
+    wrap.setPointerCapture(e.pointerId);
+  });
+
+  wrap.addEventListener('pointermove', e => {
+    if (!_swipe || _swipe.id !== id || _swipe.cancelled) return;
+    const dx = e.clientX - _swipe.startX, dy = e.clientY - _swipe.startY;
+    if (!_swipe.moved && Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 8) { _swipe.cancelled = true; return; }
+    _swipe.moved = true;
+    const x = Math.max(-TRAIL_W, Math.min(0, _swipe.base + dx));
+    content.style.transition = 'none';
+    content.style.transform = x ? `translateX(${x}px)` : '';
+  });
+
+  wrap.addEventListener('pointerup', e => {
+    if (!_swipe || _swipe.id !== id) return;
+    const dx = e.clientX - _swipe.startX;
+    const { base, moved, cancelled } = _swipe;
+    _swipe = null;
+    if (!moved || cancelled) { if (openSwipeId === id) snapTo(0); return; }
+    const total = base + dx;
+    if (base === 0) snapTo(total < -SNAP_PX ? -TRAIL_W : 0);
+    else snapTo(dx > CLOSE_PX ? 0 : -TRAIL_W);
+  });
+
+  wrap.addEventListener('pointercancel', () => {
+    if (_swipe && _swipe.id === id) { _swipe = null; snapTo(getBase()); }
+  });
+}
+
+// ══════════════════════════════════
+//  BOOT
+// ══════════════════════════════════
+renderOB();
+</script>
+</body>
+</html>
