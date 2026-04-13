@@ -39,4 +39,37 @@ final class AppViewModelTests: XCTestCase {
         let vm = AppViewModel()
         XCTAssertFalse(vm.fridgeInitialized)
     }
+
+    func testAddMemberAppendsToList() {
+        let vm = AppViewModel()
+        let member = FamilyMember(
+            id: UUID(),
+            familyId: Constants.defaultFamilyID,
+            name: "Test",
+            age: nil,
+            dietaryRestrictions: [],
+            allergies: [],
+            healthConditions: [],
+            preferences: MemberPreferences(spiceLevel: nil, favoriteCuisines: [], dislikedIngredients: [])
+        )
+        vm.addMember(member)
+        XCTAssertTrue(vm.members.contains(where: { $0.id == member.id }))
+    }
+
+    func testDeleteMemberRemovesFromList() {
+        let vm = AppViewModel()
+        let member = FamilyMember(
+            id: UUID(),
+            familyId: Constants.defaultFamilyID,
+            name: "ToDelete",
+            age: nil,
+            dietaryRestrictions: [],
+            allergies: [],
+            healthConditions: [],
+            preferences: MemberPreferences(spiceLevel: nil, favoriteCuisines: [], dislikedIngredients: [])
+        )
+        vm.members = [member]
+        vm.deleteMember(id: member.id)
+        XCTAssertFalse(vm.members.contains(where: { $0.id == member.id }))
+    }
 }
