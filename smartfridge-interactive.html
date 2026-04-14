@@ -1979,7 +1979,8 @@ function renderDetail() {
         ${IC.chevronBack}
         ${t('common.back')}
       </button>
-      <span class="nav-title" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+      <span class="nav-title" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+      <button class="icon-btn" onclick="shareRecipe('${r.id}')" title="Share recipe" style="margin-left:auto">${IC.share}</button>
     </div>
     <div class="scroll" style="padding-bottom:24px">
       <div style="height:160px;background:${r.bg};display:flex;align-items:center;justify-content:center;"><span style="font-size:80px;filter:drop-shadow(0 6px 18px rgba(0,0,0,0.2));line-height:1">${r.emoji}</span></div>
@@ -2005,6 +2006,20 @@ function renderDetail() {
 function backFromDetail() {
   goScreen('s-main');
   setFlow('fi-plan');
+}
+
+function shareRecipe(recipeId) {
+  const r = RECIPES.find(x=>x.id===recipeId);
+  if (!r) return;
+  const text = `Check out this recipe: ${r.name}`;
+  if (navigator.share) {
+    navigator.share({ title: r.name, text });
+  } else {
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.querySelector('.nav button[onclick^="shareRecipe"]');
+      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.innerHTML = IC.share; }, 1500); }
+    });
+  }
 }
 
 function addMissingToShop(recipeId) {
