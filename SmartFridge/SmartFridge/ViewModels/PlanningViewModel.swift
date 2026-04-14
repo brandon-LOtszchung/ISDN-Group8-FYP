@@ -38,7 +38,7 @@ final class PlanningViewModel {
             recommendations = try await api.recommend(
                 memberIds: Array(selectedMemberIds),
                 cuisineStyle: cuisine
-            )
+            ).sorted { $0.missingCount < $1.missingCount }
         } catch {
             self.error = error.localizedDescription
         }
