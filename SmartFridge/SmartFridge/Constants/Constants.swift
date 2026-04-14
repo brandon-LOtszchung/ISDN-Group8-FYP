@@ -45,9 +45,9 @@ enum Constants {
     static let cookingSkillLevels: [String] = ["beginner", "intermediate", "advanced"]
 
     static let budgetRanges: [(value: String, label: String, description: String)] = [
-        (value: "low",    label: "Budget-Friendly", description: "Under HK$100 per meal"),
-        (value: "medium", label: "Moderate",        description: "HK$100–200 per meal"),
-        (value: "high",   label: "Premium",         description: "Above HK$200 per meal"),
+        (value: "low",    label: "Budget-Friendly", description: "Under HK$50 per person"),
+        (value: "medium", label: "Moderate",        description: "HK$50–100 per person"),
+        (value: "high",   label: "Premium",         description: "Above HK$100 per person"),
     ]
 
     static let inventoryCategories: [String] = [
