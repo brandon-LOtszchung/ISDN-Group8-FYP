@@ -1843,13 +1843,6 @@ function skipScan() {
 function simulateScan() {
   closeSheet('sheet-camera');
   const el = document.getElementById('pane-fridge');
-  // inject keyframes if not already present
-  if (!document.getElementById('spin-kf')) {
-    const style = document.createElement('style');
-    style.id = 'spin-kf';
-    style.textContent = '@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}';
-    document.head.appendChild(style);
-  }
   // Phase 1: scanning spinner
   el.innerHTML = `
     <div class="tab-nav">
@@ -2641,6 +2634,12 @@ function initTrailingOnlySwipeRow(id) {
 // ══════════════════════════════════
 //  BOOT
 // ══════════════════════════════════
+(function injectKeyframes() {
+  const style = document.createElement('style');
+  style.id = 'spin-kf';
+  style.textContent = '@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}';
+  document.head.appendChild(style);
+})();
 renderOB();
 </script>
 </body>
