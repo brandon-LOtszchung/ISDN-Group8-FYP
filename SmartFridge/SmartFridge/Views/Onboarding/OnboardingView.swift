@@ -15,7 +15,7 @@ struct OnboardingView: View {
     @State private var step: OnboardingStep = .name
     @State private var familyName = ""
     @State private var selectedSkill = ""
-    @State private var selectedBudget = ""
+    @State private var budgetAmount: Int = 50
     @State private var members: [FamilyMember] = []
 
     // Typewriter state
@@ -141,13 +141,7 @@ struct OnboardingView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("💵").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "onboarding.budget.title")).font(.title.bold())
-            FlowLayout(spacing: 8) {
-                ForEach(Constants.budgetRanges, id: \.value) { budget in
-                    PillView(label: budget.label, isSelected: selectedBudget == budget.value) {
-                        selectedBudget = budget.value
-                    }
-                }
-            }
+            BudgetSliderView(budgetAmount: $budgetAmount)
         }
     }
 
@@ -184,7 +178,7 @@ struct OnboardingView: View {
                 LabeledContent(String(localized: "onboarding.summary.family"), value: familyName)
                 LabeledContent(String(localized: "onboarding.summary.cooking_skill"), value: selectedSkill.capitalized)
                 LabeledContent(String(localized: "onboarding.summary.budget"),
-                               value: Constants.budgetRanges.first(where: { $0.value == selectedBudget })?.label ?? selectedBudget)
+                               value: budgetTier(for: budgetAmount).label)
                 LabeledContent(String(localized: "onboarding.summary.members"), value: "\(members.count)")
             }
             .font(.body)
@@ -243,7 +237,7 @@ struct OnboardingView: View {
         case .cookingIntro:    return typewriterDone
         case .cooking:         return !selectedSkill.isEmpty
         case .cookingFeedback: return typewriterDone
-        case .budget:          return !selectedBudget.isEmpty
+        case .budget:          return true
         case .budgetFeedback:  return typewriterDone
         case .members:         return true
         case .summary:         return true
@@ -270,7 +264,7 @@ struct OnboardingView: View {
             name: familyName,
             preferences: FamilyPreferences(
                 cookingSkillLevel: selectedSkill,
-                budgetRange: selectedBudget,
+                budgetRange: budgetTier(for: budgetAmount).value,
                 preferredLanguage: .en
             ),
             createdAt: Date(),
