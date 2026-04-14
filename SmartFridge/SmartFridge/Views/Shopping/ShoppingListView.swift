@@ -139,6 +139,11 @@ private struct ShoppingItemRow: View {
                 Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(item.isPurchased ? theme.colors.success : theme.colors.border)
                     .font(.title3)
+                Text(IngredientEmoji.emoji(for: item.name))
+                    .font(.system(size: 20))
+                    .frame(width: 36, height: 36)
+                    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 8))
+                    .opacity(item.isPurchased ? 0.4 : 1.0)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .strikethrough(item.isPurchased)
