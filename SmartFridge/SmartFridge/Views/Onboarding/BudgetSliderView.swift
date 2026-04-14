@@ -159,8 +159,10 @@ struct BudgetSliderView: View {
                             .frame(maxHeight: .infinity)
 
                         // White dim overlay covers the right (not-yet-reached) portion
+                        let thumbHalf = CGFloat(17)  // half of rendered 34pt thumb image
+                        let usableWidth = geo.size.width - thumbHalf * 2
                         HStack(spacing: 0) {
-                            Color.clear.frame(width: geo.size.width * pct)
+                            Color.clear.frame(width: thumbHalf + usableWidth * pct)
                             Color.white.opacity(0.6)
                         }
                         .frame(height: 6)
