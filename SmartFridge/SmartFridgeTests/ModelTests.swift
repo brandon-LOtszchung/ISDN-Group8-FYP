@@ -52,6 +52,37 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(rec.missingCount, 2)
     }
 
+    func testRecipeRecommendationCaloriesNilWhenAbsent() throws {
+        let json = """
+        {
+          "saved_recipe_id": "abc123",
+          "name": "Broccoli Beef",
+          "cuisine_style": "Chinese",
+          "matched_count": 5,
+          "total_count": 7,
+          "missing_count": 2
+        }
+        """.data(using: .utf8)!
+        let rec = try decoder.decode(RecipeRecommendation.self, from: json)
+        XCTAssertNil(rec.calories, "calories must be nil when the API omits the field")
+    }
+
+    func testRecipeRecommendationCaloriesDecodedWhenPresent() throws {
+        let json = """
+        {
+          "saved_recipe_id": "def456",
+          "name": "Teriyaki Salmon",
+          "cuisine_style": "Japanese",
+          "matched_count": 4,
+          "total_count": 6,
+          "missing_count": 2,
+          "calories": 350
+        }
+        """.data(using: .utf8)!
+        let rec = try decoder.decode(RecipeRecommendation.self, from: json)
+        XCTAssertEqual(rec.calories, 350)
+    }
+
     func testFamilyMemberPreferencesNested() throws {
         let json = """
         {
