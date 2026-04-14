@@ -13,7 +13,8 @@
 "onboarding.family_name.hint"      = "例如：陳氏家庭";
 "onboarding.cooking_intro.title"   = "讓我們談談烹飪";
 "onboarding.cooking.title"         = "您的烹飪技術水平如何？";
-"onboarding.budget.title"          = "您每週的食物預算是多少？";
+"onboarding.budget.title"          = "每人的飲食預算是多少？";
+"onboarding.budget.per_person"     = "每人";
 "onboarding.members.title"         = "您家有哪些成員？";
 "onboarding.members.dietary_hint"  = "設置完成後，可在每位成員的個人資料中設定飲食偏好與過敏資訊。";
 "onboarding.summary.title"         = "一切準備就緒！";
