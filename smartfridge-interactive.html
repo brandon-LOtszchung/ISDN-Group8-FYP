@@ -704,9 +704,9 @@ input.budget-slider::-moz-range-thumb {
     <div class="share-sheet">
       <!-- Preview -->
       <div class="share-preview">
-        <div class="share-preview-icon">🛒</div>
+        <div class="share-preview-icon" id="share-preview-icon">🛒</div>
         <div class="share-preview-text">
-          <div class="share-preview-title">Shopping List</div>
+          <div class="share-preview-title" id="share-preview-title">Shopping List</div>
           <div class="share-preview-sub" id="share-preview-sub">Loading…</div>
         </div>
       </div>
@@ -2011,24 +2011,18 @@ function backFromDetail() {
 function shareRecipe(recipeId) {
   const r = RECIPES.find(x=>x.id===recipeId);
   if (!r) return;
-  const kcalLine = r.kcal != null ? `Energy: ~${r.kcal} kcal per serving\n` : '';
+  const kcalLine = r.kcal != null ? `Energy: ~${r.kcal} kcal per serving` : '';
   const ingredients = r.ingredients.map(i => `  • ${i.name} — ${i.qty}`).join('\n');
   const steps = r.steps.map((s, i) => `  ${i + 1}. ${s}`).join('\n');
   const text = [
-    `🍽️ ${r.name}`,
+    `${r.emoji} ${r.name}`,
     `Cuisine: ${r.cuisine}`,
-    kcalLine.trimEnd(),
+    kcalLine,
     `\nIngredients:\n${ingredients}`,
     `\nSteps:\n${steps}`,
   ].filter(Boolean).join('\n');
-  if (navigator.share) {
-    navigator.share({ title: r.name, text });
-  } else {
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.querySelector('.nav button[onclick^="shareRecipe"]');
-      if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.innerHTML = IC.share; }, 1500); }
-    });
-  }
+  const sub = [r.cuisine, r.kcal != null ? `~${r.kcal} kcal` : null].filter(Boolean).join(' · ');
+  openShareSheet({ icon: r.emoji, title: r.name, sub, text });
 }
 
 function addMissingToShop(recipeId) {
@@ -2191,18 +2185,22 @@ function buildShareText() {
   return lines.join('\n').trim();
 }
 
+function openShareSheet({ icon, title, sub, text }) {
+  document.getElementById('share-preview-icon').textContent = icon;
+  document.getElementById('share-preview-title').textContent = title;
+  document.getElementById('share-preview-sub').textContent = sub;
+  document.getElementById('sheet-share').dataset.text = text;
+  openSheet('sheet-share');
+}
+
 function shareShoppingList() {
   const text = buildShareText();
-  // Update preview subtitle with item count + total
   const total = S.shopping.reduce((s,i)=>s+(i.cost||0),0);
   const bought = S.shopping.filter(i=>i.purchased).length;
   let sub = STRINGS[S.lang]['shopping.items'](S.shopping.length);
   if (total > 0) sub += ` · HK$${total}`;
   if (bought > 0) sub += ` · ${STRINGS[S.lang]['shopping.bought'](bought)}`;
-  document.getElementById('share-preview-sub').textContent = sub;
-  // Store text for copy action
-  document.getElementById('sheet-share').dataset.text = text;
-  openSheet('sheet-share');
+  openShareSheet({ icon: '🛒', title: 'Shopping List', sub, text });
 }
 
 function closeShareSheet() { closeSheet('sheet-share'); }
