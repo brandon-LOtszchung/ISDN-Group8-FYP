@@ -79,6 +79,7 @@ struct IngredientEmoji {
         ("oat",           "🌾"),
         ("egg",           "🥚"),
         ("ham",           "🥓"),
+        ("ginger",        "🫚"),
         ("oil",           "🫚"),
         ("salt",          "🧂"),
         ("sauce",         "🫙"),
