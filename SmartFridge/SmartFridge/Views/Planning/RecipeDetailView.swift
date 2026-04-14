@@ -32,6 +32,9 @@ struct RecipeDetailView: View {
                             infoPill(recommendation.cuisineStyle, icon: "fork.knife")
                             infoPill("\(recommendation.matchPercentage)% match", icon: "checkmark.circle")
                             infoPill("\(recommendation.missingCount) missing", icon: "cart.badge.plus")
+                            if let kcal = recommendation.calories ?? RecipeCalories.estimate(for: recommendation.name) {
+                                infoPill("~\(kcal) kcal", icon: "flame")
+                            }
                         }
                     }
 
