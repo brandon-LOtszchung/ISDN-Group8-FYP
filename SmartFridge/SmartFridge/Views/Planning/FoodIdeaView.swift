@@ -108,11 +108,15 @@ private struct RecipeCardView: View {
     var body: some View {
         CardView {
             VStack(alignment: .leading, spacing: 0) {
-                // Hero placeholder
-                Rectangle()
-                    .fill(theme.colors.surfaceAlt)
-                    .frame(height: 80)
-                    .overlay(Text("🍽️").font(.largeTitle).accessibilityHidden(true))
+                // Hero — per-cuisine gradient with recipe emoji
+                RecipeHero.gradient(for: recommendation.cuisineStyle)
+                    .frame(height: 120)
+                    .overlay(
+                        Text(RecipeHero.emoji(for: recommendation.name))
+                            .font(.system(size: 56))
+                            .shadow(color: .black.opacity(0.18), radius: 6, x: 0, y: 4)
+                            .accessibilityHidden(true)
+                    )
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {

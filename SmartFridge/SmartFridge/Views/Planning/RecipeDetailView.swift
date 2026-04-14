@@ -16,11 +16,15 @@ struct RecipeDetailView: View {
         ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                // Hero
-                Rectangle()
-                    .fill(theme.colors.surfaceAlt)
+                // Hero — per-cuisine gradient with recipe emoji
+                RecipeHero.gradient(for: recommendation.cuisineStyle)
                     .frame(height: 160)
-                    .overlay(Text("🍽️").font(.system(size: heroEmojiSize)).accessibilityHidden(true))
+                    .overlay(
+                        Text(RecipeHero.emoji(for: recommendation.name))
+                            .font(.system(size: heroEmojiSize))
+                            .shadow(color: .black.opacity(0.18), radius: 8, x: 0, y: 4)
+                            .accessibilityHidden(true)
+                    )
                     .id("top")
 
                 VStack(alignment: .leading, spacing: 12) {
