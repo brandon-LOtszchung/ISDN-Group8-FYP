@@ -2011,7 +2011,16 @@ function backFromDetail() {
 function shareRecipe(recipeId) {
   const r = RECIPES.find(x=>x.id===recipeId);
   if (!r) return;
-  const text = `Check out this recipe: ${r.name}`;
+  const kcalLine = r.kcal != null ? `Energy: ~${r.kcal} kcal per serving\n` : '';
+  const ingredients = r.ingredients.map(i => `  • ${i.name} — ${i.qty}`).join('\n');
+  const steps = r.steps.map((s, i) => `  ${i + 1}. ${s}`).join('\n');
+  const text = [
+    `🍽️ ${r.name}`,
+    `Cuisine: ${r.cuisine}`,
+    kcalLine.trimEnd(),
+    `\nIngredients:\n${ingredients}`,
+    `\nSteps:\n${steps}`,
+  ].filter(Boolean).join('\n');
   if (navigator.share) {
     navigator.share({ title: r.name, text });
   } else {
