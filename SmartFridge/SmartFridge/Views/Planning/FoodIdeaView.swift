@@ -132,6 +132,11 @@ private struct RecipeCardView: View {
                     Text("\(recommendation.missingCount) missing")
                         .font(.caption)
                         .foregroundStyle(recommendation.missingCount == 0 ? theme.colors.success : theme.colors.danger)
+                    if let kcal = recommendation.calories ?? RecipeCalories.estimate(for: recommendation.name) {
+                        Label("~\(kcal) kcal", systemImage: "flame")
+                            .font(.caption)
+                            .foregroundStyle(.orange)
+                    }
                 }
                 .padding(10)
             }
