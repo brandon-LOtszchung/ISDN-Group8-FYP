@@ -171,6 +171,42 @@ body {
 .pill:active { transform: scale(0.95); }
 .pill.on { background: var(--p); border-color: var(--p); color: #fff; }
 
+/* ── BUDGET SLIDER ── */
+.budget-price { text-align:center; margin-bottom:16px; }
+.budget-price .amount { font:800 40px/1 'Inter',sans-serif; transition:color .15s; }
+.budget-price .tier   { font:600 14px/1 'Inter',sans-serif; margin-top:6px; transition:color .15s; }
+.budget-price .per    { font:400 12px/1 'Inter',sans-serif; color:var(--gray); margin-top:4px; }
+.budget-track-wrap { position:relative; height:44px; display:flex; align-items:center; margin:0 2px; }
+.budget-track { position:absolute; inset:0; display:flex; align-items:center; pointer-events:none; }
+.budget-gradient {
+  position:absolute; left:0; right:0; height:6px; border-radius:3px;
+  background: linear-gradient(to right,
+    #4CAF50 0%, #4CAF50 28.57%,
+    #FF9800 28.57%, #FF9800 64.29%,
+    #F44336 64.29%, #F44336 100%);
+}
+.budget-dim {
+  position:absolute; right:0; height:6px;
+  border-radius:0 3px 3px 0; background:rgba(255,255,255,.6);
+  pointer-events:none; transition:width .05s;
+}
+input.budget-slider {
+  -webkit-appearance:none; appearance:none;
+  position:relative; z-index:2; width:100%; height:6px;
+  background:transparent; outline:none; cursor:pointer;
+}
+input.budget-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+  border:3px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.22);
+  cursor:grab; transition:background .15s, transform .1s;
+}
+input.budget-slider::-webkit-slider-thumb:active { transform:scale(1.12); cursor:grabbing; }
+input.budget-slider::-moz-range-thumb {
+  width:26px; height:26px; border-radius:50%;
+  border:3px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.22); cursor:grab;
+}
+.budget-endpoints { display:flex; justify-content:space-between; font:400 11px/1 'Inter',sans-serif; color:var(--gray); margin-top:6px; }
+
 /* ── PROGRESS DOTS ── */
 .dots { display: flex; gap: 6px; justify-content: center; padding: 6px 0; flex-shrink: 0; }
 .dot { width: 8px; height: 6px; border-radius: 3px; background: var(--border); transition: all 0.35s cubic-bezier(.4,0,.2,1); }
@@ -602,7 +638,7 @@ body {
 // ══════════════════════════════════
 const S = {
   obStep: 0,
-  familyName: '', skill: '', budget: '', members: ['Mom', 'Dad'],
+  familyName: '', skill: '', budget: 50, members: ['Mom', 'Dad'],
   inventory: [],
   fridgeInitialized: false,
   selectedMembers: new Set(),
@@ -620,7 +656,6 @@ const S = {
 //  CONSTANTS
 // ══════════════════════════════════
 const SKILLS  = ['beginner', 'intermediate', 'advanced'];
-const BUDGETS = [{v:'low',l:'Budget-Friendly'},{v:'medium',l:'Moderate'},{v:'high',l:'Premium'}];
 // Matches iOS Constants.cuisineOptions order
 const CUISINES = ['Chinese','Cantonese','Sichuan','Western','Italian','Japanese','Korean','Thai','Vietnamese','Indian','Mexican','Fusion'];
 
@@ -869,6 +904,34 @@ function goScreen(id) {
 // ══════════════════════════════════
 //  SIDEBAR HIGHLIGHTS
 // ══════════════════════════════════
+// ══════════════════════════════════
+//  BUDGET TIER MAPPING
+// ══════════════════════════════════
+function budgetTier(amount) {
+  if (amount < 50)  return {value:'low',    label:'Budget-Friendly', color:'#4CAF50'};
+  if (amount < 100) return {value:'medium', label:'Moderate',        color:'#FF9800'};
+  return              {value:'high',   label:'Premium',         color:'#F44336'};
+}
+
+// Sync slider UI after every drag event
+function onBudgetInput(el) {
+  S.budget = parseInt(el.value, 10);
+  const tier = budgetTier(S.budget);
+  const MIN = 10, MAX = 150;
+  const pct  = (S.budget - MIN) / (MAX - MIN);
+  // dim overlay
+  document.getElementById('budget-dim').style.width = (1 - pct) * 100 + '%';
+  // thumb colour (inject dynamic rule)
+  let st = document.getElementById('budget-thumb-style');
+  if (!st) { st = document.createElement('style'); st.id='budget-thumb-style'; document.head.appendChild(st); }
+  st.textContent = `input.budget-slider::-webkit-slider-thumb{background:${tier.color}}input.budget-slider::-moz-range-thumb{background:${tier.color}}`;
+  // price display
+  document.getElementById('budget-amount').textContent = 'HK$' + S.budget;
+  document.getElementById('budget-amount').style.color = tier.color;
+  document.getElementById('budget-tier').textContent   = tier.label;
+  document.getElementById('budget-tier').style.color   = tier.color;
+}
+
 const HINTS = {
   'fi-profile':  '<strong>Profile tab:</strong> View family info and tap a member to edit their dietary restrictions, allergies, and preferences.',
   'fi-onboard': '<strong>Step 1:</strong> Set up your family profile — name, cooking level, budget, and members.',
@@ -983,18 +1046,37 @@ function renderOB() {
       });
       break;
 
-    case 'budget':
+    case 'budget': {
+      const MIN = 10, MAX = 150;
+      const tier0 = budgetTier(S.budget);
+      const pct0  = (S.budget - MIN) / (MAX - MIN);
       body.innerHTML = `
         <div style="padding-top:20px">
           <div style="font-size:52px;line-height:1">💵</div>
-          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">What's your weekly food budget?</div>
-          <div class="pill-wrap" style="margin-top:20px" id="budget-pills"></div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">What's your budget per person?</div>
+          <div style="margin-top:24px">
+            <div class="budget-price">
+              <div class="amount" id="budget-amount" style="color:${tier0.color}">HK$${S.budget}</div>
+              <div class="tier"   id="budget-tier"   style="color:${tier0.color}">${tier0.label}</div>
+              <div class="per">per person</div>
+            </div>
+            <div class="budget-track-wrap">
+              <div class="budget-track">
+                <div class="budget-gradient"></div>
+                <div class="budget-dim" id="budget-dim" style="width:${(1-pct0)*100}%"></div>
+              </div>
+              <input class="budget-slider" type="range" min="${MIN}" max="${MAX}" step="5"
+                     value="${S.budget}" oninput="onBudgetInput(this)">
+            </div>
+            <div class="budget-endpoints"><span>&lt;HK$${MIN}</span><span>&gt;HK$${MAX}</span></div>
+          </div>
         </div>`;
-      BUDGETS.forEach(b => {
-        const p = mkPill(b.l, S.budget===b.v, ()=>{S.budget=b.v;renderOB();});
-        document.getElementById('budget-pills').appendChild(p);
-      });
+      // inject initial thumb colour
+      let st = document.getElementById('budget-thumb-style');
+      if (!st) { st = document.createElement('style'); st.id='budget-thumb-style'; document.head.appendChild(st); }
+      st.textContent = `input.budget-slider::-webkit-slider-thumb{background:${tier0.color}}input.budget-slider::-moz-range-thumb{background:${tier0.color}}`;
       break;
+    }
 
     case 'members':
       body.innerHTML = `
@@ -1009,7 +1091,7 @@ function renderOB() {
       break;
 
     case 'summary':
-      const bl = BUDGETS.find(b=>b.v===S.budget)?.l || S.budget;
+      const bl = budgetTier(S.budget).label;
       body.innerHTML = `
         <div style="padding-top:20px">
           <div style="font-size:52px;line-height:1">🎉</div>
@@ -1068,7 +1150,7 @@ function updateOBBtn() {
     name: S.familyName.trim().length > 0,
     tw: twT === null,
     cooking: S.skill !== '',
-    budget: S.budget !== '',
+    budget: true,
     members: true,
     summary: true,
   }[step.type] ?? true;
