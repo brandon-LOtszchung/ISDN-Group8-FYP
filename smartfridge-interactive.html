@@ -481,9 +481,26 @@ input.budget-slider::-moz-range-thumb {
 }
 .fab:active { transform: scale(0.93); }
 
+/* ── SHARE TEXT PANEL ── */
+.share-text-panel {
+  width: 240px; flex-shrink: 0;
+  display: none; flex-direction: column; gap: 8px;
+  opacity: 0; transition: opacity 0.25s;
+}
+.share-text-panel.visible { opacity: 1; }
+.share-text-panel h2 { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+.share-text-panel-body {
+  background: rgba(255,255,255,0.06); border-radius: 10px;
+  padding: 14px; font-size: 12px; color: rgba(255,255,255,0.7);
+  line-height: 1.65; white-space: pre-wrap; word-break: break-word;
+  max-height: 520px; overflow-y: auto;
+}
+.share-text-panel-body::-webkit-scrollbar { display: none; }
+
 @media (max-width: 700px) {
   body { padding: 0; }
   .sidebar { display: none; }
+  .share-text-panel { display: none !important; }
   .phone { border-radius: 0; box-shadow: none; width: 100vw; height: 100dvh; }
 }
 
@@ -782,6 +799,12 @@ input.budget-slider::-moz-range-thumb {
 
 </div><!-- /phone -->
 </div><!-- /phone-wrap -->
+
+<!-- SHARE TEXT PANEL -->
+<div class="share-text-panel" id="share-text-panel">
+  <h2>Share Preview</h2>
+  <div class="share-text-panel-body" id="share-text-panel-body"></div>
+</div>
 
 <script>
 // ══════════════════════════════════
@@ -2229,6 +2252,13 @@ function openShareSheet({ icon, title, sub, text }) {
   document.getElementById('share-preview-sub').textContent = sub;
   document.getElementById('sheet-share').dataset.text = text;
   openSheet('sheet-share');
+  const panel = document.getElementById('share-text-panel');
+  const body  = document.getElementById('share-text-panel-body');
+  if (panel && body) {
+    body.textContent = text;
+    panel.style.display = 'flex';
+    requestAnimationFrame(() => panel.classList.add('visible'));
+  }
 }
 
 function shareShoppingList() {
@@ -2241,7 +2271,14 @@ function shareShoppingList() {
   openShareSheet({ icon: '🛒', title: 'Shopping List', sub, text });
 }
 
-function closeShareSheet() { closeSheet('sheet-share'); }
+function closeShareSheet() {
+  closeSheet('sheet-share');
+  const panel = document.getElementById('share-text-panel');
+  if (panel) {
+    panel.classList.remove('visible');
+    setTimeout(() => { panel.style.display = 'none'; }, 250);
+  }
+}
 
 function shareViaApp(app) {
   const labels = { airdrop:'AirDrop', messages:'Messages', mail:'Mail', whatsapp:'WhatsApp', notes:'Notes', more:'More' };
