@@ -276,6 +276,8 @@ input.budget-slider::-moz-range-thumb {
 .shop-qty { font-size: 13px; color: var(--gray); margin-top: 1px; }
 .shop-cost { font: 700 15px/1 'Inter',sans-serif; color: var(--p); flex-shrink: 0; }
 .shop-row.bought .shop-name { text-decoration: line-through; color: var(--gray); }
+.shop-emoji { width: 36px; height: 36px; border-radius: 8px; background: rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: opacity 0.2s; }
+.shop-row.bought .shop-emoji { opacity: 0.4; }
 
 /* ── COST CARD ── */
 .cost-card {
@@ -1730,6 +1732,43 @@ function addMissingToShop(recipeId) {
 // ══════════════════════════════════
 //  SHOPPING
 // ══════════════════════════════════
+function ingredientEmoji(name) {
+  const keywords = [
+    ['spring onion','🌿'],['bok choy','🥬'],['bell pepper','🫑'],
+    ['sweet potato','🍠'],['oyster sauce','🫙'],['cooking oil','🫚'],
+    ['fish sauce','🫙'],['soy sauce','🫙'],['chili sauce','🫙'],
+    ['strawberry','🍓'],['blueberry','🫐'],['pineapple','🍍'],
+    ['watermelon','🍉'],['eggplant','🍆'],['aubergine','🍆'],
+    ['cucumber','🥒'],['capsicum','🫑'],['broccoli','🥦'],
+    ['mushroom','🍄'],['cabbage','🥬'],['avocado','🥑'],
+    ['chicken','🍗'],['sausage','🌭'],['vinegar','🫙'],
+    ['yogurt','🥛'],['cheese','🧀'],['butter','🧈'],
+    ['shrimp','🦐'],['salmon','🐟'],['oyster','🦪'],
+    ['noodle','🍜'],['prawn','🦐'],['lychee','🍈'],
+    ['coffee','☕'],['cherry','🍒'],['potato','🥔'],
+    ['tomato','🍅'],['carrot','🥕'],['onion','🧅'],
+    ['garlic','🧄'],['banana','🍌'],['orange','🍊'],
+    ['mango','🥭'],['peach','🍑'],['grape','🍇'],
+    ['lemon','🍋'],['bread','🍞'],['flour','🌾'],
+    ['sugar','🍬'],['honey','🍯'],['juice','🧃'],
+    ['beans','🫘'],['apple','🍎'],['pasta','🍝'],
+    ['pear','🍐'],['kiwi','🥝'],['corn','🌽'],
+    ['tofu','🫘'],['peas','🫛'],['beef','🥩'],
+    ['pork','🥩'],['lamb','🥩'],['duck','🍗'],
+    ['steak','🥩'],['tuna','🐟'],['fish','🐟'],
+    ['squid','🦑'],['crab','🦀'],['bacon','🥓'],
+    ['milk','🥛'],['cream','🥛'],['rice','🍚'],
+    ['oat','🌾'],['egg','🥚'],['ham','🥓'],
+    ['oil','🫚'],['salt','🧂'],['sauce','🫙'],
+    ['paste','🫙'],['stock','🫙'],['broth','🫙'],
+    ['canned','🥫'],['water','💧'],['lime','🍋'],
+    ['melon','🍈'],['tea','🍵'],
+  ].sort((a,b) => b[0].length - a[0].length);
+  const lower = name.toLowerCase();
+  const match = keywords.find(([kw]) => lower.includes(kw));
+  return match ? match[1] : '🛒';
+}
+
 function renderShop() {
   const el = document.getElementById('pane-shop');
   if (S.shopping.length === 0) {
@@ -1783,6 +1822,7 @@ function renderShop() {
         <span class="shop-check" style="color:${item.purchased?'var(--success)':'var(--border)'}">
           ${item.purchased ? IC.checkFill : IC.circle}
         </span>
+        <span class="shop-emoji">${ingredientEmoji(item.name)}</span>
         <div class="shop-info">
           <div class="shop-name">${item.name}</div>
           <div class="shop-qty">${item.qty} ${item.unit}</div>
