@@ -286,6 +286,8 @@ input.budget-slider::-moz-range-thumb {
 .shop-row.bought .shop-name { text-decoration: line-through; color: var(--gray); }
 .shop-emoji { width: 36px; height: 36px; border-radius: 8px; background: rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: opacity 0.2s; }
 .shop-row.bought .shop-emoji { opacity: 0.4; }
+.shop-row.partial .shop-name { color: var(--gray); }
+.shop-source { font-size: 11px; color: var(--gray); margin-top: 2px; opacity: 0.75; }
 
 /* ── COST CARD ── */
 .cost-card {
@@ -1047,6 +1049,7 @@ const IC = {
   camera: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
   checkFill: `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5-3.5-3.5 1.41-1.41L10 13.67l6.09-6.09L17.5 9 10 16.5z"/></svg>`,
   circle: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/></svg>`,
+  minusCircle: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
   forkKnife: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="21" y1="15" x2="21" y2="22"/><path d="M21 2a4 4 0 0 0-4 4v5h4"/></svg>`,
   checkCircle: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>`,
   cartPlus: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/><line x1="19" y1="3" x2="19" y2="9"/><line x1="16" y1="6" x2="22" y2="6"/></svg>`,
@@ -2066,7 +2069,12 @@ function addMissingToShop(recipeId) {
   if (!r) return;
   let added = 0;
   r.buy.forEach(item => {
-    if (!S.shopping.find(s=>s.name===item.name)) {
+    const alreadyAdded = S.shopping.find(s =>
+      s.name.toLowerCase() === item.name.toLowerCase() &&
+      s.unit.toLowerCase() === item.unit.toLowerCase() &&
+      s.recipe === item.recipe
+    );
+    if (!alreadyAdded) {
       S.shopping.push({...item, purchased:false, id:Date.now()+Math.random()});
       added++;
     }
@@ -2120,6 +2128,27 @@ function ingredientEmoji(name) {
   return match ? match[1] : '🛒';
 }
 
+function computeAggregated() {
+  const map = {};
+  S.shopping.forEach(item => {
+    const key = `${item.name.toLowerCase()}|${item.unit.toLowerCase()}`;
+    if (!map[key]) {
+      map[key] = { key, name: item.name, unit: item.unit, totalQty: 0, cost: item.cost, sources: [] };
+    }
+    map[key].totalQty += item.qty;
+    if (map[key].cost == null) map[key].cost = item.cost;
+    map[key].sources.push(item);
+  });
+  return Object.values(map)
+    .map(ag => {
+      ag.sources.sort((a, b) => (a.recipe || '').localeCompare(b.recipe || ''));
+      ag.isPurchased = ag.sources.every(s => s.purchased);
+      ag.isPartial   = ag.sources.some(s => s.purchased) && !ag.isPurchased;
+      return ag;
+    })
+    .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+}
+
 function renderShop() {
   const el = document.getElementById('pane-shop');
   if (S.shopping.length === 0) {
@@ -2137,18 +2166,17 @@ function renderShop() {
     return;
   }
 
-  const bought = S.shopping.filter(i=>i.purchased).length;
-  const totalAll  = S.shopping.reduce((s,i)=>s+i.cost,0);
-
-  const groups = {};
-  S.shopping.forEach(i => (groups[i.recipe]=groups[i.recipe]||[]).push(i));
+  const aggregated = computeAggregated();
+  const boughtCount = aggregated.filter(ag => ag.isPurchased).length;
+  const totalAll    = S.shopping.reduce((s, i) => s + (i.cost || 0), 0);
+  const anyPurchased = S.shopping.some(i => i.purchased);
 
   let h = `
     <div class="tab-nav">
       ${tabNavLeading()}
       <div class="tab-nav-trailing" style="gap:4px">
         <button class="icon-btn" title="Share shopping list" onclick="shareShoppingList()">${IC.share}</button>
-        ${bought>0?`<button class="icon-btn" style="color:var(--danger);font:600 13px/1 Inter,sans-serif;width:auto;padding:0 8px;white-space:nowrap" onclick="clearBoughtConfirm()">${t('shopping.clear_bought')}</button>`:''}
+        ${anyPurchased ? `<button class="icon-btn" style="color:var(--danger);font:600 13px/1 Inter,sans-serif;width:auto;padding:0 8px;white-space:nowrap" onclick="clearBoughtConfirm()">${t('shopping.clear_bought')}</button>` : ''}
       </div>
     </div>
     <div class="ltitle">${t('shopping.title')}</div>
@@ -2160,53 +2188,64 @@ function renderShop() {
             <div class="amount">HK$${totalAll}</div>
           </div>
           <div class="cost-rhs">
-            <span style="font:500 12px/1 Inter,sans-serif;color:var(--gray)">${STRINGS[S.lang]['shopping.items'](S.shopping.length)}</span>
-            ${bought>0?`<span style="font:600 12px/1 Inter,sans-serif;color:var(--gray)">${STRINGS[S.lang]['shopping.bought'](bought)}</span>`:''}
+            <span style="font:500 12px/1 Inter,sans-serif;color:var(--gray)">${STRINGS[S.lang]['shopping.items'](aggregated.length)}</span>
+            ${boughtCount > 0 ? `<span style="font:600 12px/1 Inter,sans-serif;color:var(--gray)">${STRINGS[S.lang]['shopping.bought'](boughtCount)}</span>` : ''}
           </div>
         </div>
-      </div>`;
+      </div>
+      <div style="margin:12px 16px 0"><div class="inset">`;
 
-  Object.keys(groups).sort().forEach(recipe => {
-    h += `<div class="sec-hdr">${recipe}</div><div class="inset">`;
-    groups[recipe].forEach(item => {
-      h += `
-      <div class="swipe-row-wrap" data-swipe-id="${item.id}">
+  aggregated.forEach(ag => {
+    const rowClass    = ag.isPurchased ? 'bought' : (ag.isPartial ? 'partial' : '');
+    const checkIcon   = ag.isPurchased ? IC.checkFill : (ag.isPartial ? IC.minusCircle : IC.circle);
+    const checkColor  = ag.isPurchased ? 'var(--success)' : (ag.isPartial ? 'var(--scan)' : 'var(--border)');
+    const emojiOpacity = ag.isPurchased ? '0.4' : '1';
+    const costColor   = ag.isPurchased ? 'var(--gray)' : 'var(--p)';
+    const sourcesHtml = ag.sources.map(s =>
+      `<div class="shop-source">· ${s.recipe || 'Other'} &nbsp; ${s.qty} ${s.unit}</div>`
+    ).join('');
+    h += `
+      <div class="swipe-row-wrap" data-swipe-id="${ag.key}">
         <div class="swipe-row-trailing">
-          <button class="swipe-action-btn" style="background:#FF3B30" onclick="removeShoppingItem(${JSON.stringify(item.id)})">
+          <button class="swipe-action-btn" style="background:#FF3B30" onclick="removeAggregated(${JSON.stringify(ag.key)})">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             ${t('common.delete')}
           </button>
         </div>
-        <div class="swipe-row-content shop-row ${item.purchased?'bought':''}" onclick="togglePurchased(${JSON.stringify(item.id)})">
-          <span class="shop-check" style="color:${item.purchased?'var(--success)':'var(--border)'}">
-            ${item.purchased ? IC.checkFill : IC.circle}
-          </span>
-          <span class="shop-emoji">${ingredientEmoji(item.name)}</span>
+        <div class="swipe-row-content shop-row ${rowClass}" onclick="toggleAggregated(${JSON.stringify(ag.key)})">
+          <span class="shop-check" style="color:${checkColor}">${checkIcon}</span>
+          <span class="shop-emoji" style="opacity:${emojiOpacity}">${ingredientEmoji(ag.name)}</span>
           <div class="shop-info">
-            <div class="shop-name">${item.name}</div>
-            <div class="shop-qty">${item.qty} ${item.unit}</div>
+            <div class="shop-name">${ag.name}</div>
+            <div class="shop-qty">${ag.totalQty} ${ag.unit}</div>
+            ${sourcesHtml}
           </div>
-          <span class="shop-cost">${item.cost != null ? 'HK$'+item.cost : '—'}</span>
+          <span class="shop-cost" style="color:${costColor}">${ag.cost != null ? 'HK$' + ag.cost : '—'}</span>
         </div>
       </div>`;
-    });
-    h += `</div>`;
   });
-  h += `</div>`;
+
+  h += `</div></div></div>`;
   el.innerHTML = h;
   el.querySelectorAll('.swipe-row-wrap').forEach(wrap => {
     initTrailingOnlySwipeRow(wrap.dataset.swipeId);
   });
 }
 
-function togglePurchased(id) {
-  const item = S.shopping.find(i=>i.id===id);
-  if (item) { item.purchased = !item.purchased; renderShop(); }
+function toggleAggregated(key) {
+  const sources = S.shopping.filter(i =>
+    `${i.name.toLowerCase()}|${i.unit.toLowerCase()}` === key
+  );
+  const allPurchased = sources.every(i => i.purchased);
+  sources.forEach(i => { i.purchased = !allPurchased; });
+  renderShop();
 }
 
-function removeShoppingItem(id) {
-  if (openSwipeId === id) { openSwipeId = null; openSwipeDir = null; }
-  S.shopping = S.shopping.filter(i => i.id !== id);
+function removeAggregated(key) {
+  if (openSwipeId === key) { openSwipeId = null; openSwipeDir = null; }
+  S.shopping = S.shopping.filter(i =>
+    `${i.name.toLowerCase()}|${i.unit.toLowerCase()}` !== key
+  );
   renderShop();
 }
 
@@ -2221,20 +2260,17 @@ function clearBoughtConfirm() {
 
 function buildShareText() {
   const lines = ['Shopping List'];
-  const totalAll = S.shopping.reduce((s,i)=>s+(i.cost||0),0);
+  const totalAll = S.shopping.reduce((s, i) => s + (i.cost || 0), 0);
   if (totalAll > 0) lines.push('Total: HK$' + totalAll);
   lines.push('');
-  const groups = {};
-  S.shopping.forEach(i => (groups[i.recipe]=groups[i.recipe]||[]).push(i));
-  Object.keys(groups).sort().forEach(recipe => {
-    lines.push(recipe + ':');
-    groups[recipe].forEach(item => {
-      const status = item.purchased ? '✓' : '○';
-      let row = `${status} ${item.name} – ${item.qty} ${item.unit}`;
-      if (item.cost != null) row += ` (HK$${item.cost})`;
-      lines.push(row);
+  computeAggregated().forEach(ag => {
+    const status = ag.isPurchased ? '✓' : (ag.isPartial ? '◑' : '○');
+    let row = `${status} ${ag.name} – ${ag.totalQty} ${ag.unit}`;
+    if (ag.cost != null) row += ` (HK$${ag.cost}/${ag.unit})`;
+    lines.push(row);
+    ag.sources.forEach(s => {
+      lines.push(`   · ${s.recipe || 'Other'}: ${s.qty} ${s.unit}`);
     });
-    lines.push('');
   });
   return lines.join('\n').trim();
 }
@@ -2256,9 +2292,10 @@ function openShareSheet({ icon, title, sub, text }) {
 
 function shareShoppingList() {
   const text = buildShareText();
-  const total = S.shopping.reduce((s,i)=>s+(i.cost||0),0);
-  const bought = S.shopping.filter(i=>i.purchased).length;
-  let sub = STRINGS[S.lang]['shopping.items'](S.shopping.length);
+  const aggregated = computeAggregated();
+  const total  = S.shopping.reduce((s, i) => s + (i.cost || 0), 0);
+  const bought = aggregated.filter(ag => ag.isPurchased).length;
+  let sub = STRINGS[S.lang]['shopping.items'](aggregated.length);
   if (total > 0) sub += ` · HK$${total}`;
   if (bought > 0) sub += ` · ${STRINGS[S.lang]['shopping.bought'](bought)}`;
   openShareSheet({ icon: '🛒', title: 'Shopping List', sub, text });

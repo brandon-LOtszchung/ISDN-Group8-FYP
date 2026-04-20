@@ -2,6 +2,24 @@
 import Foundation
 import Supabase
 
+// MARK: - Aggregated Item
+
+struct AggregatedShoppingItem: Identifiable {
+    var id: String { "\(name.lowercased())|\(unit.lowercased())" }
+    var name: String
+    var unit: String
+    var totalQuantity: Double
+    var estimatedUnitCost: Double?
+    var alternatives: [String]
+    /// Underlying items, one per source recipe, sorted by recipe name.
+    var sources: [ShoppingListItem]
+
+    var isPurchased: Bool { sources.allSatisfy(\.isPurchased) }
+    var isPartiallyPurchased: Bool { sources.contains(where: \.isPurchased) && !isPurchased }
+}
+
+// MARK: - ViewModel
+
 @Observable
 @MainActor
 final class ShoppingViewModel {
@@ -24,6 +42,30 @@ final class ShoppingViewModel {
         Dictionary(grouping: items) { $0.recipeName ?? "Other" }
     }
 
+    /// Items merged by (name, unit) across all recipes, sorted alphabetically by name.
+    var aggregatedItems: [AggregatedShoppingItem] {
+        var groups: [String: [ShoppingListItem]] = [:]
+        for item in items {
+            let key = "\(item.name.lowercased())|\(item.unit.lowercased())"
+            groups[key, default: []].append(item)
+        }
+        return groups.values.map { groupItems in
+            let sorted = groupItems.sorted { ($0.recipeName ?? "") < ($1.recipeName ?? "") }
+            return AggregatedShoppingItem(
+                name: sorted[0].name,
+                unit: sorted[0].unit,
+                totalQuantity: sorted.reduce(0) { $0 + $1.quantity },
+                estimatedUnitCost: sorted.compactMap(\.estimatedUnitCost).first,
+                alternatives: Array(Set(sorted.flatMap(\.alternatives))),
+                sources: sorted
+            )
+        }.sorted { $0.name.lowercased() < $1.name.lowercased() }
+    }
+
+    var aggregatedPurchasedCount: Int {
+        aggregatedItems.filter(\.isPurchased).count
+    }
+
     func load() async {
         isLoading = true
         defer { isLoading = false }
@@ -41,6 +83,30 @@ final class ShoppingViewModel {
         let updated = items[idx]
         Task {
             do { try await supabase.updateShoppingItem(updated) }
+            catch { self.error = error.localizedDescription }
+        }
+    }
+
+    /// Marks all underlying items for an aggregated entry purchased/unpurchased together.
+    func toggleAggregated(_ aggregated: AggregatedShoppingItem) {
+        let newPurchased = !aggregated.isPurchased
+        for source in aggregated.sources {
+            guard let idx = items.firstIndex(where: { $0.id == source.id }) else { continue }
+            items[idx].isPurchased = newPurchased
+            let updated = items[idx]
+            Task {
+                do { try await supabase.updateShoppingItem(updated) }
+                catch { self.error = error.localizedDescription }
+            }
+        }
+    }
+
+    /// Removes all underlying items for an aggregated entry.
+    func removeAggregated(_ aggregated: AggregatedShoppingItem) {
+        let ids = aggregated.sources.map(\.id)
+        items.removeAll { ids.contains($0.id) }
+        Task {
+            do { try await supabase.deleteShoppingListItems(ids: ids) }
             catch { self.error = error.localizedDescription }
         }
     }
