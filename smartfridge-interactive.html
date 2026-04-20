@@ -859,11 +859,11 @@ const RECIPES = [
   { id:'r1', name:'Steamed Chicken with Ginger', cuisine:'Cantonese', match:85, kcal:320,
     emoji:'🍗', bg:'linear-gradient(135deg,#FFE0C0 0%,#FFBA7A 100%)',
     ingredients:[
-      {name:'Chicken Thigh',qty:'500g',   have:true },
-      {name:'Ginger',       qty:'30g',    have:false},
-      {name:'Soy Sauce',    qty:'2 tbsp', have:true },
-      {name:'Sesame Oil',   qty:'1 tsp',  have:true },
-      {name:'Spring Onion', qty:'3',      have:true },
+      {name:'Chicken Thigh',quantity:500, unit:'g',      have:true },
+      {name:'Ginger',       quantity:30,  unit:'g',      have:false},
+      {name:'Soy Sauce',    quantity:2,   unit:'tbsp',   have:true },
+      {name:'Sesame Oil',   quantity:1,   unit:'tsp',    have:true },
+      {name:'Spring Onion', quantity:3,   unit:'',       have:true },
     ],
     steps:[
       'Clean and pat dry the chicken thighs. Score lightly on both sides.',
@@ -878,10 +878,10 @@ const RECIPES = [
   { id:'r2', name:'Bok Choy with Oyster Sauce', cuisine:'Cantonese', match:100, kcal:95,
     emoji:'🥬', bg:'linear-gradient(135deg,#BAFAD2 0%,#5DD88A 100%)',
     ingredients:[
-      {name:'Bok Choy',     qty:'300g',   have:true},
-      {name:'Oyster Sauce', qty:'2 tbsp', have:true},
-      {name:'Garlic',       qty:'3 cloves',have:true},
-      {name:'Sesame Oil',   qty:'1 tsp',  have:true},
+      {name:'Bok Choy',     quantity:300, unit:'g',      have:true},
+      {name:'Oyster Sauce', quantity:2,   unit:'tbsp',   have:true},
+      {name:'Garlic',       quantity:3,   unit:'cloves', have:true},
+      {name:'Sesame Oil',   quantity:1,   unit:'tsp',    have:true},
     ],
     steps:[
       'Wash bok choy and halve lengthwise if large.',
@@ -896,13 +896,13 @@ const RECIPES = [
   { id:'r3', name:'Mapo Tofu', cuisine:'Sichuan', match:60, kcal:380,
     emoji:'🫕', bg:'linear-gradient(135deg,#FFCDC5 0%,#FF7A6A 100%)',
     ingredients:[
-      {name:'Silken Tofu',      qty:'1 block',have:false},
-      {name:'Pork Belly',       qty:'150g',  have:true },
-      {name:'Doubanjiang',      qty:'2 tbsp',have:false},
-      {name:'Sichuan Peppercorn',qty:'1 tsp',have:false},
-      {name:'Garlic',           qty:'4 cloves',have:true},
-      {name:'Spring Onion',     qty:'2',     have:true },
-      {name:'Soy Sauce',        qty:'1 tbsp',have:true },
+      {name:'Silken Tofu',       quantity:1,   unit:'block',  have:false},
+      {name:'Pork Belly',        quantity:150, unit:'g',      have:true },
+      {name:'Doubanjiang',       quantity:2,   unit:'tbsp',   have:false},
+      {name:'Sichuan Peppercorn',quantity:1,   unit:'tsp',    have:false},
+      {name:'Garlic',            quantity:4,   unit:'cloves', have:true },
+      {name:'Spring Onion',      quantity:2,   unit:'',       have:true },
+      {name:'Soy Sauce',         quantity:1,   unit:'tbsp',   have:true },
     ],
     steps:[
       'Cut tofu into 2cm cubes. Blanch in salted boiling water 2 minutes.',
@@ -922,12 +922,12 @@ const RECIPES = [
   { id:'r4', name:'Garlic Fried Rice', cuisine:'Chinese', match:95, kcal:410,
     emoji:'🍳', bg:'linear-gradient(135deg,#FFF6C2 0%,#FFD94A 100%)',
     ingredients:[
-      {name:'Rice',        qty:'2 cups', have:true},
-      {name:'Eggs',        qty:'2',      have:true},
-      {name:'Garlic',      qty:'5 cloves',have:true},
-      {name:'Soy Sauce',   qty:'1 tbsp', have:true},
-      {name:'Spring Onion',qty:'2',      have:true},
-      {name:'Sesame Oil',  qty:'1 tsp',  have:true},
+      {name:'Rice',        quantity:2,   unit:'cups',   have:true},
+      {name:'Eggs',        quantity:2,   unit:'',       have:true},
+      {name:'Garlic',      quantity:5,   unit:'cloves', have:true},
+      {name:'Soy Sauce',   quantity:1,   unit:'tbsp',   have:true},
+      {name:'Spring Onion',quantity:2,   unit:'',       have:true},
+      {name:'Sesame Oil',  quantity:1,   unit:'tsp',    have:true},
     ],
     steps:[
       'Use day-old rice for best results. Break up any clumps.',
@@ -943,12 +943,12 @@ const RECIPES = [
   { id:'r5', name:'Teriyaki Salmon', cuisine:'Japanese', match:70, kcal:350,
     emoji:'🐟', bg:'linear-gradient(135deg,#FFE4E8 0%,#FFB3C2 100%)',
     ingredients:[
-      {name:'Salmon Fillet',qty:'200g',  have:true },
-      {name:'Soy Sauce',    qty:'3 tbsp',have:true },
-      {name:'Mirin',        qty:'2 tbsp',have:false},
-      {name:'Brown Sugar',  qty:'1 tbsp',have:false},
-      {name:'Garlic',       qty:'2 cloves',have:true},
-      {name:'Sesame Oil',   qty:'1 tsp', have:true },
+      {name:'Salmon Fillet',quantity:200, unit:'g',      have:true },
+      {name:'Soy Sauce',    quantity:3,   unit:'tbsp',   have:true },
+      {name:'Mirin',        quantity:2,   unit:'tbsp',   have:false},
+      {name:'Brown Sugar',  quantity:1,   unit:'tbsp',   have:false},
+      {name:'Garlic',       quantity:2,   unit:'cloves', have:true },
+      {name:'Sesame Oil',   quantity:1,   unit:'tsp',    have:true },
     ],
     steps:[
       'Combine soy sauce, mirin, brown sugar, and garlic for the sauce.',
@@ -967,13 +967,13 @@ const RECIPES = [
   { id:'r6', name:'Bibimbap', cuisine:'Korean', match:55, kcal:490,
     emoji:'🥘', bg:'linear-gradient(135deg,#FFD8B8 0%,#FF8C5A 100%)',
     ingredients:[
-      {name:'Rice',         qty:'2 cups', have:true },
-      {name:'Gochujang',    qty:'2 tbsp', have:false},
-      {name:'Eggs',         qty:'2',      have:true },
-      {name:'Sesame Oil',   qty:'2 tsp',  have:true },
-      {name:'Garlic',       qty:'3 cloves',have:true},
-      {name:'Spinach',      qty:'100g',   have:false},
-      {name:'Carrots',      qty:'1',      have:false},
+      {name:'Rice',         quantity:2,   unit:'cups',   have:true },
+      {name:'Gochujang',    quantity:2,   unit:'tbsp',   have:false},
+      {name:'Eggs',         quantity:2,   unit:'',       have:true },
+      {name:'Sesame Oil',   quantity:2,   unit:'tsp',    have:true },
+      {name:'Garlic',       quantity:3,   unit:'cloves', have:true },
+      {name:'Spinach',      quantity:100, unit:'g',      have:false},
+      {name:'Carrots',      quantity:1,   unit:'',       have:false},
     ],
     steps:[
       'Cook rice and keep warm.',
@@ -992,12 +992,12 @@ const RECIPES = [
   { id:'r7', name:'Chicken Adobo', cuisine:'Filipino', match:75, kcal:430,
     emoji:'🍖', bg:'linear-gradient(135deg,#E8D8C0 0%,#C49A6C 100%)',
     ingredients:[
-      {name:'Chicken Thigh',qty:'500g',   have:true },
-      {name:'Soy Sauce',    qty:'4 tbsp', have:true },
-      {name:'White Vinegar',qty:'3 tbsp', have:false},
-      {name:'Garlic',       qty:'6 cloves',have:true},
-      {name:'Bay Leaves',   qty:'3',      have:false},
-      {name:'Black Pepper', qty:'1 tsp',  have:false},
+      {name:'Chicken Thigh',quantity:500, unit:'g',      have:true },
+      {name:'Soy Sauce',    quantity:4,   unit:'tbsp',   have:true },
+      {name:'White Vinegar',quantity:3,   unit:'tbsp',   have:false},
+      {name:'Garlic',       quantity:6,   unit:'cloves', have:true },
+      {name:'Bay Leaves',   quantity:3,   unit:'',       have:false},
+      {name:'Black Pepper', quantity:1,   unit:'tsp',    have:false},
     ],
     steps:[
       'Combine soy sauce, vinegar, garlic, bay leaves and pepper.',
@@ -1017,12 +1017,12 @@ const RECIPES = [
   { id:'r8', name:'Nasi Goreng', cuisine:'Indonesian', match:65, kcal:520,
     emoji:'🍜', bg:'linear-gradient(135deg,#FFF0C0 0%,#FFCC55 100%)',
     ingredients:[
-      {name:'Rice',         qty:'2 cups', have:true },
-      {name:'Eggs',         qty:'2',      have:true },
-      {name:'Kecap Manis',  qty:'2 tbsp', have:false},
-      {name:'Garlic',       qty:'4 cloves',have:true},
-      {name:'Shrimp Paste', qty:'1 tsp',  have:false},
-      {name:'Spring Onion', qty:'3',      have:true },
+      {name:'Rice',         quantity:2,   unit:'cups',   have:true },
+      {name:'Eggs',         quantity:2,   unit:'',       have:true },
+      {name:'Kecap Manis',  quantity:2,   unit:'tbsp',   have:false},
+      {name:'Garlic',       quantity:4,   unit:'cloves', have:true },
+      {name:'Shrimp Paste', quantity:1,   unit:'tsp',    have:false},
+      {name:'Spring Onion', quantity:3,   unit:'',       have:true },
     ],
     steps:[
       'Use cold leftover rice for best results.',
@@ -1995,13 +1995,19 @@ function renderDetail() {
 
   let tabContent = '';
   if (S.detailTab === 0) {
-    tabContent = r.ingredients.map(ing => `
+    const missingPct = ing => {
+        if (ing.quantity <= 0) return 0;
+        const inv = S.inventory.find(x => x.name.toLowerCase() === ing.name.toLowerCase());
+        const available = inv ? inv.qty : 0;
+        return Math.max(0, ing.quantity - available) / ing.quantity;
+      };
+    tabContent = r.ingredients.slice().sort((a,b) => missingPct(b) - missingPct(a)).map(ing => `
       <div class="ing-row">
         <span class="ing-icon" style="color:${ing.have?'var(--success)':'var(--border)'}">
           ${ing.have ? IC.checkFill : IC.circle}
         </span>
         <span class="ing-name">${ing.name}</span>
-        <span class="ing-qty">${ing.qty}</span>
+        <span class="ing-qty">${ing.quantity}${ing.unit ? ' ' + ing.unit : ''}</span>
         <span class="ing-tag ${ing.have?'have':'need'}">${ing.have?t('recipe.in_fridge'):t('recipe.need_to_buy')}</span>
       </div>`).join('');
   } else {
@@ -2051,7 +2057,7 @@ function shareRecipe(recipeId) {
   const r = RECIPES.find(x=>x.id===recipeId);
   if (!r) return;
   const kcalLine = r.kcal != null ? `Energy: ~${r.kcal} kcal per serving` : '';
-  const ingredients = r.ingredients.map(i => `  • ${i.name} — ${i.qty}`).join('\n');
+  const ingredients = r.ingredients.map(i => `  • ${i.name} — ${i.quantity}${i.unit ? ' ' + i.unit : ''}`).join('\n');
   const steps = r.steps.map((s, i) => `  ${i + 1}. ${s}`).join('\n');
   const text = [
     `${r.emoji} ${r.name}`,

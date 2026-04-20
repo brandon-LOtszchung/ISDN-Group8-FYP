@@ -128,8 +128,18 @@ struct RecipeDetailView: View {
 
     @ViewBuilder
     private func ingredientsList(_ detail: RecipeDetail) -> some View {
+        let sortedIngredients = detail.ingredients.sorted { lhs, rhs in
+            func missingPct(_ ing: RecipeIngredient) -> Double {
+                guard ing.quantity > 0 else { return 0 }
+                let available = appVM.inventory
+                    .first { $0.name.localizedCaseInsensitiveCompare(ing.name) == .orderedSame }
+                    .map(\.quantity) ?? 0
+                return max(0, ing.quantity - available) / ing.quantity
+            }
+            return missingPct(lhs) > missingPct(rhs)
+        }
         VStack(spacing: 0) {
-            ForEach(detail.ingredients, id: \.name) { ing in
+            ForEach(sortedIngredients, id: \.name) { ing in
                 // An ingredient is "in fridge" when it appears in the local inventory
                 let inFridge = appVM.inventory.contains {
                     $0.name.localizedCaseInsensitiveCompare(ing.name) == .orderedSame
