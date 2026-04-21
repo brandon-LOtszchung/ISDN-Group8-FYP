@@ -76,6 +76,7 @@ struct RecipeRecommendation: Codable, Identifiable {
     var matchedCount: Int
     var totalCount: Int
     var missingCount: Int
+    var calories: Int?          // decoded from API when present; nil otherwise
 }
 
 /// Returned by GET /api/recipes/{id}
@@ -88,6 +89,7 @@ struct RecipeDetail: Codable {
     var ingredients: [RecipeIngredient]
     var steps: [String]
     var missingIngredients: [MissingIngredient]
+    var calories: Int?          // decoded from API when present; nil otherwise
 }
 
 struct RecipeIngredient: Codable {

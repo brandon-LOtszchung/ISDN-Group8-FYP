@@ -88,6 +88,22 @@ final class AppViewModel {
         }
     }
 
+    func addMember(_ member: FamilyMember) {
+        members.append(member)
+        Task {
+            do { try await supabase.upsertMember(member) }
+            catch { self.error = error.localizedDescription }
+        }
+    }
+
+    func deleteMember(id: UUID) {
+        members.removeAll { $0.id == id }
+        Task {
+            do { try await supabase.deleteMember(id: id) }
+            catch { self.error = error.localizedDescription }
+        }
+    }
+
     func updateMember(_ member: FamilyMember) {
         if let idx = members.firstIndex(where: { $0.id == member.id }) {
             members[idx] = member

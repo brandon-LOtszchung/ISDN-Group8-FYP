@@ -21,18 +21,17 @@ struct ShoppingListView: View {
             lines.append("\(String(localized: "shopping.total")): \(total)")
         }
         lines.append("")
-        for recipe in shoppingVM.itemsGroupedByRecipe.keys.sorted() {
-            lines.append("\(recipe):")
-            for item in shoppingVM.itemsGroupedByRecipe[recipe] ?? [] {
-                let status = item.isPurchased ? "✓" : "○"
-                var row = "\(status) \(item.name) – \(Int(item.quantity)) \(item.unit)"
-                if let cost = item.estimatedUnitCost,
-                   let formatted = Self.hkdFormatter.string(from: NSNumber(value: cost)) {
-                    row += " (\(formatted))"
-                }
-                lines.append(row)
+        for item in shoppingVM.aggregatedItems {
+            let status = item.isPurchased ? "✓" : (item.isPartiallyPurchased ? "◑" : "○")
+            var row = "\(status) \(item.name) – \(Int(item.totalQuantity)) \(item.unit)"
+            if let cost = item.estimatedUnitCost,
+               let formatted = Self.hkdFormatter.string(from: NSNumber(value: cost)) {
+                row += " (\(formatted)/\(item.unit))"
             }
-            lines.append("")
+            lines.append(row)
+            for source in item.sources {
+                lines.append("   · \(source.recipeName ?? "Other"): \(Int(source.quantity)) \(source.unit)")
+            }
         }
         return lines.joined(separator: "\n").trimmingCharacters(in: .newlines)
     }
@@ -95,28 +94,26 @@ struct ShoppingListView: View {
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
-                        Text(String(format: String(localized: "shopping.items"), shoppingVM.items.count))
+                        Text(String(format: String(localized: "shopping.items"), shoppingVM.aggregatedItems.count))
                             .font(.caption).foregroundStyle(.secondary)
-                        Text(String(format: String(localized: "shopping.bought"), shoppingVM.purchasedItemIDs.count))
+                        Text(String(format: String(localized: "shopping.bought"), shoppingVM.aggregatedPurchasedCount))
                             .font(.caption).foregroundStyle(.secondary)
                     }
                 }
                 .padding(.vertical, 4)
             }
 
-            // Items grouped by recipe
-            ForEach(shoppingVM.itemsGroupedByRecipe.keys.sorted(), id: \.self) { recipe in
-                Section(recipe) {
-                    ForEach(shoppingVM.itemsGroupedByRecipe[recipe] ?? []) { item in
-                        ShoppingItemRow(item: item) {
-                            shoppingVM.togglePurchased(item)
-                        }
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                shoppingVM.removeItem(id: item.id)
-                            } label: {
-                                Label(String(localized: "common.delete"), systemImage: "trash")
-                            }
+            // Aggregated ingredient list
+            Section {
+                ForEach(shoppingVM.aggregatedItems) { item in
+                    AggregatedItemRow(item: item) {
+                        shoppingVM.toggleAggregated(item)
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            shoppingVM.removeAggregated(item)
+                        } label: {
+                            Label(String(localized: "common.delete"), systemImage: "trash")
                         }
                     }
                 }
@@ -126,33 +123,48 @@ struct ShoppingListView: View {
     }
 }
 
-// MARK: - Shopping Item Row
+// MARK: - Aggregated Item Row
 
-private struct ShoppingItemRow: View {
-    let item: ShoppingListItem
+private struct AggregatedItemRow: View {
+    let item: AggregatedShoppingItem
     let onToggle: () -> Void
     @Environment(ThemeManager.self) private var theme
 
     var body: some View {
         Button(action: onToggle) {
             HStack(spacing: 12) {
-                Image(systemName: item.isPurchased ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(item.isPurchased ? theme.colors.success : theme.colors.border)
+                Image(systemName: checkIconName)
+                    .foregroundStyle(checkIconColor)
                     .font(.title3)
+
+                Text(IngredientEmoji.emoji(for: item.name))
+                    .font(.system(size: 20))
+                    .frame(width: 36, height: 36)
+                    .background(.fill.tertiary, in: RoundedRectangle(cornerRadius: 8))
+                    .opacity(item.isPurchased ? 0.4 : 1.0)
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.name)
                         .strikethrough(item.isPurchased)
                         .foregroundStyle(item.isPurchased ? .secondary : theme.colors.text)
                         .font(.body)
-                    Text("\(item.quantity, specifier: "%.0f") \(item.unit)")
+                    Text("\(item.totalQuantity, specifier: "%.0f") \(item.unit)")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                    // Source recipes
+                    ForEach(item.sources) { source in
+                        Text("· \(source.recipeName ?? "Other")  \(source.quantity, specifier: "%.0f") \(source.unit)")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
+                    }
                 }
+
                 Spacer()
+
                 if let cost = item.estimatedUnitCost {
                     Text(ShoppingListView.hkdFormatter.string(from: NSNumber(value: cost)) ?? "—")
                         .font(.subheadline.bold())
-                        .foregroundStyle(theme.colors.primary)
+                        .foregroundStyle(item.isPurchased ? .secondary : theme.colors.primary)
                 } else {
                     Text("—")
                         .font(.subheadline.bold())
@@ -162,8 +174,27 @@ private struct ShoppingItemRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(item.name)
+        .accessibilityValue(accessibilityValue)
         .accessibilityHint(item.isPurchased
             ? String(localized: "shopping.hint.unmark")
             : String(localized: "shopping.hint.mark"))
+    }
+
+    private var checkIconName: String {
+        if item.isPurchased { return "checkmark.circle.fill" }
+        if item.isPartiallyPurchased { return "minus.circle" }
+        return "circle"
+    }
+
+    private var checkIconColor: Color {
+        if item.isPurchased { return theme.colors.success }
+        if item.isPartiallyPurchased { return .orange }
+        return theme.colors.border
+    }
+
+    private var accessibilityValue: String {
+        if item.isPurchased { return "purchased" }
+        if item.isPartiallyPurchased { return "partially purchased" }
+        return "not purchased"
     }
 }

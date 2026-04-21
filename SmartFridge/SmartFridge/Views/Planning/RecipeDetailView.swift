@@ -16,11 +16,15 @@ struct RecipeDetailView: View {
         ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                // Hero
-                Rectangle()
-                    .fill(theme.colors.surfaceAlt)
+                // Hero — per-cuisine gradient with recipe emoji
+                RecipeHero.gradient(for: recommendation.cuisineStyle)
                     .frame(height: 160)
-                    .overlay(Text("🍽️").font(.system(size: heroEmojiSize)).accessibilityHidden(true))
+                    .overlay(
+                        Text(RecipeHero.emoji(for: recommendation.name))
+                            .font(.system(size: heroEmojiSize))
+                            .shadow(color: .black.opacity(0.18), radius: 8, x: 0, y: 4)
+                            .accessibilityHidden(true)
+                    )
                     .id("top")
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -32,6 +36,9 @@ struct RecipeDetailView: View {
                             infoPill(recommendation.cuisineStyle, icon: "fork.knife")
                             infoPill("\(recommendation.matchPercentage)% match", icon: "checkmark.circle")
                             infoPill("\(recommendation.missingCount) missing", icon: "cart.badge.plus")
+                            if let kcal = recommendation.calories ?? RecipeCalories.estimate(for: recommendation.name) {
+                                infoPill("~\(kcal) kcal", icon: "flame")
+                            }
                         }
                     }
 
@@ -121,8 +128,18 @@ struct RecipeDetailView: View {
 
     @ViewBuilder
     private func ingredientsList(_ detail: RecipeDetail) -> some View {
+        let sortedIngredients = detail.ingredients.sorted { lhs, rhs in
+            func missingPct(_ ing: RecipeIngredient) -> Double {
+                guard ing.quantity > 0 else { return 0 }
+                let available = appVM.inventory
+                    .first { $0.name.localizedCaseInsensitiveCompare(ing.name) == .orderedSame }
+                    .map(\.quantity) ?? 0
+                return max(0, ing.quantity - available) / ing.quantity
+            }
+            return missingPct(lhs) > missingPct(rhs)
+        }
         VStack(spacing: 0) {
-            ForEach(detail.ingredients, id: \.name) { ing in
+            ForEach(sortedIngredients, id: \.name) { ing in
                 // An ingredient is "in fridge" when it appears in the local inventory
                 let inFridge = appVM.inventory.contains {
                     $0.name.localizedCaseInsensitiveCompare(ing.name) == .orderedSame

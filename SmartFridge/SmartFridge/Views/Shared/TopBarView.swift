@@ -75,6 +75,9 @@ struct ProfileDrawerView: View {
     @Environment(AppViewModel.self) private var appVM
     @Environment(ThemeManager.self) private var theme
 
+    @State private var showAddMember = false
+    @State private var memberToDelete: FamilyMember? = nil
+
     var body: some View {
         NavigationStack {
             List {
@@ -88,13 +91,54 @@ struct ProfileDrawerView: View {
                         NavigationLink(value: member.id) {
                             ProfileMemberRow(member: member)
                         }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) {
+                                memberToDelete = member
+                            } label: {
+                                Label(String(localized: "common.delete"), systemImage: "trash")
+                            }
+                        }
                     }
                 }
             }
             .navigationTitle(String(localized: "profile.title"))
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showAddMember = true
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                }
+            }
             .navigationDestination(for: UUID.self) { memberId in
                 MemberProfileView(memberId: memberId)
+            }
+            .sheet(isPresented: $showAddMember) {
+                NavigationStack {
+                    MemberProfileView(memberId: nil)
+                }
+                .environment(appVM)
+                .environment(theme)
+            }
+            .alert(
+                String(localized: "profile.member.delete_confirm_title"),
+                isPresented: Binding(
+                    get: { memberToDelete != nil },
+                    set: { if !$0 { memberToDelete = nil } }
+                ),
+                presenting: memberToDelete
+            ) { member in
+                Button(String(localized: "common.delete"), role: .destructive) {
+                    appVM.deleteMember(id: member.id)
+                    memberToDelete = nil
+                }
+                Button(String(localized: "common.cancel"), role: .cancel) {
+                    memberToDelete = nil
+                }
+            } message: { _ in
+                Text(String(localized: "profile.member.delete_confirm_message"))
             }
         }
     }

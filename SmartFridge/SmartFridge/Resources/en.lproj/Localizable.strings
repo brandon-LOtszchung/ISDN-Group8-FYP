@@ -13,7 +13,8 @@
 "onboarding.family_name.hint"      = "e.g. The Chan Family";
 "onboarding.cooking_intro.title"   = "Let's talk about cooking";
 "onboarding.cooking.title"         = "What's your cooking skill level?";
-"onboarding.budget.title"          = "What's your weekly food budget?";
+"onboarding.budget.title"          = "What's your budget per person?";
+"onboarding.budget.per_person"     = "per person";
 "onboarding.members.title"         = "Who's in your family?";
 "onboarding.members.dietary_hint"  = "Dietary preferences and allergies can be set for each member in their profile after setup.";
 "onboarding.summary.title"         = "You're all set!";
@@ -102,6 +103,9 @@
 "profile.member.cuisines"          = "Favourite Cuisines";
 "profile.member.disliked"          = "Disliked Ingredients";
 "profile.member.add_disliked"      = "Add ingredient...";
+"profile.member.add_title"             = "New Member";
+"profile.member.delete_confirm_title"  = "Remove Member?";
+"profile.member.delete_confirm_message" = "This member and their preferences will be permanently removed.";
 
 // Common
 "common.loading"                   = "Loading...";

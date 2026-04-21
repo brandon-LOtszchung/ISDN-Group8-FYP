@@ -13,7 +13,8 @@
 "onboarding.family_name.hint"      = "mis. Keluarga Chan";
 "onboarding.cooking_intro.title"   = "Mari bicara tentang memasak";
 "onboarding.cooking.title"         = "Apa tingkat kemampuan memasak Anda?";
-"onboarding.budget.title"          = "Berapa anggaran makanan mingguan Anda?";
+"onboarding.budget.title"          = "Berapa anggaran makan per orang Anda?";
+"onboarding.budget.per_person"     = "per orang";
 "onboarding.members.title"         = "Siapa saja yang ada di keluarga Anda?";
 "onboarding.members.dietary_hint"  = "Preferensi makanan dan alergi setiap anggota dapat diatur di profil mereka setelah setup selesai.";
 "onboarding.summary.title"         = "Semuanya siap!";
@@ -102,6 +103,9 @@
 "profile.member.cuisines"          = "Masakan Favorit";
 "profile.member.disliked"          = "Bahan yang Tidak Disukai";
 "profile.member.add_disliked"      = "Tambah bahan...";
+"profile.member.add_title"             = "Anggota Baru";
+"profile.member.delete_confirm_title"  = "Hapus Anggota?";
+"profile.member.delete_confirm_message" = "Anggota ini dan preferensinya akan dihapus secara permanen.";
 
 // Common
 "common.loading"                   = "Memuat...";

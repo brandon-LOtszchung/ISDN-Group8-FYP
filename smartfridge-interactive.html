@@ -1,0 +1,2705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartFridge — Interactive Demo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700&display=swap');
+
+:root {
+  --p: #FF6B35; --surface: #FFF8F5; --surface-alt: #FFF0E8;
+  --text: #2C3E50; --gray: #8E8E93; --gray-light: #F2F2F7;
+  --success: #27AE60; --danger: #C0392B; --scan: #F39C12;
+  --border: #E0E0E0; --white: #fff;
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-btn: 0 4px 12px rgba(255,107,53,0.3);
+}
+
+:root[data-theme="cool"] {
+  --p: #16A085;
+  --surface: #F8F9FA;
+  --surface-alt: #F0F4F8;
+  --shadow-btn: 0 4px 12px rgba(22,160,133,0.3);
+}
+
+*,*::before,*::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 24px; gap: 40px;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  color: rgba(255,255,255,0.85); width: 220px; flex-shrink: 0;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.sidebar h2 { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+.flow-item {
+  display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px;
+  font-size: 13px; font-weight: 500; opacity: 0.45; transition: all 0.2s; cursor: pointer;
+}
+.flow-item .fi-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); flex-shrink: 0; transition: all 0.2s; }
+.flow-item.active { background: rgba(255,255,255,0.1); opacity: 1; }
+.flow-item.active .fi-dot { background: var(--p); box-shadow: 0 0 6px var(--p); }
+.flow-item.done { opacity: 0.7; }
+.flow-item.done .fi-dot { background: var(--success); }
+.sidebar-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
+.hint-box {
+  margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.06); border-radius: 10px;
+  font-size: 12px; color: rgba(255,255,255,0.5); line-height: 1.5;
+}
+.hint-box strong { color: rgba(255,255,255,0.8); }
+
+/* ── PHONE FRAME ── */
+.phone-wrap { position: relative; }
+.phone {
+  width: 390px; height: 844px; background: var(--white); border-radius: 50px;
+  overflow: hidden; display: flex; flex-direction: column; position: relative;
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.15), 0 0 0 10px #1c1c1e, 0 30px 80px rgba(0,0,0,0.5), 0 0 40px rgba(255,107,53,0.1);
+}
+.island {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 34px; background: #000; border-radius: 20px; z-index: 100;
+}
+
+/* ── STATUS BAR ── */
+.status {
+  height: 54px; display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 28px 8px; flex-shrink: 0; position: relative; z-index: 5;
+}
+.status-time { font-size: 16px; font-weight: 700; color: var(--text); }
+.status-icons { display: flex; align-items: center; gap: 5px; }
+.status-icons svg { fill: var(--text); }
+
+/* ── SCREEN SYSTEM ── */
+.screen {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  display: flex; flex-direction: column; background: var(--white);
+  transition: opacity 0.25s, transform 0.3s;
+  opacity: 0; pointer-events: none; transform: translateX(30px);
+}
+.screen.active { opacity: 1; pointer-events: all; transform: translateX(0); z-index: 10; }
+
+.screen-inner { padding-top: 54px; display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+/* ── NAVIGATION BAR (detail screen) ── */
+.nav {
+  height: 44px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; position: relative; padding: 0 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.1);
+}
+.nav-title { font-size: 17px; font-weight: 600; color: var(--text); }
+.nav-back {
+  position: absolute; left: 8px; display: flex; align-items: center; gap: 2px;
+  color: var(--p); font-size: 17px; font-weight: 500; cursor: pointer;
+  background: none; border: none; font-family: inherit; padding: 8px;
+}
+
+/* ── TAB NAV BAR (toolbar icons above large title) ── */
+.tab-nav {
+  height: 44px; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 8px; flex-shrink: 0;
+}
+.tab-nav-leading, .tab-nav-trailing { display: flex; align-items: center; }
+.icon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border: none; background: none;
+  cursor: pointer; border-radius: 8px; color: var(--p);
+  transition: background 0.15s;
+}
+.icon-btn:active { background: rgba(0,0,0,0.05); }
+.icon-btn.scan-color { color: var(--scan); }
+
+/* ── LARGE TITLE ── */
+.ltitle { font-size: 34px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); padding: 0 20px 10px; flex-shrink: 0; }
+
+/* ── SEARCH ── */
+.search {
+  margin: 0 16px 10px; height: 36px; background: rgba(118,118,128,0.12);
+  border-radius: 10px; display: flex; align-items: center; gap: 7px; padding: 0 10px; flex-shrink: 0;
+}
+.search svg { flex-shrink: 0; opacity: 0.5; }
+.search input {
+  flex: 1; border: none; background: none; font: 15px/1 'Inter', sans-serif; color: var(--text); outline: none;
+}
+.search input::placeholder { color: var(--gray); }
+
+/* ── SCROLL ── */
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ── GROUPED LIST ── */
+.list-bg { background: var(--gray-light); }
+.sec-hdr {
+  padding: 20px 20px 6px; font-size: 12px; font-weight: 600; color: var(--gray);
+  font-variant: small-caps; background: var(--gray-light);
+}
+.inset { margin: 0 16px; border-radius: 12px; overflow: hidden; background: var(--white); }
+.inset + .sec-hdr { padding-top: 8px; }
+.row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07); background: var(--white);
+  transition: background 0.1s;
+}
+.row:last-child { border-bottom: none; }
+.row:active { background: #f8f8f8; }
+.row-em { font-size: 26px; flex-shrink: 0; width: 36px; text-align: center; }
+.row-info { flex: 1; min-width: 0; }
+.row-title { font-size: 16px; font-weight: 600; color: var(--text); }
+.row-sub { font-size: 13px; color: var(--gray); margin-top: 1px; }
+.row-badge { margin-left: auto; font-weight: 700; font-size: 16px; color: var(--p); flex-shrink: 0; }
+.list-footer { padding: 8px 0 20px; text-align: center; font-size: 12px; color: var(--gray); }
+
+/* ── BUTTONS ── */
+.btn {
+  display: block; width: 100%; padding: 16px; border-radius: 14px; border: none;
+  font: 600 16px/1 'Inter',sans-serif; cursor: pointer; transition: opacity 0.15s, transform 0.1s;
+}
+.btn:active:not(:disabled) { opacity: 0.85; transform: scale(0.98); }
+.btn-p { background: var(--p); color: #fff; box-shadow: var(--shadow-btn); }
+.btn-p:disabled { background: #E0E0E0; color: #aaa; box-shadow: none; cursor: default; }
+.btn-scan { background: var(--scan); color: #fff; box-shadow: 0 4px 12px rgba(243,156,18,0.3); }
+.btn-ghost { background: none; color: var(--p); font-size: 15px; padding: 12px; box-shadow: none; }
+.btn-danger-ghost { background: none; color: var(--danger); font-size: 15px; padding: 12px; box-shadow: none; }
+
+/* ── PILLS ── */
+.pill-scroller { display: flex; gap: 8px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
+.pill-scroller::-webkit-scrollbar { display: none; }
+.pill-wrap { display: flex; gap: 8px; flex-wrap: wrap; }
+.pill {
+  padding: 7px 14px; border-radius: 20px; font: 600 14px/1 'Inter',sans-serif;
+  border: 1.5px solid var(--border); background: var(--white); color: var(--text);
+  cursor: pointer; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; user-select: none;
+}
+.pill:active { transform: scale(0.95); }
+.pill.on { background: var(--p); border-color: var(--p); color: #fff; }
+
+/* ── BUDGET SLIDER ── */
+.budget-price { text-align:center; margin-bottom:16px; }
+.budget-price .amount { font:800 40px/1 'Inter',sans-serif; transition:color .15s; }
+.budget-price .tier   { font:600 14px/1 'Inter',sans-serif; margin-top:6px; transition:color .15s; }
+.budget-price .per    { font:400 12px/1 'Inter',sans-serif; color:var(--gray); margin-top:4px; }
+.budget-track-wrap { position:relative; height:44px; display:flex; align-items:center; margin:0 2px; }
+.budget-track { position:absolute; inset:0; display:flex; align-items:center; pointer-events:none; }
+.budget-gradient {
+  position:absolute; left:0; right:0; height:6px; border-radius:3px;
+  background: linear-gradient(to right,
+    #4CAF50 0%, #4CAF50 28.57%,
+    #FF9800 28.57%, #FF9800 64.29%,
+    #F44336 64.29%, #F44336 100%);
+}
+.budget-dim {
+  position:absolute; right:0; height:6px;
+  border-radius:0 3px 3px 0; background:rgba(255,255,255,.6);
+  pointer-events:none; transition:width .05s;
+}
+input.budget-slider {
+  -webkit-appearance:none; appearance:none;
+  position:relative; z-index:2; width:100%; height:6px;
+  background:transparent; outline:none; cursor:pointer;
+}
+input.budget-slider::-webkit-slider-thumb {
+  -webkit-appearance:none; width:26px; height:26px; border-radius:50%;
+  border:3px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.22);
+  cursor:grab; transition:background .15s, transform .1s;
+}
+input.budget-slider::-webkit-slider-thumb:active { transform:scale(1.12); cursor:grabbing; }
+input.budget-slider::-moz-range-thumb {
+  width:26px; height:26px; border-radius:50%;
+  border:3px solid #fff; box-shadow:0 2px 8px rgba(0,0,0,.22); cursor:grab;
+}
+.budget-endpoints { display:flex; justify-content:space-between; font:400 11px/1 'Inter',sans-serif; color:var(--gray); margin-top:6px; }
+
+/* ── PROGRESS DOTS ── */
+.dots { display: flex; gap: 6px; justify-content: center; padding: 6px 0; flex-shrink: 0; }
+.dot { width: 8px; height: 6px; border-radius: 3px; background: var(--border); transition: all 0.35s cubic-bezier(.4,0,.2,1); }
+.dot.cur { width: 20px; background: var(--p); }
+.dot.done { background: var(--p); }
+
+/* ── RECIPE CARD ── */
+.recipe-card {
+  background: var(--surface); border-radius: 12px; overflow: hidden;
+  box-shadow: var(--shadow-card); margin: 0 16px 12px; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.recipe-card:active { transform: scale(0.98); box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.card-hero { height: 120px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.card-hero-emoji { font-size: 56px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.18)); line-height: 1; }
+.card-body { padding: 10px 12px 12px; }
+.card-title { font-size: 15px; font-weight: 700; color: var(--text); }
+.card-sub { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.match-track { height: 4px; background: #E0E0E0; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.match-fill { height: 4px; border-radius: 2px; background: var(--success); transition: width 0.6s cubic-bezier(.4,0,.2,1); }
+
+/* ── SEGMENTED ── */
+.seg { display: flex; background: rgba(118,118,128,0.12); border-radius: 9px; padding: 2px; }
+.seg-btn {
+  flex: 1; text-align: center; padding: 8px 0; font: 600 13px/1 'Inter',sans-serif;
+  color: var(--gray); border: none; background: none; border-radius: 8px;
+  cursor: pointer; font-family: inherit; transition: all 0.2s;
+}
+.seg-btn.on { background: var(--white); color: var(--text); box-shadow: 0 1px 4px rgba(0,0,0,0.12); }
+
+/* ── INFO PILLS ── */
+.ipill {
+  display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px;
+  background: var(--surface-alt); border-radius: 20px; font: 600 12px/1 'Inter',sans-serif; color: var(--text);
+}
+.ipill.green { background: #E8F8EE; color: var(--success); }
+.ipill.red { background: #FDEAEA; color: var(--danger); }
+
+/* ── INGREDIENT ROW ── */
+.ing-row {
+  display: flex; align-items: center; gap: 10px; padding: 8px 0;
+  border-bottom: 0.5px solid rgba(0,0,0,0.06);
+}
+.ing-row:last-child { border-bottom: none; }
+.ing-icon { display: flex; align-items: center; flex-shrink: 0; }
+.ing-name { flex: 1; font-size: 15px; color: var(--text); }
+.ing-qty { font-size: 13px; color: var(--gray); }
+.ing-tag { font: 700 11px/1 'Inter',sans-serif; padding: 3px 8px; border-radius: 8px; }
+.ing-tag.have { background: #E8F8EE; color: var(--success); }
+.ing-tag.need { background: #FDEAEA; color: var(--danger); }
+
+/* ── STEP ROW ── */
+.step-row { display: flex; gap: 12px; margin-bottom: 12px; align-items: flex-start; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--p); color: #fff; font: 700 12px/1 'Inter',sans-serif; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+.step-txt { font-size: 15px; line-height: 1.55; color: var(--text); }
+
+/* ── SHOPPING ROW ── */
+.shop-row {
+  display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07); cursor: pointer; background: var(--white);
+  transition: background 0.1s;
+}
+.shop-row:last-child { border-bottom: none; }
+.shop-row:active { background: #f8f8f8; }
+.shop-check { display: flex; align-items: center; flex-shrink: 0; transition: color 0.2s; }
+.shop-info { flex: 1; }
+.shop-name { font-size: 16px; font-weight: 500; color: var(--text); transition: all 0.2s; }
+.shop-qty { font-size: 13px; color: var(--gray); margin-top: 1px; }
+.shop-cost { font: 700 15px/1 'Inter',sans-serif; color: var(--p); flex-shrink: 0; }
+.shop-row.bought .shop-name { text-decoration: line-through; color: var(--gray); }
+.shop-emoji { width: 36px; height: 36px; border-radius: 8px; background: rgba(0,0,0,0.04); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; transition: opacity 0.2s; }
+.shop-row.bought .shop-emoji { opacity: 0.4; }
+.shop-row.partial .shop-name { color: var(--gray); }
+.shop-source { font-size: 11px; color: var(--gray); margin-top: 2px; opacity: 0.75; }
+
+/* ── COST CARD ── */
+.cost-card {
+  margin: 8px 16px; background: var(--white); border-radius: 12px;
+  padding: 16px; box-shadow: var(--shadow-card); display: flex; align-items: center; justify-content: space-between;
+}
+.cost-lhs .label { font-size: 12px; color: var(--gray); font-weight: 500; }
+.cost-lhs .amount { font: 700 26px/1 'Inter',sans-serif; color: var(--p); margin-top: 2px; letter-spacing: -0.5px; }
+.cost-rhs { text-align: right; display: flex; flex-direction: column; gap: 3px; }
+
+/* ── EMPTY STATE ── */
+.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 8px; padding: 40px; }
+.empty-icon { font-size: 52px; opacity: 0.3; }
+.empty-title { font: 700 20px/1 'Inter',sans-serif; color: #555; }
+.empty-desc { font-size: 14px; color: var(--gray); text-align: center; line-height: 1.5; }
+
+/* ── SCAN PROMPT (inline, matches ScanPromptView) ── */
+.scan-prompt {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  flex: 1; gap: 16px; padding: 32px 24px; text-align: center;
+}
+.scan-prompt-icon { font-size: 60px; line-height: 1; }
+.scan-prompt-title { font: 700 22px/1.3 'Inter',sans-serif; color: var(--text); }
+.scan-prompt-sub { font-size: 15px; color: var(--gray); line-height: 1.5; max-width: 280px; }
+.scan-prompt-actions { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 320px; }
+
+/* ── TAB BAR ── */
+.tabbar {
+  height: 83px; border-top: 0.5px solid rgba(0,0,0,0.12);
+  display: flex; align-items: flex-start; justify-content: space-around;
+  padding-top: 10px; background: rgba(250,250,250,0.94);
+  backdrop-filter: blur(20px); flex-shrink: 0;
+}
+.tab-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  font: 500 10px/1 'Inter',sans-serif; color: var(--gray); cursor: pointer;
+  border: none; background: none; font-family: inherit; padding: 4px 16px; border-radius: 8px;
+  transition: color 0.15s;
+}
+.tab-btn.on { color: var(--p); }
+
+/* ── SHEET ── */
+.sheet-wrap {
+  position: absolute; inset: 0; z-index: 200;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.sheet-wrap.open { opacity: 1; pointer-events: all; }
+.sheet-dim { flex: 1; background: rgba(0,0,0,0.4); cursor: pointer; }
+.sheet {
+  background: var(--white); border-radius: 20px 20px 0 0; padding: 0 24px 34px;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+.sheet-wrap.open .sheet { transform: translateY(0); }
+.handle { width: 38px; height: 5px; background: #ddd; border-radius: 3px; margin: 10px auto 20px; }
+
+/* ── ADD ITEM MODAL ── */
+.modal-wrap {
+  position: absolute; inset: 0; z-index: 300; display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.modal-wrap.open { opacity: 1; pointer-events: all; }
+.modal-dim { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+.modal {
+  position: relative; background: var(--white); width: 100%; border-radius: 20px 20px 0 0;
+  padding: 0 20px 34px; z-index: 1;
+  transform: translateY(100%); transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+}
+.modal-wrap.open .modal { transform: translateY(0); }
+
+/* ── FORMS ── */
+.field {
+  width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px;
+  font: 16px/1 'Inter',sans-serif; color: var(--text); outline: none; transition: border-color 0.2s;
+  background: var(--white);
+}
+.field:focus { border-color: var(--p); }
+.field-label { font: 600 13px/1 'Inter',sans-serif; color: var(--gray); margin-bottom: 6px; display: block; }
+
+/* ── MEMBER ROW ── */
+.mem-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; }
+.mem-input {
+  flex: 1; padding: 12px 14px; border-radius: 10px;
+  font: 15px/1 'Inter',sans-serif; color: var(--text); outline: none; transition: border-color 0.2s;
+  background: #F2F2F7; border: 1.5px solid transparent;
+}
+.mem-input:focus { border-color: var(--p); background: var(--white); }
+.mem-del { font-size: 22px; color: var(--danger); cursor: pointer; background: none; border: none; padding: 4px 6px; display: flex; align-items: center; }
+
+/* ── SUMMARY ROWS ── */
+.sum-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 13px 0; border-bottom: 0.5px solid rgba(0,0,0,0.07);
+}
+.sum-row:last-child { border-bottom: none; }
+.sum-key { font-size: 16px; color: var(--gray); }
+.sum-val { font: 700 16px/1 'Inter',sans-serif; color: var(--text); }
+
+/* ── TYPEWRITER ── */
+.cursor { border-right: 2px solid var(--text); animation: blink 0.7s steps(1) infinite; }
+@keyframes blink { 0%,100%{border-color:var(--text)} 50%{border-color:transparent} }
+
+/* ── iOS SHARE SHEET ── */
+.share-sheet-wrap {
+  position: absolute; inset: 0; z-index: 250;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.share-sheet-wrap.open { opacity: 1; pointer-events: all; }
+.share-sheet-dim { flex: 1; background: rgba(0,0,0,0.45); cursor: pointer; }
+.share-sheet {
+  background: #F2F2F7; border-radius: 14px 14px 0 0;
+  transform: translateY(100%); transition: transform 0.35s cubic-bezier(.4,0,.2,1);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+.share-sheet-wrap.open .share-sheet { transform: translateY(0); }
+
+.share-preview {
+  background: #fff; border-radius: 14px; margin: 16px 16px 0;
+  padding: 14px 16px; display: flex; align-items: flex-start; gap: 12px;
+}
+.share-preview-icon {
+  width: 48px; height: 48px; border-radius: 10px; background: var(--p);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 22px;
+}
+.share-preview-text { flex: 1; min-width: 0; }
+.share-preview-title { font: 600 14px/1.3 'Inter',sans-serif; color: var(--text); margin-bottom: 3px; }
+.share-preview-sub { font: 13px/1.4 'Inter',sans-serif; color: var(--gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.share-apps {
+  display: flex; gap: 4px; padding: 16px 12px 4px; overflow-x: auto;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.share-apps::-webkit-scrollbar { display: none; }
+.share-app {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  min-width: 68px; cursor: pointer; padding: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+.share-app:active .share-app-icon { transform: scale(0.92); }
+.share-app-icon {
+  width: 52px; height: 52px; border-radius: 14px; display: flex;
+  align-items: center; justify-content: center; font-size: 26px;
+  transition: transform 0.1s; flex-shrink: 0;
+}
+.share-app-label { font: 11px/1.2 'Inter',sans-serif; color: var(--text); text-align: center; }
+
+.share-actions {
+  background: #fff; border-radius: 14px; margin: 12px 16px; overflow: hidden;
+}
+.share-action {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  border-bottom: 0.5px solid rgba(0,0,0,0.1); cursor: pointer;
+  transition: background 0.15s; -webkit-tap-highlight-color: transparent;
+}
+.share-action:last-child { border-bottom: none; }
+.share-action:active { background: #F2F2F7; }
+.share-action-icon {
+  width: 30px; height: 30px; border-radius: 7px; display: flex;
+  align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px;
+}
+.share-action-label { font: 17px/1 'Inter',sans-serif; color: var(--text); }
+
+.share-cancel {
+  background: #fff; border-radius: 14px; margin: 8px 16px 16px;
+  text-align: center; padding: 16px; font: 600 17px/1 'Inter',sans-serif;
+  color: var(--p); cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.share-cancel:active { background: #e8e8ed; }
+
+/* ── TOAST ── */
+.toast {
+  position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: rgba(30,30,30,0.92); color: #fff; padding: 10px 18px; border-radius: 20px;
+  font: 600 14px/1 'Inter',sans-serif; white-space: nowrap; z-index: 500;
+  opacity: 0; transition: opacity 0.2s, transform 0.2s; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font: 700 12px/1 'Inter',sans-serif; color: var(--gray);
+  font-variant: small-caps; padding: 16px 16px 8px;
+}
+
+/* ── FAB ── */
+.fab {
+  position: absolute; bottom: 96px; right: 16px; width: 50px; height: 50px;
+  border-radius: 50%; background: var(--p); box-shadow: var(--shadow-btn);
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+  cursor: pointer; border: none; transition: transform 0.15s; z-index: 5; color: #fff;
+}
+.fab:active { transform: scale(0.93); }
+
+/* ── SHARE TEXT PANEL ── */
+.share-text-panel {
+  width: 240px; flex-shrink: 0;
+  display: none; flex-direction: column; gap: 8px;
+  opacity: 0; transition: opacity 0.25s;
+}
+.share-text-panel.visible { opacity: 1; }
+.share-text-panel h2 { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+.share-text-panel-body {
+  background: rgba(255,255,255,0.06); border-radius: 10px;
+  padding: 14px; font-size: 12px; color: rgba(255,255,255,0.7);
+  line-height: 1.65; white-space: pre-wrap; word-break: break-word;
+  max-height: 520px; overflow-y: auto;
+}
+.share-text-panel-body::-webkit-scrollbar { display: none; }
+
+@media (max-width: 700px) {
+  body { padding: 0; }
+  .sidebar { display: none; }
+  .share-text-panel { display: none !important; }
+  .phone { border-radius: 0; box-shadow: none; width: 100vw; height: 100dvh; }
+}
+
+/* ── SWIPE ROW ── */
+.swipe-row-wrap {
+  position: relative; overflow: hidden;
+  border-bottom: 0.5px solid rgba(0,0,0,0.07);
+  touch-action: pan-y; /* let browser scroll vertically; script handles horizontal swipe */
+}
+.swipe-row-wrap:last-child { border-bottom: none; }
+.swipe-row-leading {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 240px;
+  display: flex; align-items: stretch;
+}
+.swipe-row-trailing {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 80px;
+  display: flex; align-items: stretch;
+}
+.swipe-action-btn {
+  flex: 1; border: none; cursor: pointer; color: #fff;
+  font: 700 11px/1.3 'Inter',sans-serif;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; user-select: none; -webkit-user-select: none;
+}
+.swipe-action-btn:active { filter: brightness(0.9); }
+.swipe-action-btn svg { flex-shrink: 0; }
+.swipe-row-content {
+  position: relative; background: var(--white); will-change: transform;
+  touch-action: pan-y; /* allow vertical scroll, intercept horizontal */
+}
+.swipe-row-content.row { border-bottom: none; cursor: default; }
+.swipe-row-content.shop-row { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <h2>App Flow</h2>
+  <div class="flow-item active" id="fi-onboard"><div class="fi-dot"></div>Onboarding</div>
+  <div class="sidebar-divider"></div>
+  <div class="flow-item" id="fi-fridge"><div class="fi-dot"></div>Fridge Inventory</div>
+  <div class="flow-item" id="fi-plan"><div class="fi-dot"></div>Food Ideas</div>
+  <div class="flow-item" id="fi-detail"><div class="fi-dot"></div>Recipe Detail</div>
+  <div class="flow-item" id="fi-shop"><div class="fi-dot"></div>Shopping List</div>
+  <div class="flow-item" id="fi-profile"><div class="fi-dot"></div>Profile</div>
+  <div class="hint-box" id="hint-box">
+    <strong>Start here →</strong><br>Enter your family name to begin the setup flow.
+  </div>
+</div>
+
+<!-- PHONE -->
+<div class="phone-wrap">
+<div class="phone" id="phone">
+  <div class="island"></div>
+
+  <!-- STATUS BAR -->
+  <div class="status" id="status-bar" style="position:absolute;top:0;left:0;right:0;z-index:50;">
+    <span class="status-time" id="clock">9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="0" width="3" height="12" rx="1" opacity="0.3"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 4.5a5 5 0 0 1 3.54 1.46L13 4.5A7 7 0 0 0 8 2.5a7 7 0 0 0-5 2l1.46 1.46A5 5 0 0 1 8 4.5zm0 3a2 2 0 0 1 1.42.59L11 6.5A4 4 0 0 0 8 5.5a4 4 0 0 0-3 1l1.58 1.59A2 2 0 0 1 8 7.5zm0 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg>
+      <svg width="26" height="13" viewBox="0 0 26 13"><rect x="0.5" y="0.5" width="21" height="12" rx="3.5" stroke="currentColor" fill="none" stroke-opacity="0.35"/><rect x="22.5" y="4" width="3" height="5" rx="1.5" fill="currentColor" fill-opacity="0.4"/><rect x="2" y="2" width="17" height="9" rx="2" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <!-- ════════ ONBOARDING ════════ -->
+  <div class="screen active" id="s-onboard">
+    <div class="screen-inner" style="padding-bottom:0;">
+      <!-- Back button row (matches OnboardingView HStack with chevron.left) -->
+      <div style="display:flex;align-items:center;padding:16px 24px 0;flex-shrink:0;min-height:44px;">
+        <button id="ob-back" onclick="obBack()" style="display:none;background:none;border:none;cursor:pointer;color:var(--p);padding:4px 0;display:flex;align-items:center;" aria-label="Back">
+          <svg width="10" height="17" viewBox="0 0 10 17" fill="none"><path d="M9 1L1 8.5L9 16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+      <div class="dots" id="ob-dots"></div>
+      <div class="scroll" style="padding: 0 24px 24px;" id="ob-body"></div>
+      <div style="padding: 8px 24px 40px; flex-shrink:0;">
+        <button class="btn btn-p" id="ob-btn" onclick="obNext()" disabled>Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ MAIN (tabs) ════════ -->
+  <div class="screen" id="s-main">
+    <div class="screen-inner" style="padding-bottom:0;">
+      <!-- TAB PANES -->
+      <div id="pane-fridge"  style="flex:1;min-height:0;display:flex;flex-direction:column;"></div>
+      <div id="pane-plan"    style="flex:1;min-height:0;display:none;flex-direction:column;"></div>
+      <div id="pane-shop"    style="flex:1;min-height:0;display:none;flex-direction:column;"></div>
+      <div id="pane-profile" style="flex:1;min-height:0;display:none;flex-direction:column;"></div>
+
+      <div class="tabbar">
+        <button class="tab-btn on" id="tb-0" onclick="goTab(0)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <line x1="5" y1="9" x2="19" y2="9"/>
+            <line x1="10" y1="5" x2="10" y2="7"/>
+            <line x1="10" y1="13" x2="10" y2="16"/>
+          </svg>
+          <span id="tb-label-0">Fridge</span>
+        </button>
+        <button class="tab-btn" id="tb-1" onclick="goTab(1)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21h6"/>
+            <path d="M12 3C8.7 3 6 5.7 6 9c0 2.4 1.3 4.5 3.2 5.7.5.3.8.8.8 1.3V18h4v-2c0-.5.3-1 .8-1.3C16.7 13.5 18 11.4 18 9c0-3.3-2.7-6-6-6z"/>
+          </svg>
+          <span id="tb-label-1">Plan</span>
+        </button>
+        <button class="tab-btn" id="tb-2" onclick="goTab(2)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="9" cy="21" r="1"/>
+            <circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/>
+          </svg>
+          <span id="tb-label-2">Shopping</span>
+        </button>
+        <button class="tab-btn" id="tb-3" onclick="goTab(3)">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+            <circle cx="12" cy="8" r="4"/>
+          </svg>
+          <span id="tb-label-3">Profile</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════ RECIPE DETAIL ════════ -->
+  <div class="screen" id="s-detail">
+    <div class="screen-inner" id="detail-inner" style="padding-bottom:0;"></div>
+  </div>
+
+  <!-- ════════ MEMBER PROFILE SCREEN ════════ -->
+  <div class="screen" id="s-member-profile">
+    <div class="screen-inner" id="member-profile-inner" style="padding-bottom:0;"></div>
+  </div>
+
+  <!-- ════════ CAMERA SHEET ════════ -->
+  <div class="sheet-wrap" id="sheet-camera">
+    <div class="sheet-dim" onclick="closeSheet('sheet-camera')"></div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div id="camera-sheet-title" style="font:600 17px/1 Inter,sans-serif;text-align:center;margin-bottom:20px;">Add Items</div>
+      <button class="btn btn-scan" id="camera-take-photo-btn" style="margin-bottom:12px;" onclick="simulateScan()">Take Photo</button>
+      <button class="btn btn-p"    id="camera-library-btn"    style="margin-bottom:4px;"  onclick="simulateScan()">Choose from Library</button>
+      <button class="btn btn-ghost" id="camera-cancel-btn" onclick="closeSheet('sheet-camera')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ════════ DELETE CONFIRM SHEET ════════ -->
+  <div class="sheet-wrap" id="sheet-delete-confirm">
+    <div class="sheet-dim" onclick="cancelDeleteItem()"></div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div style="text-align:center;padding-bottom:20px;">
+        <div id="delete-confirm-title" style="font:600 17px/1.4 Inter,sans-serif;color:var(--text);margin-bottom:6px;"></div>
+        <div id="delete-confirm-msg" style="font:15px/1.4 Inter,sans-serif;color:var(--gray)">This will remove the item from your fridge.</div>
+      </div>
+      <button id="delete-confirm-btn" class="btn" style="background:#FF3B30;color:#fff;box-shadow:0 4px 12px rgba(255,59,48,0.3);margin-bottom:10px" onclick="confirmDeleteItem()">Delete</button>
+      <button id="delete-cancel-btn" class="btn btn-ghost" onclick="cancelDeleteItem()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ════════ ADD ITEM MODAL ════════ -->
+  <div class="modal-wrap" id="modal-add">
+    <div class="modal-dim" onclick="closeModal()"></div>
+    <div class="modal">
+      <div class="handle"></div>
+      <div id="modal-add-title" style="font:600 17px/1 Inter,sans-serif;text-align:center;margin-bottom:20px;">Add Item</div>
+      <div style="margin-bottom:14px;">
+        <label id="modal-name-label" class="field-label">Item Name</label>
+        <input class="field" id="add-name" placeholder="e.g. Tofu" autocomplete="off">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+        <div>
+          <label id="modal-cat-label" class="field-label">Category</label>
+          <select class="field" id="add-cat" style="appearance:none;">
+            <option>Protein</option><option>Vegetable</option><option>Fruit</option>
+            <option>Dairy</option><option>Grain</option><option>Condiment</option>
+            <option>Beverage</option><option>Other</option>
+          </select>
+        </div>
+        <div>
+          <label id="modal-qty-label" class="field-label">Quantity</label>
+          <input class="field" id="add-qty" type="number" min="0" value="1">
+        </div>
+      </div>
+      <button class="btn btn-p" id="modal-save-btn" onclick="addItemManually()">Add to Fridge</button>
+      <button id="modal-cancel-btn" class="btn btn-ghost" onclick="closeModal()" style="margin-top:4px">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ════════ ADD MEMBER SHEET ════════ -->
+  <div class="sheet-wrap" id="sheet-add-member">
+    <div class="sheet-dim" onclick="closeAddMemberSheet()"></div>
+    <div class="sheet" style="max-height:82%;overflow:hidden;display:flex;flex-direction:column;padding-left:0;padding-right:0;padding-bottom:0;">
+      <div class="handle"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 12px;flex-shrink:0;">
+        <button id="am-cancel-btn" onclick="closeAddMemberSheet()" style="background:none;border:none;cursor:pointer;color:var(--p);font:16px/1 Inter,sans-serif;padding:4px 0;">Cancel</button>
+        <span id="am-title" style="font:600 17px/1 Inter,sans-serif;">New Member</span>
+        <button id="am-save-btn" onclick="submitAddMember()" disabled style="background:none;border:none;cursor:pointer;color:var(--p);font:600 16px/1 Inter,sans-serif;padding:4px 0;opacity:0.4;transition:opacity 0.15s;">Save</button>
+      </div>
+      <div class="scroll list-bg" id="add-member-body" style="flex:1;padding-bottom:34px;"></div>
+    </div>
+  </div>
+
+  <!-- ════════ DELETE MEMBER CONFIRM SHEET ════════ -->
+  <div class="sheet-wrap" id="sheet-delete-member">
+    <div class="sheet-dim" onclick="cancelDeleteMember()"></div>
+    <div class="sheet">
+      <div class="handle"></div>
+      <div style="text-align:center;padding-bottom:20px;">
+        <div id="delete-member-name" style="font:600 17px/1.4 Inter,sans-serif;color:var(--text);margin-bottom:6px;"></div>
+        <div id="delete-member-msg" style="font:15px/1.4 Inter,sans-serif;color:var(--gray)">This member and their preferences will be permanently removed.</div>
+      </div>
+      <button id="delete-member-btn" class="btn" style="background:#FF3B30;color:#fff;box-shadow:0 4px 12px rgba(255,59,48,0.3);margin-bottom:10px" onclick="confirmDeleteMember()">Delete</button>
+      <button id="delete-member-cancel-btn" class="btn btn-ghost" onclick="cancelDeleteMember()">Cancel</button>
+    </div>
+  </div>
+
+  <!-- ════════ iOS SHARE SHEET ════════ -->
+  <div class="share-sheet-wrap" id="sheet-share">
+    <div class="share-sheet-dim" onclick="closeShareSheet()"></div>
+    <div class="share-sheet">
+      <!-- Preview -->
+      <div class="share-preview">
+        <div class="share-preview-icon" id="share-preview-icon">🛒</div>
+        <div class="share-preview-text">
+          <div class="share-preview-title" id="share-preview-title">Shopping List</div>
+          <div class="share-preview-sub" id="share-preview-sub">Loading…</div>
+        </div>
+      </div>
+      <!-- App icons row -->
+      <div class="share-apps">
+        <div class="share-app" onclick="shareViaApp('airdrop')">
+          <div class="share-app-icon" style="background:#E8F4FF;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L8 8H4l4 6H5l7 8 7-8h-3l4-6h-4z"/></svg>
+          </div>
+          <span class="share-app-label">AirDrop</span>
+        </div>
+        <div class="share-app" onclick="shareViaApp('messages')">
+          <div class="share-app-icon" style="background:#34C759;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M20 2H4C2.9 2 2 2.9 2 4v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+          </div>
+          <span class="share-app-label">Messages</span>
+        </div>
+        <div class="share-app" onclick="shareViaApp('mail')">
+          <div class="share-app-icon" style="background:#007AFF;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 2l-8 5-8-5h16zm0 12H4V9l8 5 8-5v9z"/></svg>
+          </div>
+          <span class="share-app-label">Mail</span>
+        </div>
+        <div class="share-app" onclick="shareViaApp('whatsapp')">
+          <div class="share-app-icon" style="background:#25D366;">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          </div>
+          <span class="share-app-label">WhatsApp</span>
+        </div>
+        <div class="share-app" onclick="shareViaApp('notes')">
+          <div class="share-app-icon" style="background:#FFCC00;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3D3000" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <span class="share-app-label">Notes</span>
+        </div>
+        <div class="share-app" onclick="shareViaApp('more')">
+          <div class="share-app-icon" style="background:#8E8E93;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+          </div>
+          <span class="share-app-label">More</span>
+        </div>
+      </div>
+      <!-- Action rows -->
+      <div class="share-actions">
+        <div class="share-action" onclick="shareActionCopy()">
+          <div class="share-action-icon" style="background:#636366;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </div>
+          <span class="share-action-label">Copy</span>
+        </div>
+        <div class="share-action" onclick="shareActionSave()">
+          <div class="share-action-icon" style="background:#007AFF;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <span class="share-action-label">Save to Files</span>
+        </div>
+      </div>
+      <!-- Cancel -->
+      <div id="share-cancel-btn" class="share-cancel" onclick="closeShareSheet()">Cancel</div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+</div><!-- /phone -->
+</div><!-- /phone-wrap -->
+
+<!-- SHARE TEXT PANEL -->
+<div class="share-text-panel" id="share-text-panel">
+  <h2>Share Preview</h2>
+  <div class="share-text-panel-body" id="share-text-panel-body"></div>
+</div>
+
+<script>
+// ══════════════════════════════════
+//  STATE
+// ══════════════════════════════════
+const imageCache = new Set();
+function preloadRecipeImages() {
+  RECIPES.forEach(r => {
+    if (!r.image || imageCache.has(r.image)) return;
+    const img = new Image();
+    img.onload = () => {
+      imageCache.add(r.image);
+      document.querySelectorAll(`.card-hero-img-wrap[data-src="${CSS.escape(r.image)}"]`).forEach(el => {
+        el.outerHTML = `<img src="${r.image}" alt="${r.name}" style="width:100%;height:100%;object-fit:cover;object-position:center">`;
+      });
+    };
+    img.src = r.image;
+  });
+}
+
+const S = {
+  obStep: 0,
+  familyName: '', skill: '', budget: 50, members: ['Mom', 'Dad'],
+  inventory: [],
+  fridgeInitialized: false,
+  selectedMembers: new Set(),
+  selectedCuisine: null,
+  recipes: [],
+  shopping: [],
+  activeTab: 0,
+  searchText: '',
+  currentRecipeId: null,
+  detailTab: 0,
+  _editingItemId: null,
+  lang: 'en',
+  theme: 'warm',
+};
+
+// ══════════════════════════════════
+//  CONSTANTS
+// ══════════════════════════════════
+const SKILLS  = ['beginner', 'intermediate', 'advanced'];
+// Matches iOS Constants.cuisineOptions order
+const CUISINES = ['Chinese','Cantonese','Sichuan','Western','Italian','Japanese','Korean','Thai','Vietnamese','Indian','Mexican','Fusion'];
+
+const EMOJI_MAP = { protein:'🥩', meat:'🥩', seafood:'🥩', vegetable:'🥦', fruit:'🍎', dairy:'🥛', grain:'🌾', condiment:'🫙' };
+const catE = c => EMOJI_MAP[c.toLowerCase()] || '🍽️';
+
+const FRIDGE_DEFAULT = [
+  {id:1, name:'Chicken Thigh',  cat:'Protein',   qty:2},
+  {id:2, name:'Pork Belly',     cat:'Protein',   qty:1},
+  {id:3, name:'Salmon Fillet',  cat:'Seafood',   qty:1},
+  {id:4, name:'Bok Choy',       cat:'Vegetable', qty:3},
+  {id:5, name:'Gai Lan',        cat:'Vegetable', qty:2},
+  {id:6, name:'Spring Onion',   cat:'Vegetable', qty:4},
+  {id:7, name:'Garlic',         cat:'Vegetable', qty:5},
+  {id:8, name:'Soy Sauce',      cat:'Condiment', qty:1},
+  {id:9, name:'Oyster Sauce',   cat:'Condiment', qty:1},
+  {id:10,name:'Sesame Oil',     cat:'Condiment', qty:1},
+  {id:11,name:'Rice',           cat:'Grain',     qty:1},
+  {id:12,name:'Eggs',           cat:'Dairy',     qty:6},
+];
+
+const RECIPES = [
+  { id:'r1', name:'Steamed Chicken with Ginger', cuisine:'Cantonese', match:85, kcal:320,
+    emoji:'🍗', bg:'linear-gradient(135deg,#FFE0C0 0%,#FFBA7A 100%)', image:'https://www.foodandwine.com/thmb/ZPTdpUZ0IRTydL0-JjRbxzjbvhU=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/201303-r-xl-steamed-chicken-with-scallions-and-ginger-2000-613746e4d91a4d718dab0a6c7a9d8562.jpg',
+    ingredients:[
+      {name:'Chicken Thigh',quantity:500, unit:'g',      have:true },
+      {name:'Ginger',       quantity:30,  unit:'g',      have:false},
+      {name:'Soy Sauce',    quantity:2,   unit:'tbsp',   have:true },
+      {name:'Sesame Oil',   quantity:1,   unit:'tsp',    have:true },
+      {name:'Spring Onion', quantity:3,   unit:'',       have:true },
+    ],
+    steps:[
+      'Clean and pat dry the chicken thighs. Score lightly on both sides.',
+      'Julienne the ginger and slice spring onions into 2-inch pieces.',
+      'Rub chicken with soy sauce and sesame oil. Marinate 15 minutes.',
+      'Place chicken on a heatproof plate. Top with ginger and spring onion.',
+      'Steam over high heat for 18–20 minutes until cooked through.',
+      'Drizzle with hot oil and remaining soy sauce. Serve immediately.',
+    ],
+    buy:[{name:'Ginger', qty:1, unit:'piece', cost:8, recipe:'Steamed Chicken'}],
+  },
+  { id:'r2', name:'Bok Choy with Oyster Sauce', cuisine:'Cantonese', match:100, kcal:95,
+    emoji:'🥬', bg:'linear-gradient(135deg,#BAFAD2 0%,#5DD88A 100%)', image:'https://panlasangpinoy.com/wp-content/uploads/2016/10/Bok-Choy-with-Garlic-and-Oyster-Sauce-500x492.jpg',
+    ingredients:[
+      {name:'Bok Choy',     quantity:300, unit:'g',      have:true},
+      {name:'Oyster Sauce', quantity:2,   unit:'tbsp',   have:true},
+      {name:'Garlic',       quantity:3,   unit:'cloves', have:true},
+      {name:'Sesame Oil',   quantity:1,   unit:'tsp',    have:true},
+    ],
+    steps:[
+      'Wash bok choy and halve lengthwise if large.',
+      'Mince the garlic finely.',
+      'Blanch bok choy in boiling salted water for 2 minutes. Drain.',
+      'Heat oil in wok. Sauté garlic until golden and fragrant.',
+      'Add oyster sauce and a splash of water. Stir to combine.',
+      'Pour over bok choy and serve immediately.',
+    ],
+    buy:[],
+  },
+  { id:'r3', name:'Mapo Tofu', cuisine:'Sichuan', match:60, kcal:380,
+    emoji:'🫕', bg:'linear-gradient(135deg,#FFCDC5 0%,#FF7A6A 100%)', image:'https://beyond-meat-cms-production.s3.us-west-2.amazonaws.com/e9dce573-eff0-4f67-80a2-8a7eb44ee9a5.jpg',
+    ingredients:[
+      {name:'Silken Tofu',       quantity:1,   unit:'block',  have:false},
+      {name:'Pork Belly',        quantity:150, unit:'g',      have:true },
+      {name:'Doubanjiang',       quantity:2,   unit:'tbsp',   have:false},
+      {name:'Sichuan Peppercorn',quantity:1,   unit:'tsp',    have:false},
+      {name:'Garlic',            quantity:4,   unit:'cloves', have:true },
+      {name:'Spring Onion',      quantity:2,   unit:'',       have:true },
+      {name:'Soy Sauce',         quantity:1,   unit:'tbsp',   have:true },
+    ],
+    steps:[
+      'Cut tofu into 2cm cubes. Blanch in salted boiling water 2 minutes.',
+      'Mince pork belly. Finely chop garlic and spring onion.',
+      'Heat oil in wok. Fry pork until browned and fragrant.',
+      'Add doubanjiang and Sichuan peppercorn. Stir-fry 1 minute.',
+      'Add garlic, soy sauce and 1 cup water. Bring to a simmer.',
+      'Gently add tofu. Simmer 5 minutes.',
+      'Thicken with cornstarch slurry. Garnish with spring onion.',
+    ],
+    buy:[
+      {name:'Silken Tofu',       qty:1,unit:'block', cost:15, recipe:'Mapo Tofu'},
+      {name:'Doubanjiang',       qty:1,unit:'jar',   cost:22, recipe:'Mapo Tofu'},
+      {name:'Sichuan Peppercorn',qty:1,unit:'pack',  cost:12, recipe:'Mapo Tofu'},
+    ],
+  },
+  { id:'r4', name:'Garlic Fried Rice', cuisine:'Chinese', match:95, kcal:410,
+    emoji:'🍳', bg:'linear-gradient(135deg,#FFF6C2 0%,#FFD94A 100%)', image:'https://www.chilitochoc.com/wp-content/uploads/2021/02/garlic-butter-fried-rice-square.jpg',
+    ingredients:[
+      {name:'Rice',        quantity:2,   unit:'cups',   have:true},
+      {name:'Eggs',        quantity:2,   unit:'',       have:true},
+      {name:'Garlic',      quantity:5,   unit:'cloves', have:true},
+      {name:'Soy Sauce',   quantity:1,   unit:'tbsp',   have:true},
+      {name:'Spring Onion',quantity:2,   unit:'',       have:true},
+      {name:'Sesame Oil',  quantity:1,   unit:'tsp',    have:true},
+    ],
+    steps:[
+      'Use day-old rice for best results. Break up any clumps.',
+      'Mince garlic. Slice spring onions. Beat eggs.',
+      'Scramble eggs in hot oiled wok, set aside.',
+      'Add more oil. Sauté garlic until golden.',
+      'Add rice; stir-fry 3–4 minutes, pressing against the wok.',
+      'Return eggs. Add soy sauce, sesame oil. Toss well.',
+      'Garnish with spring onions. Serve immediately.',
+    ],
+    buy:[],
+  },
+  { id:'r5', name:'Teriyaki Salmon', cuisine:'Japanese', match:70, kcal:350,
+    emoji:'🐟', bg:'linear-gradient(135deg,#FFE4E8 0%,#FFB3C2 100%)', image:'https://www.dinneratthezoo.com/wp-content/uploads/2016/04/salmon-teriyaki-11.jpg',
+    ingredients:[
+      {name:'Salmon Fillet',quantity:200, unit:'g',      have:true },
+      {name:'Soy Sauce',    quantity:3,   unit:'tbsp',   have:true },
+      {name:'Mirin',        quantity:2,   unit:'tbsp',   have:false},
+      {name:'Brown Sugar',  quantity:1,   unit:'tbsp',   have:false},
+      {name:'Garlic',       quantity:2,   unit:'cloves', have:true },
+      {name:'Sesame Oil',   quantity:1,   unit:'tsp',    have:true },
+    ],
+    steps:[
+      'Combine soy sauce, mirin, brown sugar, and garlic for the sauce.',
+      'Pat salmon dry. Season with salt and pepper.',
+      'Heat sesame oil in a pan over medium-high heat.',
+      'Sear salmon skin-side down for 3 minutes until crispy.',
+      'Flip and cook 2 more minutes.',
+      'Pour teriyaki sauce over. Simmer until it thickens.',
+      'Serve over rice with steamed vegetables.',
+    ],
+    buy:[
+      {name:'Mirin',       qty:1,unit:'bottle',cost:28,recipe:'Teriyaki Salmon'},
+      {name:'Brown Sugar', qty:1,unit:'pack',  cost:12,recipe:'Teriyaki Salmon'},
+    ],
+  },
+  { id:'r6', name:'Bibimbap', cuisine:'Korean', match:55, kcal:490,
+    emoji:'🥘', bg:'linear-gradient(135deg,#FFD8B8 0%,#FF8C5A 100%)', image:'https://www.recipetineats.com/tachyon/2019/05/Bibimbap_3.jpg',
+    ingredients:[
+      {name:'Rice',         quantity:2,   unit:'cups',   have:true },
+      {name:'Gochujang',    quantity:2,   unit:'tbsp',   have:false},
+      {name:'Eggs',         quantity:2,   unit:'',       have:true },
+      {name:'Sesame Oil',   quantity:2,   unit:'tsp',    have:true },
+      {name:'Garlic',       quantity:3,   unit:'cloves', have:true },
+      {name:'Spinach',      quantity:100, unit:'g',      have:false},
+      {name:'Carrots',      quantity:1,   unit:'',       have:false},
+    ],
+    steps:[
+      'Cook rice and keep warm.',
+      'Blanch and season spinach with sesame oil, garlic, soy sauce.',
+      'Julienne carrots, sauté briefly in sesame oil.',
+      'Fry eggs sunny-side up.',
+      'Arrange all toppings over rice in a bowl.',
+      'Top with gochujang to taste. Mix well before eating.',
+    ],
+    buy:[
+      {name:'Gochujang',qty:1,unit:'jar',  cost:25,recipe:'Bibimbap'},
+      {name:'Spinach',  qty:1,unit:'bunch',cost:12,recipe:'Bibimbap'},
+      {name:'Carrots',  qty:2,unit:'pcs',  cost:6, recipe:'Bibimbap'},
+    ],
+  },
+  { id:'r7', name:'Chicken Adobo', cuisine:'Filipino', match:75, kcal:430,
+    emoji:'🍖', bg:'linear-gradient(135deg,#E8D8C0 0%,#C49A6C 100%)', image:'https://www.seriouseats.com/thmb/uc8nb040OwgXekR9obuhEqm8WoI=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/__opt__aboutcom__coeus__resources__content_migration__serious_eats__seriouseats.com__2019__10__20191023-chicken-adobo-vicky-wasik-19-12ce105a2e1a44dfb1e2673775118064.jpg',
+    ingredients:[
+      {name:'Chicken Thigh',quantity:500, unit:'g',      have:true },
+      {name:'Soy Sauce',    quantity:4,   unit:'tbsp',   have:true },
+      {name:'White Vinegar',quantity:3,   unit:'tbsp',   have:false},
+      {name:'Garlic',       quantity:6,   unit:'cloves', have:true },
+      {name:'Bay Leaves',   quantity:3,   unit:'',       have:false},
+      {name:'Black Pepper', quantity:1,   unit:'tsp',    have:false},
+    ],
+    steps:[
+      'Combine soy sauce, vinegar, garlic, bay leaves and pepper.',
+      'Marinate chicken in the sauce for at least 30 minutes.',
+      'Heat oil in a heavy pan or wok.',
+      'Brown the chicken pieces on all sides.',
+      'Add the marinade. Bring to a boil.',
+      'Simmer uncovered 30–40 minutes until sauce reduces.',
+      'Serve over steamed white rice.',
+    ],
+    buy:[
+      {name:'White Vinegar',qty:1,unit:'bottle',cost:15,recipe:'Chicken Adobo'},
+      {name:'Bay Leaves',   qty:1,unit:'pack',  cost:8, recipe:'Chicken Adobo'},
+      {name:'Black Pepper', qty:1,unit:'jar',   cost:18,recipe:'Chicken Adobo'},
+    ],
+  },
+  { id:'r8', name:'Nasi Goreng', cuisine:'Indonesian', match:65, kcal:520,
+    emoji:'🍜', bg:'linear-gradient(135deg,#FFF0C0 0%,#FFCC55 100%)', image:'https://takestwoeggs.com/wp-content/uploads/2025/03/Overhead-plate-Nasi-Goreng-Indonesian-Fried-Rice.jpg',
+    ingredients:[
+      {name:'Rice',         quantity:2,   unit:'cups',   have:true },
+      {name:'Eggs',         quantity:2,   unit:'',       have:true },
+      {name:'Kecap Manis',  quantity:2,   unit:'tbsp',   have:false},
+      {name:'Garlic',       quantity:4,   unit:'cloves', have:true },
+      {name:'Shrimp Paste', quantity:1,   unit:'tsp',    have:false},
+      {name:'Spring Onion', quantity:3,   unit:'',       have:true },
+    ],
+    steps:[
+      'Use cold leftover rice for best results.',
+      'Fry eggs and set aside.',
+      'Sauté garlic and shrimp paste until fragrant.',
+      'Add rice and stir-fry on high heat.',
+      'Add kecap manis and mix thoroughly.',
+      'Top with fried egg, sliced spring onion, and crackers.',
+    ],
+    buy:[
+      {name:'Kecap Manis', qty:1,unit:'bottle',cost:20,recipe:'Nasi Goreng'},
+      {name:'Shrimp Paste',qty:1,unit:'jar',   cost:18,recipe:'Nasi Goreng'},
+    ],
+  },
+];
+
+// ══════════════════════════════════
+//  SVG ICONS (SF Symbol style)
+// ══════════════════════════════════
+const IC = {
+  sun:    `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.07" y2="4.93"/></svg>`,
+  globe:  `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>`,
+  person: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+  camera: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`,
+  checkFill: `<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5-3.5-3.5 1.41-1.41L10 13.67l6.09-6.09L17.5 9 10 16.5z"/></svg>`,
+  circle: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/></svg>`,
+  minusCircle: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>`,
+  forkKnife: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="21" y1="15" x2="21" y2="22"/><path d="M21 2a4 4 0 0 0-4 4v5h4"/></svg>`,
+  checkCircle: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>`,
+  cartPlus: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/><line x1="19" y1="3" x2="19" y2="9"/><line x1="16" y1="6" x2="22" y2="6"/></svg>`,
+  chevronBack: `<svg width="10" height="17" viewBox="0 0 10 17" fill="none"><path d="M9 1L1 8.5L9 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  share: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>`,
+  plus: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  flame: `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>`,
+  snowflake: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/><line x1="4.93" y1="19.07" x2="19.07" y2="4.93"/></svg>`,
+};
+
+// ══════════════════════════════════
+//  LOCALISATION
+// ══════════════════════════════════
+const STRINGS = {
+  en: {
+    'tab.fridge': 'Fridge', 'tab.plan': 'Plan', 'tab.shopping': 'Shopping', 'tab.profile': 'Profile',
+    'inventory.title': 'My Fridge', 'inventory.search': 'Search ingredients...',
+    'inventory.empty': 'Your fridge is empty', 'inventory.empty.hint': 'Tap the camera icon to scan your fridge.',
+    'inventory.no_results': 'No results',
+    'inventory.scan_prompt.title': 'Set up your fridge',
+    'inventory.scan_prompt.subtitle': 'Scan your fridge or mark it as empty to get started',
+    'inventory.scan_prompt.scan': 'Scan My Fridge', 'inventory.scan_prompt.empty': 'My Fridge is Empty',
+    'inventory.action_stock': 'Stock', 'inventory.action_use': 'Use', 'inventory.action_edit': 'Edit',
+    'inventory.add_item': 'Add Item', 'inventory.edit_item': 'Edit Item',
+    'inventory.item_name': 'Item Name', 'inventory.item_category': 'Category', 'inventory.item_quantity': 'Quantity',
+    'inventory.add_to_fridge': 'Add to Fridge', 'inventory.save_changes': 'Save Changes',
+    'inventory.footer': (n) => `${n} item${n!==1?'s':''} · swipe right to stock/use/edit · swipe left to delete`,
+    'inventory.scanning': 'Scanning fridge…', 'inventory.scanning_hint': 'AI is identifying items',
+    'inventory.scan_complete': (n) => `${n} items found`, 'inventory.scan_updated': 'Your fridge has been updated',
+    'inventory.delete_msg': 'This will remove the item from your fridge.',
+    'camera.title': 'Add Items', 'camera.take_photo': 'Take Photo', 'camera.choose_library': 'Choose from Library',
+    'planning.title': 'Food Ideas', 'planning.cooking_for': 'Cooking for', 'planning.cuisine': 'Cuisine',
+    'planning.get_ideas': 'Get Ideas', 'planning.finding': 'Finding recipes…',
+    'planning.no_results.title': 'No matching recipes',
+    'planning.no_results.desc': 'Try selecting a different cuisine or add more items to your fridge.',
+    'planning.missing': (n) => `${n} missing`,
+    'recipe.ingredients': 'Ingredients', 'recipe.steps': 'Steps',
+    'recipe.in_fridge': 'In fridge', 'recipe.need_to_buy': 'Need to buy',
+    'recipe.add_to_shopping': 'Add Missing to Shopping List', 'recipe.match': 'match',
+    'shopping.title': 'Shopping', 'shopping.total': 'Estimated Total',
+    'shopping.clear_bought': 'Clear Bought', 'shopping.share_title': 'Shopping List',
+    'shopping.items': (n) => `${n} item${n!==1?'s':''}`, 'shopping.bought': (n) => `${n} bought`,
+    'shopping.empty.title': 'No items', 'shopping.empty.desc': 'Add missing ingredients from a recipe in the Plan tab.',
+    'shopping.toast_cleared': 'Bought items cleared',
+    'shopping.purchased': 'purchased',
+    'profile.title': 'Profile', 'profile.family': 'Family', 'profile.members': 'Members',
+    'profile.no_members': 'No members yet', 'profile.swipe_hint': 'Swipe left to delete · tap to edit',
+    'profile.member.basic': 'Basic Info', 'profile.member.name': 'Name', 'profile.member.age': 'Age',
+    'profile.member.age_hint': 'Optional', 'profile.member.dietary': 'Dietary Restrictions',
+    'profile.member.allergies': 'Allergies', 'profile.member.health': 'Health Conditions',
+    'profile.member.spice': 'Spice Preference',
+    'profile.member.add_title': 'New Member',
+    'profile.member.delete_msg': 'This member and their preferences will be permanently removed.',
+    'common.cancel': 'Cancel', 'common.save': 'Save', 'common.delete': 'Delete', 'common.back': 'Back',
+    'lang.btn': '中文',
+  },
+  zh: {
+    'tab.fridge': '雪櫃', 'tab.plan': '計劃', 'tab.shopping': '購物', 'tab.profile': '個人資料',
+    'inventory.title': '我的雪櫃', 'inventory.search': '搜尋食材...',
+    'inventory.empty': '您的雪櫃是空的', 'inventory.empty.hint': '點擊相機圖示掃描您的雪櫃。',
+    'inventory.no_results': '沒有結果',
+    'inventory.scan_prompt.title': '設定您的雪櫃',
+    'inventory.scan_prompt.subtitle': '掃描您的雪櫃或將其標記為空以開始',
+    'inventory.scan_prompt.scan': '掃描我的雪櫃', 'inventory.scan_prompt.empty': '我的雪櫃是空的',
+    'inventory.action_stock': '補貨', 'inventory.action_use': '使用', 'inventory.action_edit': '編輯',
+    'inventory.add_item': '新增食材', 'inventory.edit_item': '編輯食材',
+    'inventory.item_name': '名稱', 'inventory.item_category': '類別', 'inventory.item_quantity': '數量',
+    'inventory.add_to_fridge': '加入雪櫃', 'inventory.save_changes': '儲存更改',
+    'inventory.footer': (n) => `${n} 件食材 · 向右滑動以補貨/使用/編輯 · 向左滑動以刪除`,
+    'inventory.scanning': '正在掃描雪櫃...', 'inventory.scanning_hint': 'AI 正在辨識食材',
+    'inventory.scan_complete': (n) => `已找到 ${n} 種食材`, 'inventory.scan_updated': '您的雪櫃已更新',
+    'inventory.delete_msg': '此操作將從您的雪櫃中移除此項目。',
+    'camera.title': '新增食材', 'camera.take_photo': '拍照', 'camera.choose_library': '從相簿選擇',
+    'planning.title': '食物點子', 'planning.cooking_for': '為誰烹飪', 'planning.cuisine': '菜系',
+    'planning.get_ideas': '獲取點子', 'planning.finding': '正在搜尋食譜…',
+    'planning.no_results.title': '沒有符合的食譜',
+    'planning.no_results.desc': '嘗試選擇其他菜系，或在冰箱中添加更多食材。',
+    'planning.missing': (n) => `缺少 ${n} 種`,
+    'recipe.ingredients': '食材', 'recipe.steps': '步驟',
+    'recipe.in_fridge': '已在雪櫃', 'recipe.need_to_buy': '需要購買',
+    'recipe.add_to_shopping': '將缺少的加入購物清單', 'recipe.match': '配對',
+    'shopping.title': '購物', 'shopping.total': '預計總額',
+    'shopping.clear_bought': '清除已購', 'shopping.share_title': '購物清單',
+    'shopping.items': (n) => `${n} 件`, 'shopping.bought': (n) => `${n} 已購`,
+    'shopping.empty.title': '沒有項目', 'shopping.empty.desc': '在計劃標籤中從食譜新增缺少的食材。',
+    'shopping.toast_cleared': '已購項目已清除',
+    'shopping.purchased': '已購買',
+    'profile.title': '個人資料', 'profile.family': '家庭', 'profile.members': '成員',
+    'profile.no_members': '尚無成員', 'profile.swipe_hint': '向左滑動以刪除 · 點擊以編輯',
+    'profile.member.basic': '基本資料', 'profile.member.name': '姓名', 'profile.member.age': '年齡',
+    'profile.member.age_hint': '選填', 'profile.member.dietary': '飲食限制',
+    'profile.member.allergies': '過敏', 'profile.member.health': '健康狀況',
+    'profile.member.spice': '辣度偏好',
+    'profile.member.add_title': '新成員',
+    'profile.member.delete_msg': '此成員及其偏好設定將被永久移除。',
+    'common.cancel': '取消', 'common.save': '儲存', 'common.delete': '刪除', 'common.back': '返回',
+    'lang.btn': 'EN',
+  },
+};
+function t(key) { const v = STRINGS[S.lang][key]; return typeof v === 'function' ? v : (v ?? key); }
+
+// Leading toolbar icons — function so lang/theme toggle re-evaluates on each render
+function tabNavLeading() {
+  return `<div class="tab-nav-leading">
+    <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">${S.theme === 'warm' ? IC.sun : IC.snowflake}</button>
+    <button class="icon-btn" onclick="toggleLang()" title="Select language"
+      style="font:700 12px/1 'Inter',sans-serif;width:auto;min-width:36px;padding:0 7px;letter-spacing:0.3px"
+    >${t('lang.btn')}</button>
+  </div>`;
+}
+
+// ══════════════════════════════════
+//  THEME TOGGLE
+// ══════════════════════════════════
+function toggleTheme() {
+  S.theme = S.theme === 'warm' ? 'cool' : 'warm';
+  document.documentElement.setAttribute('data-theme', S.theme === 'cool' ? 'cool' : '');
+  applyLang();
+  if (S.activeTab === 3) renderProfile();
+}
+
+// ══════════════════════════════════
+//  LANGUAGE
+// ══════════════════════════════════
+function toggleLang() {
+  S.lang = S.lang === 'en' ? 'zh' : 'en';
+  applyLang();
+}
+
+function applyLang() {
+  // Tab bar labels
+  ['fridge','plan','shopping','profile'].forEach((k,i) => {
+    const el = document.getElementById(`tb-label-${i}`);
+    if (el) el.textContent = t(`tab.${k}`);
+  });
+  // Camera sheet
+  _setTxt('camera-sheet-title',   t('camera.title'));
+  _setTxt('camera-take-photo-btn',t('camera.take_photo'));
+  _setTxt('camera-library-btn',   t('camera.choose_library'));
+  _setTxt('camera-cancel-btn',    t('common.cancel'));
+  // Delete item confirm
+  _setTxt('delete-confirm-msg',   t('inventory.delete_msg'));
+  _setTxt('delete-confirm-btn',   t('common.delete'));
+  _setTxt('delete-cancel-btn',    t('common.cancel'));
+  // Add/edit item modal
+  _setTxt('modal-name-label',     t('inventory.item_name'));
+  _setTxt('modal-cat-label',      t('inventory.item_category'));
+  _setTxt('modal-qty-label',      t('inventory.item_quantity'));
+  _setTxt('modal-cancel-btn',     t('common.cancel'));
+  // Add member sheet
+  _setTxt('am-title',             t('profile.member.add_title'));
+  _setTxt('am-cancel-btn',        t('common.cancel'));
+  _setTxt('am-save-btn',          t('common.save'));
+  // Delete member confirm
+  _setTxt('delete-member-msg',    t('profile.member.delete_msg'));
+  _setTxt('delete-member-btn',    t('common.delete'));
+  _setTxt('delete-member-cancel-btn', t('common.cancel'));
+  // Share sheet
+  _setTxt('share-cancel-btn',     t('common.cancel'));
+  // Re-render active screens
+  renderFridge();
+  renderPlan();
+  renderShop();
+  if (S.activeTab === 3) renderProfile();
+}
+
+function _setTxt(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+// ══════════════════════════════════
+//  CLOCK
+// ══════════════════════════════════
+function updateClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent =
+    d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ══════════════════════════════════
+//  SCREEN TRANSITIONS
+// ══════════════════════════════════
+let prevScreen = null;
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active');
+  });
+  document.getElementById(id).classList.add('active');
+  prevScreen = id;
+}
+
+// ══════════════════════════════════
+//  SIDEBAR HIGHLIGHTS
+// ══════════════════════════════════
+// ══════════════════════════════════
+//  BUDGET TIER MAPPING
+// ══════════════════════════════════
+function budgetTier(amount) {
+  if (amount < 50)  return {value:'low',    label:'Budget-Friendly', color:'#4CAF50'};
+  if (amount < 100) return {value:'medium', label:'Moderate',        color:'#FF9800'};
+  return              {value:'high',   label:'Premium',         color:'#F44336'};
+}
+
+// Sync slider UI after every drag event
+function onBudgetInput(el) {
+  S.budget = parseInt(el.value, 10);
+  const tier = budgetTier(S.budget);
+  const MIN = 10, MAX = 150;
+  const pct  = (S.budget - MIN) / (MAX - MIN);
+  // dim overlay
+  document.getElementById('budget-dim').style.width = (1 - pct) * 100 + '%';
+  // thumb colour (inject dynamic rule)
+  let st = document.getElementById('budget-thumb-style');
+  if (!st) { st = document.createElement('style'); st.id='budget-thumb-style'; document.head.appendChild(st); }
+  st.textContent = `input.budget-slider::-webkit-slider-thumb{background:${tier.color}}input.budget-slider::-moz-range-thumb{background:${tier.color}}`;
+  // price display
+  document.getElementById('budget-amount').textContent = 'HK$' + S.budget;
+  document.getElementById('budget-amount').style.color = tier.color;
+  document.getElementById('budget-tier').textContent   = tier.label;
+  document.getElementById('budget-tier').style.color   = tier.color;
+}
+
+const HINTS = {
+  'fi-profile':  '<strong>Profile tab:</strong> View family info and tap a member to edit their dietary restrictions, allergies, and preferences.',
+  'fi-onboard': '<strong>Step 1:</strong> Set up your family profile — name, cooking level, budget, and members.',
+  'fi-fridge':  '<strong>Fridge tab:</strong> Scan or tap + to add items. Tap ⋯ on a row to stock, use, edit, or delete.',
+  'fi-plan':    '<strong>Plan tab:</strong> Pick who you\'re cooking for and a cuisine, then get AI recipe ideas.',
+  'fi-detail':  '<strong>Recipe Detail:</strong> View ingredients (with fridge matches) and step-by-step instructions.',
+  'fi-shop':    '<strong>Shopping tab:</strong> Missing ingredients land here. Share, swipe to delete, or tap to mark as purchased.',
+};
+function setFlow(id) {
+  document.querySelectorAll('.flow-item').forEach(el => {
+    el.classList.remove('active');
+    if (el.id !== id) el.classList.add('done');
+  });
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('active'); el.classList.remove('done'); }
+  const hint = document.getElementById('hint-box');
+  if (hint) hint.innerHTML = HINTS[id] || '';
+}
+
+// ══════════════════════════════════
+//  SHEETS / MODALS
+// ══════════════════════════════════
+function openSheet(id)  { document.getElementById(id).classList.add('open'); }
+function closeSheet(id) { document.getElementById(id).classList.remove('open'); }
+function openProfileSheet() {
+  // Profile is now a dedicated tab — switch to it
+  goTab(3);
+}
+function openModal() {
+  S._editingItemId = null;
+  document.getElementById('modal-add-title').textContent = t('inventory.add_item');
+  document.getElementById('add-name').value = '';
+  document.getElementById('add-cat').value = 'Protein';
+  document.getElementById('add-qty').value = '1';
+  document.getElementById('modal-save-btn').textContent = t('inventory.add_to_fridge');
+  document.getElementById('modal-add').classList.add('open');
+  setTimeout(() => document.getElementById('add-name').focus({ preventScroll: true }), 50);
+}
+function closeModal()   { document.getElementById('modal-add').classList.remove('open'); }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ══════════════════════════════════
+//  ONBOARDING
+// ══════════════════════════════════
+const OB = [
+  {type:'name'},
+  {type:'tw', emoji:'🍳', text:"Let's talk about how your family cooks."},
+  {type:'cooking'},
+  {type:'tw', emoji:'⭐', textFn:() => ({
+    beginner: "No worries — we'll keep the recipes simple and easy to follow.",
+    intermediate: "Nice! You'll have plenty of variety to choose from.",
+    advanced: "Impressive! Get ready for some complex and exciting dishes.",
+  }[S.skill] || 'Great choice!')},
+  {type:'budget'},
+  {type:'tw', emoji:'💰', text:"Great! We'll find recipes that fit your budget."},
+  {type:'members'},
+  {type:'summary'},
+];
+
+let twT = null;
+function renderOB() {
+  const step = OB[S.obStep];
+  document.getElementById('ob-dots').innerHTML = OB.map((_,i) =>
+    `<div class="dot ${i < S.obStep?'done':''} ${i===S.obStep?'cur':''}"></div>`).join('');
+
+  if (twT) { clearTimeout(twT); twT = null; }
+  const body = document.getElementById('ob-body');
+  const btn  = document.getElementById('ob-btn');
+  btn.textContent = S.obStep === OB.length-1 ? 'Get Started' : 'Continue';
+
+  switch (step.type) {
+    case 'name':
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">👨‍👩‍👧‍👦</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">${'What\'s your family name?'}</div>
+          <input class="field" id="fname" placeholder="e.g. The Chan Family" value="${S.familyName}" style="margin-top:20px" autocomplete="off">
+        </div>`;
+      setTimeout(() => {
+        const inp = document.getElementById('fname');
+        inp.addEventListener('input', e => { S.familyName = e.target.value; updateOBBtn(); });
+        inp.focus();
+      }, 50);
+      break;
+
+    case 'tw':
+      const txt = step.textFn ? step.textFn() : step.text;
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">${step.emoji}</div>
+          <div style="font:700 22px/1.4 Inter,sans-serif;margin-top:18px;min-height:62px" id="tw"></div>
+        </div>`;
+      typewrite(txt);
+      break;
+
+    case 'cooking':
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">🍽️</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">What's your cooking skill level?</div>
+          <div class="pill-wrap" style="margin-top:20px" id="skill-pills"></div>
+        </div>`;
+      SKILLS.forEach(s => {
+        const p = mkPill(s.charAt(0).toUpperCase()+s.slice(1), S.skill===s, ()=>{S.skill=s;renderOB();});
+        document.getElementById('skill-pills').appendChild(p);
+      });
+      break;
+
+    case 'budget': {
+      const MIN = 10, MAX = 150;
+      const tier0 = budgetTier(S.budget);
+      const pct0  = (S.budget - MIN) / (MAX - MIN);
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">💵</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">What's your budget per person?</div>
+          <div style="margin-top:24px">
+            <div class="budget-price">
+              <div class="amount" id="budget-amount" style="color:${tier0.color}">HK$${S.budget}</div>
+              <div class="tier"   id="budget-tier"   style="color:${tier0.color}">${tier0.label}</div>
+              <div class="per">per person</div>
+            </div>
+            <div class="budget-track-wrap">
+              <div class="budget-track">
+                <div class="budget-gradient"></div>
+                <div class="budget-dim" id="budget-dim" style="width:${(1-pct0)*100}%"></div>
+              </div>
+              <input class="budget-slider" type="range" min="${MIN}" max="${MAX}" step="5"
+                     value="${S.budget}" oninput="onBudgetInput(this)">
+            </div>
+            <div class="budget-endpoints"><span>&lt;HK$${MIN}</span><span>&gt;HK$${MAX}</span></div>
+          </div>
+        </div>`;
+      // inject initial thumb colour
+      let st = document.getElementById('budget-thumb-style');
+      if (!st) { st = document.createElement('style'); st.id='budget-thumb-style'; document.head.appendChild(st); }
+      st.textContent = `input.budget-slider::-webkit-slider-thumb{background:${tier0.color}}input.budget-slider::-moz-range-thumb{background:${tier0.color}}`;
+      break;
+    }
+
+    case 'members':
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">👥</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">Who's in your family?</div>
+          <div style="font-size:15px;color:var(--gray);margin-top:8px;line-height:1.5">Dietary preferences and allergies can be set for each member in their profile after setup.</div>
+          <div id="mem-list" style="margin-top:20px"></div>
+          <button class="btn btn-ghost" style="text-align:left;padding-left:0;margin-top:4px;color:var(--p)" onclick="addMember()">Add Member</button>
+        </div>`;
+      renderMembers();
+      break;
+
+    case 'summary':
+      const bl = budgetTier(S.budget).label;
+      body.innerHTML = `
+        <div style="padding-top:20px">
+          <div style="font-size:52px;line-height:1">🎉</div>
+          <div style="font:700 28px/1.25 Inter,sans-serif;margin-top:18px;letter-spacing:-0.4px">You're all set!</div>
+          <div style="margin-top:20px;background:var(--gray-light);border-radius:12px;padding:4px 16px">
+            <div class="sum-row"><span class="sum-key">Family</span><span class="sum-val">${S.familyName}</span></div>
+            <div class="sum-row"><span class="sum-key">Cooking skill</span><span class="sum-val">${S.skill.charAt(0).toUpperCase()+S.skill.slice(1)}</span></div>
+            <div class="sum-row"><span class="sum-key">Budget</span><span class="sum-val">${bl}</span></div>
+            <div class="sum-row"><span class="sum-key">Members</span><span class="sum-val">${S.members.length} people</span></div>
+          </div>
+        </div>`;
+      break;
+  }
+  updateOBBtn();
+}
+
+function mkPill(label, on, fn) {
+  const el = document.createElement('span');
+  el.className = 'pill' + (on?' on':'');
+  el.textContent = label;
+  el.onclick = fn;
+  return el;
+}
+
+function typewrite(text) {
+  const el = document.getElementById('tw');
+  let i = 0;
+  function tick() {
+    if (!el) return;
+    if (i <= text.length) {
+      el.innerHTML = text.slice(0,i) + (i<text.length?'<span class="cursor">&nbsp;</span>':'');
+      i++;
+      twT = setTimeout(tick, 28);
+    } else {
+      twT = null;
+      updateOBBtn();
+    }
+  }
+  tick();
+}
+
+function obBack() {
+  if (S.obStep > 0) {
+    S.obStep--;
+    renderOB();
+  }
+}
+
+function updateOBBtn() {
+  const btn = document.getElementById('ob-btn');
+  // Show/hide back button — hidden on first step (matches iOS chevron.left visibility)
+  const backBtn = document.getElementById('ob-back');
+  if (backBtn) backBtn.style.display = S.obStep > 0 ? 'flex' : 'none';
+  const step = OB[S.obStep];
+  const ok = {
+    name: S.familyName.trim().length > 0,
+    tw: twT === null,
+    cooking: S.skill !== '',
+    budget: true,
+    members: true,
+    summary: true,
+  }[step.type] ?? true;
+  btn.disabled = !ok;
+}
+
+function obNext() {
+  if (S.obStep < OB.length - 1) {
+    S.obStep++;
+    renderOB();
+  } else {
+    // Done — launch app; show inline scan prompt in fridge tab
+    S.selectedMembers = new Set(S.members);
+    goScreen('s-main');
+    setFlow('fi-fridge');
+    renderFridge(); // renders inline scan prompt since fridgeInitialized=false
+    renderPlan();
+    renderShop();
+  }
+}
+
+function renderMembers() {
+  const el = document.getElementById('mem-list');
+  if (!el) return;
+  el.innerHTML = S.members.map((m,i) => `
+    <div class="mem-row">
+      <input class="mem-input" value="${m}" placeholder="Name"
+             oninput="S.members[${i}]=this.value" autocomplete="off">
+      <button class="mem-del" onclick="S.members.splice(${i},1);renderMembers()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+function addMember() {
+  S.members.push('');
+  renderMembers();
+  const inputs = document.querySelectorAll('.mem-input');
+  if (inputs.length) inputs[inputs.length-1].focus();
+}
+
+// ══════════════════════════════════
+//  TABS
+// ══════════════════════════════════
+const PANES = ['pane-fridge','pane-plan','pane-shop','pane-profile'];
+const FLOW_IDS = ['fi-fridge','fi-plan','fi-shop','fi-profile'];
+function goTab(i) {
+  S.activeTab = i;
+  PANES.forEach((id,j) => {
+    document.getElementById(id).style.display = j===i ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.tab-btn').forEach((b,j) => b.classList.toggle('on', j===i));
+  setFlow(FLOW_IDS[i] || 'fi-fridge');
+  if (i===2) renderShop();
+  if (i===3) renderProfile();
+}
+
+// ══════════════════════════════════
+//  FRIDGE
+// ══════════════════════════════════
+function renderFridge() {
+  openSwipeId = null; openSwipeDir = null;
+  const el = document.getElementById('pane-fridge');
+
+  // ── Inline scan prompt (matches ScanPromptView) ──
+  if (!S.fridgeInitialized && S.inventory.length === 0) {
+    el.innerHTML = `
+      <div class="tab-nav">
+        ${tabNavLeading()}
+        <div class="tab-nav-trailing">
+          <button class="icon-btn" onclick="openModal()" title="Add item">${IC.plus}</button>
+          <button class="icon-btn scan-color" onclick="openSheet('sheet-camera')" title="Scan fridge">${IC.camera}</button>
+        </div>
+      </div>
+      <div class="ltitle">${t('inventory.title')}</div>
+      <div class="scan-prompt">
+        <div class="scan-prompt-icon">📷</div>
+        <div class="scan-prompt-title">${t('inventory.scan_prompt.title')}</div>
+        <div class="scan-prompt-sub">${t('inventory.scan_prompt.subtitle')}</div>
+        <div class="scan-prompt-actions">
+          <button class="btn btn-scan" onclick="doScan()">${t('inventory.scan_prompt.scan')}</button>
+          <button class="btn btn-ghost" onclick="skipScan()">${t('inventory.scan_prompt.empty')}</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const inv = S.searchText
+    ? S.inventory.filter(x => x.name.toLowerCase().includes(S.searchText.toLowerCase()))
+    : S.inventory;
+
+  const groups = {};
+  inv.forEach(x => (groups[x.cat] = groups[x.cat]||[]).push(x));
+
+  let h = `
+    <div class="tab-nav">
+      ${tabNavLeading()}
+      <div class="tab-nav-trailing">
+        <button class="icon-btn" onclick="openModal()" title="Add item">${IC.plus}</button>
+        <button class="icon-btn scan-color" onclick="openSheet('sheet-camera')" title="Scan fridge">${IC.camera}</button>
+      </div>
+    </div>
+    <div class="ltitle">${t('inventory.title')}</div>
+    <div class="search" style="flex-shrink:0">
+      <svg width="14" height="14" viewBox="0 0 14 14"><circle cx="6" cy="6" r="5" stroke="currentColor" fill="none" stroke-width="1.5"/><line x1="10" y1="10" x2="13.5" y2="13.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <input placeholder="${t('inventory.search')}" value="${S.searchText}" oninput="S.searchText=this.value;renderFridge()">
+    </div>`;
+
+  if (S.inventory.length === 0) {
+    // Fridge initialized but empty
+    h += `<div class="empty" style="flex:1">
+      <div class="empty-icon">🧊</div>
+      <div class="empty-title">${t('inventory.empty')}</div>
+      <div class="empty-desc">${t('inventory.empty.hint')}</div>
+    </div>`;
+  } else if (inv.length === 0) {
+    h += `<div class="empty" style="flex:1">
+      <div class="empty-icon">🔍</div>
+      <div class="empty-title">${t('inventory.no_results')}</div>
+      <div class="empty-desc">No items match "${S.searchText}"</div>
+    </div>`;
+  } else {
+    h += `<div class="scroll list-bg" style="padding-bottom:80px">`;
+    Object.keys(groups).sort().forEach(cat => {
+      h += `<div class="sec-hdr">${cat}</div><div class="inset">`;
+      groups[cat].forEach(item => {
+        const useDisabled = item.qty <= 0 ? 'disabled style="opacity:0.4;cursor:not-allowed"' : '';
+        h += `
+        <div class="swipe-row-wrap" data-swipe-id="${item.id}">
+          <div class="swipe-row-leading">
+            <button class="swipe-action-btn" style="background:#34C759" onclick="stockItem(${item.id})">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              ${t('inventory.action_stock')}
+            </button>
+            <button class="swipe-action-btn" style="background:#FF9500" onclick="useItem(${item.id})" ${useDisabled}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              ${t('inventory.action_use')}
+            </button>
+            <button class="swipe-action-btn" style="background:#007AFF" onclick="editItemModal(${item.id})">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              ${t('inventory.action_edit')}
+            </button>
+          </div>
+          <div class="swipe-row-trailing">
+            <button class="swipe-action-btn" style="background:#FF3B30" onclick="removeItem(${item.id})">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              ${t('common.delete')}
+            </button>
+          </div>
+          <div class="swipe-row-content row">
+            <span class="row-em">${catE(item.cat)}</span>
+            <div class="row-info">
+              <div class="row-title">${item.name}</div>
+              <div class="row-sub">${item.cat}</div>
+            </div>
+            <span class="row-badge">${item.qty}</span>
+            <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style="margin-left:8px;color:#C7C7CC;flex-shrink:0"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>`;
+      });
+      h += `</div>`;
+    });
+    h += `<div class="list-footer">${STRINGS[S.lang]['inventory.footer'](S.inventory.length)}</div></div>`;
+  }
+
+  el.innerHTML = h;
+  // Attach swipe listeners to all rendered rows
+  el.querySelectorAll('.swipe-row-wrap').forEach(wrap => {
+    initSwipeRow(parseInt(wrap.dataset.swipeId));
+  });
+}
+
+let _pendingDeleteId = null;
+
+function removeItem(id) {
+  _pendingDeleteId = id;
+  const item = S.inventory.find(x => x.id === id);
+  document.getElementById('delete-confirm-title').textContent =
+    item ? `Remove "${item.name}"?` : 'Remove item?';
+  if (openSwipeId === id) closeSwipeRow(id);
+  openSheet('sheet-delete-confirm');
+}
+
+function confirmDeleteItem() {
+  closeSheet('sheet-delete-confirm');
+  if (_pendingDeleteId == null) return;
+  const id = _pendingDeleteId;
+  _pendingDeleteId = null;
+  openSwipeId = null; openSwipeDir = null;
+  S.inventory = S.inventory.filter(x => x.id !== id);
+  renderFridge();
+  showToast('Item removed');
+}
+
+function cancelDeleteItem() {
+  _pendingDeleteId = null;
+  closeSheet('sheet-delete-confirm');
+}
+
+function addItemManually() {
+  const name = document.getElementById('add-name').value.trim();
+  const cat  = document.getElementById('add-cat').value;
+  const qty  = parseInt(document.getElementById('add-qty').value) || 0;
+  if (!name) { document.getElementById('add-name').focus(); return; }
+  S.fridgeInitialized = true;
+  if (S._editingItemId != null) {
+    const item = S.inventory.find(x => x.id === S._editingItemId);
+    if (item) { item.name = name; item.cat = cat; item.qty = qty; }
+    S._editingItemId = null;
+    closeModal();
+    renderFridge();
+    showToast(`${name} updated`);
+  } else {
+    S.inventory.push({ id: Date.now(), name, cat, qty });
+    closeModal();
+    renderFridge();
+    showToast(`${name} added to fridge`);
+  }
+}
+
+// ══════════════════════════════════
+//  SWIPE ROWS
+// ══════════════════════════════════
+const LEAD_W = 240, TRAIL_W = 80, SNAP_PX = 60, CLOSE_PX = 20;
+let openSwipeId = null, openSwipeDir = null;
+let _swipe = null;
+
+function initSwipeRow(id) {
+  const wrap = document.querySelector(`.swipe-row-wrap[data-swipe-id="${id}"]`);
+  if (!wrap) return;
+  const content = wrap.querySelector('.swipe-row-content');
+
+  function getBase() {
+    if (openSwipeId !== id) return 0;
+    return openSwipeDir === 'leading' ? LEAD_W : -TRAIL_W;
+  }
+
+  function snapTo(offset) {
+    content.style.transition = 'transform 0.22s cubic-bezier(.4,0,.2,1)';
+    content.style.transform = offset ? `translateX(${offset}px)` : '';
+    if (offset > 0)       { openSwipeId = id; openSwipeDir = 'leading'; }
+    else if (offset < 0)  { openSwipeId = id; openSwipeDir = 'trailing'; }
+    else if (openSwipeId === id) { openSwipeId = null; openSwipeDir = null; }
+  }
+
+  wrap.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    // Let clicks on action buttons pass through unintercepted
+    if (e.target.closest('.swipe-action-btn')) return;
+    if (openSwipeId && openSwipeId !== id) closeSwipeRow(openSwipeId);
+    _swipe = { id, startX: e.clientX, startY: e.clientY, base: getBase(), moved: false, cancelled: false };
+    wrap.setPointerCapture(e.pointerId);
+  });
+
+  wrap.addEventListener('pointermove', e => {
+    if (!_swipe || _swipe.id !== id || _swipe.cancelled) return;
+    const dx = e.clientX - _swipe.startX;
+    const dy = e.clientY - _swipe.startY;
+    if (!_swipe.moved && Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 8) {
+      _swipe.cancelled = true; return;
+    }
+    _swipe.moved = true;
+    let x = Math.max(-TRAIL_W, Math.min(LEAD_W, _swipe.base + dx));
+    content.style.transition = 'none';
+    content.style.transform = x ? `translateX(${x}px)` : '';
+  });
+
+  wrap.addEventListener('pointerup', e => {
+    if (!_swipe || _swipe.id !== id) return;
+    const dx = e.clientX - _swipe.startX;
+    const { base, moved, cancelled } = _swipe;
+    _swipe = null;
+    if (!moved || cancelled) { if (openSwipeId === id) snapTo(0); return; }
+    const total = base + dx;
+    if (base === 0) {
+      if (total > SNAP_PX) snapTo(LEAD_W);
+      else if (total < -SNAP_PX) snapTo(-TRAIL_W);
+      else snapTo(0);
+    } else if (base > 0) {
+      snapTo(dx < -CLOSE_PX ? 0 : LEAD_W);
+    } else {
+      snapTo(dx > CLOSE_PX ? 0 : -TRAIL_W);
+    }
+  });
+
+  wrap.addEventListener('pointercancel', () => {
+    if (_swipe && _swipe.id === id) { _swipe = null; snapTo(getBase()); }
+  });
+}
+
+function closeSwipeRow(id) {
+  const wrap = document.querySelector(`.swipe-row-wrap[data-swipe-id="${id}"]`);
+  if (!wrap) return;
+  const content = wrap.querySelector('.swipe-row-content');
+  if (content) { content.style.transition = 'transform 0.22s cubic-bezier(.4,0,.2,1)'; content.style.transform = ''; }
+  if (openSwipeId === id) { openSwipeId = null; openSwipeDir = null; }
+}
+
+// Close open row when tapping outside it
+document.addEventListener('pointerdown', e => {
+  if (openSwipeId == null) return;
+  const wrap = document.querySelector(`.swipe-row-wrap[data-swipe-id="${openSwipeId}"]`);
+  if (wrap && !wrap.contains(e.target)) closeSwipeRow(openSwipeId);
+});
+
+function stockItem(id) {
+  const item = S.inventory.find(x => x.id === id);
+  if (!item) return;
+  item.qty++;
+  openSwipeId = null; openSwipeDir = null;
+  renderFridge();
+  showToast(`${item.name}: ${item.qty}`);
+}
+
+function useItem(id) {
+  const item = S.inventory.find(x => x.id === id);
+  if (!item || item.qty <= 0) return;
+  item.qty--;
+  openSwipeId = null; openSwipeDir = null;
+  renderFridge();
+  showToast(`${item.name}: ${item.qty}`);
+}
+
+function editItemModal(id) {
+  const item = S.inventory.find(x => x.id === id);
+  if (!item) return;
+  if (openSwipeId) closeSwipeRow(openSwipeId);
+  S._editingItemId = id;
+  document.getElementById('modal-add-title').textContent = t('inventory.edit_item');
+  document.getElementById('add-name').value = item.name;
+  document.getElementById('add-cat').value = item.cat;
+  document.getElementById('add-qty').value = item.qty;
+  document.getElementById('modal-save-btn').textContent = t('inventory.save_changes');
+  document.getElementById('modal-add').classList.add('open');
+  setTimeout(() => document.getElementById('add-name').focus({ preventScroll: true }), 50);
+}
+
+// ══════════════════════════════════
+//  SCAN
+// ══════════════════════════════════
+function doScan() {
+  openSheet('sheet-camera');
+}
+
+function skipScan() {
+  S.fridgeInitialized = true;
+  renderFridge();
+}
+
+function simulateScan() {
+  closeSheet('sheet-camera');
+  const el = document.getElementById('pane-fridge');
+  // Phase 1: scanning spinner
+  el.innerHTML = `
+    <div class="tab-nav">
+      ${tabNavLeading()}
+      <div class="tab-nav-trailing"></div>
+    </div>
+    <div class="ltitle">My Fridge</div>
+    <div class="empty" style="flex:1;gap:16px">
+      <div style="width:44px;height:44px;border:3px solid var(--p);border-top-color:transparent;border-radius:50%;animation:spin 0.9s linear infinite"></div>
+      <div style="font:600 17px/1 Inter,sans-serif;color:var(--text)">${t('inventory.scanning')}</div>
+      <div style="color:var(--gray);font-size:14px">${t('inventory.scanning_hint')}</div>
+    </div>`;
+  // Phase 2: success feedback (matches CameraPickerView uploadResult state)
+  setTimeout(() => {
+    S.inventory = JSON.parse(JSON.stringify(FRIDGE_DEFAULT));
+    S.fridgeInitialized = true;
+    el.innerHTML = `
+      <div class="tab-nav">
+        ${tabNavLeading()}
+        <div class="tab-nav-trailing"></div>
+      </div>
+      <div class="ltitle">${t('inventory.title')}</div>
+      <div class="empty" style="flex:1;gap:16px">
+        <svg width="72" height="72" viewBox="0 0 24 24" fill="none" style="animation:pop 0.4s cubic-bezier(.4,0,.2,1) both;color:var(--success)">
+          <circle cx="12" cy="12" r="10" fill="currentColor"/>
+          <path d="M9 12l2 2 4-4" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div style="font:700 18px/1 Inter,sans-serif;color:var(--text)">${STRINGS[S.lang]['inventory.scan_complete'](FRIDGE_DEFAULT.length)}</div>
+        <div style="color:var(--gray);font-size:14px">${t('inventory.scan_updated')}</div>
+      </div>`;
+    // Phase 3: show inventory list after short delay (auto-dismiss)
+    setTimeout(() => renderFridge(), 1500);
+  }, 1600);
+}
+
+// ══════════════════════════════════
+//  PLANNING
+// ══════════════════════════════════
+function renderPlan() {
+  const el = document.getElementById('pane-plan');
+  const canSearch = S.selectedMembers.size > 0 && S.selectedCuisine;
+
+  el.innerHTML = `
+    <div class="tab-nav">
+      ${tabNavLeading()}
+      <div class="tab-nav-trailing"></div>
+    </div>
+    <div class="ltitle" style="flex-shrink:0">${t('planning.title')}</div>
+    <div class="scroll" style="padding-bottom:20px">
+      <div class="sec-label">${t('planning.cooking_for')}</div>
+      <div class="pill-scroller" id="member-pills">
+        ${S.members.map(m => `
+          <span class="pill ${S.selectedMembers.has(m)?'on':''}" onclick="toggleMember('${esc(m)}')">${m}</span>
+        `).join('')}
+      </div>
+
+      <div class="sec-label" style="margin-top:6px">${t('planning.cuisine')}</div>
+      <div class="pill-scroller" id="cuisine-pills">
+        ${CUISINES.map(c => `
+          <span class="pill ${S.selectedCuisine===c?'on':''}" onclick="selectCuisine('${c}')">${c}</span>
+        `).join('')}
+      </div>
+
+      <div style="padding:16px 16px 8px">
+        <button class="btn btn-p" ${canSearch?'':'disabled'} onclick="fetchRecipes()">
+          ${t('planning.get_ideas')}
+        </button>
+      </div>
+
+      <div id="recipe-list"></div>
+    </div>`;
+
+  renderRecipeList();
+}
+
+function esc(s) { return s.replace(/'/g,"\\'"); }
+
+function toggleMember(name) {
+  if (S.selectedMembers.has(name)) S.selectedMembers.delete(name);
+  else S.selectedMembers.add(name);
+  renderPlan();
+}
+
+function selectCuisine(c) {
+  S.selectedCuisine = c;
+  renderPlan();
+}
+
+function fetchRecipes() {
+  const list = document.getElementById('recipe-list');
+  list.innerHTML = `<div class="empty" style="min-height:160px;gap:14px">
+    <div style="width:36px;height:36px;border:3px solid var(--p);border-top-color:transparent;border-radius:50%;animation:spin 0.9s linear infinite"></div>
+    <div style="font:600 15px/1 Inter,sans-serif;color:var(--text)">${t('planning.finding')}</div>
+  </div>`;
+  setTimeout(() => {
+    let results = RECIPES.filter(r => r.cuisine.toLowerCase() === S.selectedCuisine.toLowerCase());
+    if (results.length === 0) results = RECIPES.slice(0,3);
+    S.recipes = results.slice().sort((a, b) => a.ingredients.filter(i=>!i.have).length - b.ingredients.filter(i=>!i.have).length);
+    renderRecipeList();
+    setFlow('fi-detail');
+  }, 900);
+}
+
+function renderRecipeList() {
+  const list = document.getElementById('recipe-list');
+  if (!list || S.recipes.length === 0) { if(list) list.innerHTML=''; return; }
+
+  list.innerHTML = S.recipes.map(r => {
+    const missingCount = r.ingredients.filter(i=>!i.have).length;
+    return `<div class="recipe-card" onclick="showDetail('${r.id}')">
+      <div class="card-hero" style="background:${r.bg}">${r.image?(imageCache.has(r.image)?`<img src="${r.image}" alt="${r.name}" style="width:100%;height:100%;object-fit:cover;object-position:center">`:`<div class="card-hero-img-wrap" data-src="${r.image}" data-id="${r.id}"><div style="width:32px;height:32px;border:3px solid rgba(0,0,0,0.15);border-top-color:rgba(0,0,0,0.5);border-radius:50%;animation:spin 0.9s linear infinite"></div></div>`):`<span class="card-hero-emoji">${r.emoji}</span>`}</div>
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <span class="card-title" style="flex:1">${r.name}</span>
+          <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style="color:#C7C7CC;flex-shrink:0;margin-top:3px"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="card-sub">${r.cuisine}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+          <div class="match-track" style="flex:1"><div class="match-fill" style="width:${r.match}%"></div></div>
+          <span style="font:700 12px/1 Inter,sans-serif;color:var(--success)">${r.match}%</span>
+        </div>
+        <div style="font-size:12px;margin-top:4px;color:${missingCount===0?'var(--success)':'var(--danger)'}">
+          ${STRINGS[S.lang]['planning.missing'](missingCount)}
+        </div>
+        ${r.kcal != null ? `<div style="font-size:12px;margin-top:2px;color:#FF9500;display:flex;align-items:center;gap:3px">${IC.flame}&nbsp;~${r.kcal} kcal</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════
+//  RECIPE DETAIL
+// ══════════════════════════════════
+function showDetail(id) {
+  S.currentRecipeId = id;
+  S.detailTab = 0;
+  setFlow('fi-detail');
+  goScreen('s-detail');
+  renderDetail();
+}
+
+function renderDetail() {
+  const r = RECIPES.find(x=>x.id===S.currentRecipeId);
+  if (!r) return;
+  const missing = r.ingredients.filter(i=>!i.have);
+  const el = document.getElementById('detail-inner');
+
+  let tabContent = '';
+  if (S.detailTab === 0) {
+    const missingPct = ing => {
+        if (ing.quantity <= 0) return 0;
+        const inv = S.inventory.find(x => x.name.toLowerCase() === ing.name.toLowerCase());
+        const available = inv ? inv.qty : 0;
+        return Math.max(0, ing.quantity - available) / ing.quantity;
+      };
+    tabContent = r.ingredients.slice().sort((a,b) => missingPct(b) - missingPct(a)).map(ing => `
+      <div class="ing-row">
+        <span class="ing-icon" style="color:${ing.have?'var(--success)':'var(--border)'}">
+          ${ing.have ? IC.checkFill : IC.circle}
+        </span>
+        <span class="ing-name">${ing.name}</span>
+        <span class="ing-qty">${ing.quantity}${ing.unit ? ' ' + ing.unit : ''}</span>
+        <span class="ing-tag ${ing.have?'have':'need'}">${ing.have?t('recipe.in_fridge'):t('recipe.need_to_buy')}</span>
+      </div>`).join('');
+  } else {
+    tabContent = r.steps.map((s,i) => `
+      <div class="step-row">
+        <div class="step-num">${i+1}</div>
+        <div class="step-txt">${s}</div>
+      </div>`).join('');
+  }
+
+  el.innerHTML = `
+    <div class="nav" style="flex-shrink:0">
+      <button class="nav-back" onclick="backFromDetail()">
+        ${IC.chevronBack}
+        ${t('common.back')}
+      </button>
+      <span class="nav-title" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.name}</span>
+      <button class="icon-btn" onclick="shareRecipe('${r.id}')" title="Share recipe" style="position:absolute;right:8px">${IC.share}</button>
+    </div>
+    <div class="scroll" style="padding-bottom:24px">
+      <div style="height:160px;background:${r.bg};display:flex;align-items:center;justify-content:center;"><span style="font-size:80px;filter:drop-shadow(0 6px 18px rgba(0,0,0,0.2));line-height:1">${r.emoji}</span></div>
+      <div style="padding:16px">
+        <div style="font:700 22px/1.3 Inter,sans-serif;letter-spacing:-0.3px">${r.name}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+          <span class="ipill">${IC.forkKnife}&nbsp;${r.cuisine}</span>
+          <span class="ipill">${IC.checkCircle}&nbsp;${r.match}% ${t('recipe.match')}</span>
+          <span class="ipill">${IC.cartPlus}&nbsp;${STRINGS[S.lang]['planning.missing'](missing.length)}</span>
+          ${r.kcal != null ? `<span class="ipill" style="color:#FF9500">${IC.flame}&nbsp;~${r.kcal} kcal</span>` : ''}
+        </div>
+        <div class="seg" style="margin-top:16px">
+          <button class="seg-btn ${S.detailTab===0?'on':''}" onclick="S.detailTab=0;renderDetail()">${t('recipe.ingredients')}</button>
+          <button class="seg-btn ${S.detailTab===1?'on':''}" onclick="S.detailTab=1;renderDetail()">${t('recipe.steps')}</button>
+        </div>
+        <div style="margin-top:14px">${tabContent}</div>
+        <button class="btn btn-p" style="margin-top:20px" onclick="addMissingToShop('${r.id}')">${t('recipe.add_to_shopping')}</button>
+      </div>
+    </div>
+    <div style="height:34px;flex-shrink:0"></div>`;
+}
+
+function backFromDetail() {
+  goScreen('s-main');
+  setFlow('fi-plan');
+}
+
+function shareRecipe(recipeId) {
+  const r = RECIPES.find(x=>x.id===recipeId);
+  if (!r) return;
+  const kcalLine = r.kcal != null ? `Energy: ~${r.kcal} kcal per serving` : '';
+  const ingredients = r.ingredients.map(i => `  • ${i.name} — ${i.quantity}${i.unit ? ' ' + i.unit : ''}`).join('\n');
+  const steps = r.steps.map((s, i) => `  ${i + 1}. ${s}`).join('\n');
+  const text = [
+    `${r.emoji} ${r.name}`,
+    `Cuisine: ${r.cuisine}`,
+    kcalLine,
+    `\nIngredients:\n${ingredients}`,
+    `\nSteps:\n${steps}`,
+  ].filter(Boolean).join('\n');
+  const sub = [r.cuisine, r.kcal != null ? `~${r.kcal} kcal` : null].filter(Boolean).join(' · ');
+  openShareSheet({ icon: r.emoji, title: r.name, sub, text });
+}
+
+function addMissingToShop(recipeId) {
+  const r = RECIPES.find(x=>x.id===recipeId);
+  if (!r) return;
+  let added = 0;
+  r.buy.forEach(item => {
+    const alreadyAdded = S.shopping.find(s =>
+      s.name.toLowerCase() === item.name.toLowerCase() &&
+      s.unit.toLowerCase() === item.unit.toLowerCase() &&
+      s.recipe === item.recipe
+    );
+    if (!alreadyAdded) {
+      S.shopping.push({...item, purchased:false, id:Date.now()+Math.random()});
+      added++;
+    }
+  });
+  renderShop();
+  backFromDetail();
+  setTimeout(() => {
+    goTab(2);
+    showToast(added > 0 ? `${added} item${added>1?'s':''} added to shopping list` : 'Items already in list');
+    setFlow('fi-shop');
+  }, 250);
+}
+
+// ══════════════════════════════════
+//  SHOPPING
+// ══════════════════════════════════
+function ingredientEmoji(name) {
+  const keywords = [
+    ['spring onion','🌿'],['bok choy','🥬'],['bell pepper','🫑'],
+    ['sweet potato','🍠'],['oyster sauce','🫙'],['cooking oil','🫚'],
+    ['fish sauce','🫙'],['soy sauce','🫙'],['chili sauce','🫙'],
+    ['strawberry','🍓'],['blueberry','🫐'],['pineapple','🍍'],
+    ['watermelon','🍉'],['eggplant','🍆'],['aubergine','🍆'],
+    ['cucumber','🥒'],['capsicum','🫑'],['broccoli','🥦'],
+    ['mushroom','🍄'],['cabbage','🥬'],['avocado','🥑'],
+    ['chicken','🍗'],['sausage','🌭'],['vinegar','🫙'],
+    ['yogurt','🥛'],['cheese','🧀'],['butter','🧈'],
+    ['shrimp','🦐'],['salmon','🐟'],['oyster','🦪'],
+    ['noodle','🍜'],['prawn','🦐'],['lychee','🍈'],
+    ['coffee','☕'],['cherry','🍒'],['potato','🥔'],
+    ['tomato','🍅'],['carrot','🥕'],['onion','🧅'],
+    ['garlic','🧄'],['banana','🍌'],['orange','🍊'],
+    ['mango','🥭'],['peach','🍑'],['grape','🍇'],
+    ['lemon','🍋'],['bread','🍞'],['flour','🌾'],
+    ['sugar','🍬'],['honey','🍯'],['juice','🧃'],
+    ['beans','🫘'],['apple','🍎'],['pasta','🍝'],
+    ['pear','🍐'],['kiwi','🥝'],['corn','🌽'],
+    ['tofu','🫘'],['peas','🫛'],['beef','🥩'],
+    ['pork','🥩'],['lamb','🥩'],['duck','🍗'],
+    ['steak','🥩'],['tuna','🐟'],['fish','🐟'],
+    ['squid','🦑'],['crab','🦀'],['bacon','🥓'],
+    ['milk','🥛'],['cream','🥛'],['rice','🍚'],
+    ['oat','🌾'],['egg','🥚'],['ham','🥓'],
+    ['ginger','🫚'],['oil','🫚'],['salt','🧂'],['sauce','🫙'],
+    ['paste','🫙'],['stock','🫙'],['broth','🫙'],
+    ['canned','🥫'],['water','💧'],['lime','🍋'],
+    ['melon','🍈'],['tea','🍵'],
+  ].sort((a,b) => b[0].length - a[0].length);
+  const lower = name.toLowerCase();
+  const match = keywords.find(([kw]) => lower.includes(kw));
+  return match ? match[1] : '🛒';
+}
+
+function computeAggregated() {
+  const map = {};
+  S.shopping.forEach(item => {
+    const key = `${item.name.toLowerCase()}|${item.unit.toLowerCase()}`;
+    if (!map[key]) {
+      map[key] = { key, name: item.name, unit: item.unit, totalQty: 0, cost: item.cost, sources: [] };
+    }
+    map[key].totalQty += item.qty;
+    if (map[key].cost == null) map[key].cost = item.cost;
+    map[key].sources.push(item);
+  });
+  return Object.values(map)
+    .map(ag => {
+      ag.sources.sort((a, b) => (a.recipe || '').localeCompare(b.recipe || ''));
+      ag.isPurchased = ag.sources.every(s => s.purchased);
+      ag.isPartial   = ag.sources.some(s => s.purchased) && !ag.isPurchased;
+      return ag;
+    })
+    .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+}
+
+function renderShop() {
+  const el = document.getElementById('pane-shop');
+  if (S.shopping.length === 0) {
+    el.innerHTML = `
+      <div class="tab-nav">
+        ${tabNavLeading()}
+        <div class="tab-nav-trailing"></div>
+      </div>
+      <div class="ltitle">${t('shopping.title')}</div>
+      <div class="empty" style="flex:1">
+        <div class="empty-icon">🛒</div>
+        <div class="empty-title">${t('shopping.empty.title')}</div>
+        <div class="empty-desc">${t('shopping.empty.desc')}</div>
+      </div>`;
+    return;
+  }
+
+  const aggregated = computeAggregated();
+  const boughtCount = aggregated.filter(ag => ag.isPurchased).length;
+  const totalAll    = S.shopping.reduce((s, i) => s + (i.cost || 0), 0);
+  const anyPurchased = S.shopping.some(i => i.purchased);
+
+  let h = `
+    <div class="tab-nav">
+      ${tabNavLeading()}
+      <div class="tab-nav-trailing" style="gap:4px">
+        <button class="icon-btn" title="Share shopping list" onclick="shareShoppingList()">${IC.share}</button>
+        ${anyPurchased ? `<button class="icon-btn" style="color:var(--danger);font:600 13px/1 Inter,sans-serif;width:auto;padding:0 8px;white-space:nowrap" onclick="clearBoughtConfirm()">${t('shopping.clear_bought')}</button>` : ''}
+      </div>
+    </div>
+    <div class="ltitle">${t('shopping.title')}</div>
+    <div class="scroll list-bg" style="padding-bottom:20px">
+      <div style="margin:8px 16px 0">
+        <div class="cost-card">
+          <div class="cost-lhs">
+            <div class="label">${t('shopping.total')}</div>
+            <div class="amount">HK$${totalAll}</div>
+          </div>
+          <div class="cost-rhs">
+            <span style="font:500 12px/1 Inter,sans-serif;color:var(--gray)">${STRINGS[S.lang]['shopping.items'](aggregated.length)}</span>
+            ${boughtCount > 0 ? `<span style="font:600 12px/1 Inter,sans-serif;color:var(--gray)">${STRINGS[S.lang]['shopping.bought'](boughtCount)}</span>` : ''}
+          </div>
+        </div>
+      </div>
+      <div style="margin:12px 16px 0"><div class="inset">`;
+
+  aggregated.forEach(ag => {
+    const rowClass    = ag.isPurchased ? 'bought' : (ag.isPartial ? 'partial' : '');
+    const checkIcon   = ag.isPurchased ? IC.checkFill : (ag.isPartial ? IC.minusCircle : IC.circle);
+    const checkColor  = ag.isPurchased ? 'var(--success)' : (ag.isPartial ? 'var(--scan)' : 'var(--border)');
+    const emojiOpacity = ag.isPurchased ? '0.4' : '1';
+    const costColor   = ag.isPurchased ? 'var(--gray)' : 'var(--p)';
+    const sourcesHtml = ag.sources.map(s =>
+      `<div class="shop-source">· ${s.recipe || 'Other'} &nbsp; ${s.qty} ${s.unit}</div>`
+    ).join('');
+    h += `
+      <div class="swipe-row-wrap" data-swipe-id="${ag.key}">
+        <div class="swipe-row-trailing">
+          <button class="swipe-action-btn" style="background:#FF3B30" onclick="removeAggregated(${JSON.stringify(ag.key)})">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            ${t('common.delete')}
+          </button>
+        </div>
+        <div class="swipe-row-content shop-row ${rowClass}" onclick="toggleAggregated(${JSON.stringify(ag.key)})">
+          <span class="shop-check" style="color:${checkColor}">${checkIcon}</span>
+          <span class="shop-emoji" style="opacity:${emojiOpacity}">${ingredientEmoji(ag.name)}</span>
+          <div class="shop-info">
+            <div class="shop-name">${ag.name}</div>
+            <div class="shop-qty">${ag.totalQty} ${ag.unit}</div>
+            ${sourcesHtml}
+          </div>
+          <span class="shop-cost" style="color:${costColor}">${ag.cost != null ? 'HK$' + ag.cost : '—'}</span>
+        </div>
+      </div>`;
+  });
+
+  h += `</div></div></div>`;
+  el.innerHTML = h;
+  el.querySelectorAll('.swipe-row-wrap').forEach(wrap => {
+    initTrailingOnlySwipeRow(wrap.dataset.swipeId);
+  });
+}
+
+function toggleAggregated(key) {
+  const sources = S.shopping.filter(i =>
+    `${i.name.toLowerCase()}|${i.unit.toLowerCase()}` === key
+  );
+  const allPurchased = sources.every(i => i.purchased);
+  sources.forEach(i => { i.purchased = !allPurchased; });
+  renderShop();
+}
+
+function removeAggregated(key) {
+  if (openSwipeId === key) { openSwipeId = null; openSwipeDir = null; }
+  S.shopping = S.shopping.filter(i =>
+    `${i.name.toLowerCase()}|${i.unit.toLowerCase()}` !== key
+  );
+  renderShop();
+}
+
+function clearBoughtConfirm() {
+  // Matches iOS confirmationDialog before destructive clear
+  if (confirm('Remove all purchased items from the list?\n\nThis cannot be undone.')) {
+    S.shopping = S.shopping.filter(i=>!i.purchased);
+    renderShop();
+    showToast(t('shopping.toast_cleared'));
+  }
+}
+
+function buildShareText() {
+  const lines = ['Shopping List'];
+  const totalAll = S.shopping.reduce((s, i) => s + (i.cost || 0), 0);
+  if (totalAll > 0) lines.push('Total: HK$' + totalAll);
+  lines.push('');
+  computeAggregated().forEach(ag => {
+    const status = ag.isPurchased ? '✓' : (ag.isPartial ? '◑' : '○');
+    let row = `${status} ${ag.name} – ${ag.totalQty} ${ag.unit}`;
+    if (ag.cost != null) row += ` (HK$${ag.cost}/${ag.unit})`;
+    lines.push(row);
+    ag.sources.forEach(s => {
+      lines.push(`   · ${s.recipe || 'Other'}: ${s.qty} ${s.unit}`);
+    });
+  });
+  return lines.join('\n').trim();
+}
+
+function openShareSheet({ icon, title, sub, text }) {
+  document.getElementById('share-preview-icon').textContent = icon;
+  document.getElementById('share-preview-title').textContent = title;
+  document.getElementById('share-preview-sub').textContent = sub;
+  document.getElementById('sheet-share').dataset.text = text;
+  openSheet('sheet-share');
+  const panel = document.getElementById('share-text-panel');
+  const body  = document.getElementById('share-text-panel-body');
+  if (panel && body) {
+    body.textContent = text;
+    panel.style.display = 'flex';
+    requestAnimationFrame(() => panel.classList.add('visible'));
+  }
+}
+
+function shareShoppingList() {
+  const text = buildShareText();
+  const aggregated = computeAggregated();
+  const total  = S.shopping.reduce((s, i) => s + (i.cost || 0), 0);
+  const bought = aggregated.filter(ag => ag.isPurchased).length;
+  let sub = STRINGS[S.lang]['shopping.items'](aggregated.length);
+  if (total > 0) sub += ` · HK$${total}`;
+  if (bought > 0) sub += ` · ${STRINGS[S.lang]['shopping.bought'](bought)}`;
+  openShareSheet({ icon: '🛒', title: 'Shopping List', sub, text });
+}
+
+function closeShareSheet() {
+  closeSheet('sheet-share');
+  const panel = document.getElementById('share-text-panel');
+  if (panel) {
+    panel.classList.remove('visible');
+    setTimeout(() => { panel.style.display = 'none'; }, 250);
+  }
+}
+
+function shareViaApp(app) {
+  const labels = { airdrop:'AirDrop', messages:'Messages', mail:'Mail', whatsapp:'WhatsApp', notes:'Notes', more:'More' };
+  closeShareSheet();
+  showToast(`Opened in ${labels[app]||app}`);
+}
+
+function shareActionCopy() {
+  const text = document.getElementById('sheet-share').dataset.text || buildShareText();
+  navigator.clipboard?.writeText(text).catch(()=>{});
+  closeShareSheet();
+  showToast('Copied to clipboard');
+}
+
+function shareActionSave() {
+  closeShareSheet();
+  showToast('Saved to Files');
+}
+
+// ══════════════════════════════════
+//  PROFILE
+// ══════════════════════════════════
+const DIETARY = ['Vegetarian','Vegan','Pescatarian','Halal','Kosher','Low Sodium','Low Sugar','Low Fat','Keto','Gluten Free','Fasting'];
+const ALLERGIES = ['Tree Nuts','Peanuts','Dairy','Eggs','Shellfish','Fish','Soy','Wheat','Sesame'];
+const HEALTH_CONDITIONS = ['Diabetes','High Blood Pressure','Heart Disease','Kidney Disease','High Cholesterol','Gout'];
+const SPICE_LEVELS = ['None','Mild','Medium','Hot'];
+
+// Member profile state (editing)
+const MP = { index: -1, dietary: new Set(), allergies: new Set(), health: new Set(), spice: '', cuisines: new Set(), disliked: [] };
+
+function renderProfile() {
+  const el = document.getElementById('pane-profile');
+  const memberRows = S.members.map((m, i) => `
+    <div class="swipe-row-wrap" data-swipe-id="mem-${i}">
+      <div class="swipe-row-trailing">
+        <button class="swipe-action-btn" style="background:#FF3B30" onclick="promptDeleteMember(${i})">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          ${t('common.delete')}
+        </button>
+      </div>
+      <div class="swipe-row-content row" onclick="showMemberProfile(${i})" style="cursor:pointer">
+        <span class="row-em">👤</span>
+        <div class="row-info"><div class="row-title">${m || '(unnamed)'}</div></div>
+        <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style="color:#C7C7CC"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </div>`).join('');
+
+  el.innerHTML = `
+    <div class="tab-nav">
+      <div class="tab-nav-leading"></div>
+      <div class="tab-nav-trailing">
+        <button class="icon-btn" onclick="openAddMemberSheet()" title="Add member" aria-label="Add member">${IC.plus}</button>
+      </div>
+    </div>
+    <div class="ltitle">${t('profile.title')}</div>
+    <div class="scroll list-bg">
+      <div class="sec-hdr">${t('profile.family')}</div>
+      <div class="inset" style="margin-bottom:0">
+        <div class="row">
+          <div class="row-info"><div class="row-title">${S.familyName || '—'}</div></div>
+        </div>
+      </div>
+      <div class="sec-hdr">${t('profile.members')}</div>
+      <div class="inset">
+        ${memberRows || `<div class="row"><span class="row-title" style="color:var(--gray)">${t('profile.no_members')}</span></div>`}
+      </div>
+      ${S.members.length > 0 ? `<div style="padding:8px 16px 20px;font-size:12px;color:var(--gray);text-align:center">${t('profile.swipe_hint')}</div>` : ''}
+    </div>`;
+
+  S.members.forEach((_, i) => initTrailingOnlySwipeRow(`mem-${i}`));
+}
+
+function showMemberProfile(index) {
+  MP.index = index;
+  MP.dietary = new Set();
+  MP.allergies = new Set();
+  MP.health = new Set();
+  MP.spice = '';
+  MP.cuisines = new Set();
+  MP.disliked = [];
+  goScreen('s-member-profile');
+  renderMemberProfile();
+}
+
+function renderMemberProfile() {
+  const name = S.members[MP.index] || '(unnamed)';
+  const el = document.getElementById('member-profile-inner');
+
+  const pillRow = (arr, activeSet, toggleFn) => arr.map(opt => {
+    const on = activeSet.has(opt);
+    return `<span class="pill ${on?'on':''}" style="margin-bottom:6px" onclick="${toggleFn}('${esc(opt)}')">${opt}</span>`;
+  }).join(' ');
+
+  el.innerHTML = `
+    <div class="nav" style="flex-shrink:0">
+      <button class="nav-back" onclick="backFromMemberProfile()">
+        ${IC.chevronBack} ${t('common.back')}
+      </button>
+      <span class="nav-title" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${name}</span>
+      <button onclick="saveMemberProfile()" style="position:absolute;right:12px;background:none;border:none;cursor:pointer;color:var(--p);font:600 17px/1 Inter,sans-serif;padding:8px">${t('common.save')}</button>
+    </div>
+    <div class="scroll list-bg">
+      <div class="sec-hdr">${t('profile.member.basic')}</div>
+      <div class="inset">
+        <div class="row">
+          <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">${t('profile.member.name')}</div></div>
+          <input id="mp-name" value="${name}" style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" autocomplete="off">
+        </div>
+        <div class="row">
+          <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">${t('profile.member.age')}</div></div>
+          <input id="mp-age" type="number" placeholder="${t('profile.member.age_hint')}" style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" min="1" max="120">
+        </div>
+      </div>
+
+      <div class="sec-hdr">${t('profile.member.dietary')}</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${pillRow(DIETARY, MP.dietary, 'toggleMPDietary')}</div>
+      </div>
+
+      <div class="sec-hdr">${t('profile.member.allergies')}</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${pillRow(ALLERGIES, MP.allergies, 'toggleMPAllergy')}</div>
+      </div>
+
+      <div class="sec-hdr">${t('profile.member.health')}</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${pillRow(HEALTH_CONDITIONS, MP.health, 'toggleMPHealth')}</div>
+      </div>
+
+      <div class="sec-hdr">${t('profile.member.spice')}</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${SPICE_LEVELS.map(s => `<span class="pill ${MP.spice===s?'on':''}" style="margin-bottom:6px" onclick="setMPSpice('${s}')">${s}</span>`).join(' ')}</div>
+      </div>
+
+      <div class="sec-hdr">Favourite Cuisines</div>
+      <div class="inset" style="padding:12px 16px">
+        <div class="pill-wrap">${pillRow(CUISINES, MP.cuisines, 'toggleMPCuisine')}</div>
+      </div>
+
+      <div class="sec-hdr">Disliked Ingredients</div>
+      <div class="inset" style="padding:8px 16px">
+        ${MP.disliked.map((d, i) => `
+          <div style="display:flex;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,0.07)">
+            <span style="flex:1;font-size:16px;color:var(--text)">${d}</span>
+            <button onclick="removeMPDisliked(${i})" style="background:none;border:none;cursor:pointer;color:var(--danger);padding:4px;display:flex;align-items:center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>`).join('')}
+        <div style="display:flex;align-items:center;padding:10px 0">
+          <input id="mp-disliked-input" placeholder="Add ingredient…"
+            style="flex:1;border:none;outline:none;font:15px/1 Inter,sans-serif;color:var(--text);background:transparent"
+            onkeydown="if(event.key==='Enter')addMPDisliked()" autocomplete="off">
+          <button onclick="addMPDisliked()" style="background:none;border:none;cursor:pointer;color:var(--p);font-size:24px;line-height:1;padding:0 4px">+</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleMPDietary(opt) { MP.dietary.has(opt) ? MP.dietary.delete(opt) : MP.dietary.add(opt); renderMemberProfile(); }
+function toggleMPAllergy(opt) { MP.allergies.has(opt) ? MP.allergies.delete(opt) : MP.allergies.add(opt); renderMemberProfile(); }
+function toggleMPHealth(opt)  { MP.health.has(opt) ? MP.health.delete(opt) : MP.health.add(opt); renderMemberProfile(); }
+function setMPSpice(s) { MP.spice = MP.spice === s ? '' : s; renderMemberProfile(); }
+function toggleMPCuisine(opt) { MP.cuisines.has(opt) ? MP.cuisines.delete(opt) : MP.cuisines.add(opt); renderMemberProfile(); }
+function addMPDisliked() {
+  const inp = document.getElementById('mp-disliked-input');
+  const val = inp?.value.trim();
+  if (val && !MP.disliked.includes(val)) { MP.disliked.push(val); renderMemberProfile(); }
+}
+function removeMPDisliked(i) { MP.disliked.splice(i, 1); renderMemberProfile(); }
+
+function saveMemberProfile() {
+  const nameEl = document.getElementById('mp-name');
+  if (nameEl && nameEl.value.trim()) S.members[MP.index] = nameEl.value.trim();
+  showToast('Profile saved');
+  backFromMemberProfile();
+}
+
+function backFromMemberProfile() {
+  goScreen('s-main');
+  goTab(3);
+}
+
+// ══════════════════════════════════
+//  ADD MEMBER
+// ══════════════════════════════════
+const AM = { dietary: new Set(), allergies: new Set(), health: new Set(), spice: '', cuisines: new Set(), disliked: [] };
+
+function openAddMemberSheet() {
+  AM.dietary = new Set(); AM.allergies = new Set(); AM.health = new Set(); AM.spice = '';
+  AM.cuisines = new Set(); AM.disliked = [];
+  renderAddMemberForm();
+  openSheet('sheet-add-member');
+}
+
+function closeAddMemberSheet() { closeSheet('sheet-add-member'); }
+
+function renderAddMemberForm() {
+  const pillRow = (arr, activeSet, toggleFn) => arr.map(opt => {
+    const on = activeSet.has(opt);
+    return `<span class="pill ${on?'on':''}" style="margin-bottom:6px" onclick="${toggleFn}('${esc(opt)}')">${opt}</span>`;
+  }).join(' ');
+
+  document.getElementById('add-member-body').innerHTML = `
+    <div class="sec-hdr">Basic Info</div>
+    <div class="inset">
+      <div class="row">
+        <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">Name</div></div>
+        <input id="am-name" placeholder="Required"
+          oninput="var b=document.getElementById('am-save-btn');b.disabled=!this.value.trim();b.style.opacity=this.value.trim()?'1':'0.4';"
+          style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" autocomplete="off">
+      </div>
+      <div class="row">
+        <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">Age</div></div>
+        <input id="am-age" type="number" placeholder="Optional"
+          style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" min="1" max="120">
+      </div>
+    </div>
+    <div class="sec-hdr">Dietary Restrictions</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${pillRow(DIETARY, AM.dietary, 'toggleAMDietary')}</div>
+    </div>
+    <div class="sec-hdr">Allergies</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${pillRow(ALLERGIES, AM.allergies, 'toggleAMAllergy')}</div>
+    </div>
+    <div class="sec-hdr">Health Conditions</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${pillRow(HEALTH_CONDITIONS, AM.health, 'toggleAMHealth')}</div>
+    </div>
+    <div class="sec-hdr">Spice Preference</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${SPICE_LEVELS.map(s => `<span class="pill ${AM.spice===s?'on':''}" style="margin-bottom:6px" onclick="setAMSpice('${s}')">${s}</span>`).join(' ')}</div>
+    </div>
+    <div class="sec-hdr">Favourite Cuisines</div>
+    <div class="inset" style="padding:12px 16px">
+      <div class="pill-wrap">${pillRow(CUISINES, AM.cuisines, 'toggleAMCuisine')}</div>
+    </div>
+    <div class="sec-hdr">Disliked Ingredients</div>
+    <div class="inset" style="padding:8px 16px">
+      ${AM.disliked.map((d, i) => `
+        <div style="display:flex;align-items:center;padding:10px 0;border-bottom:0.5px solid rgba(0,0,0,0.07)">
+          <span style="flex:1;font-size:16px;color:var(--text)">${d}</span>
+          <button onclick="removeAMDisliked(${i})" style="background:none;border:none;cursor:pointer;color:var(--danger);padding:4px;display:flex;align-items:center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>`).join('')}
+      <div style="display:flex;align-items:center;padding:10px 0">
+        <input id="am-disliked-input" placeholder="Add ingredient…"
+          style="flex:1;border:none;outline:none;font:15px/1 Inter,sans-serif;color:var(--text);background:transparent"
+          onkeydown="if(event.key==='Enter')addAMDisliked()" autocomplete="off">
+        <button onclick="addAMDisliked()" style="background:none;border:none;cursor:pointer;color:var(--p);font-size:24px;line-height:1;padding:0 4px">+</button>
+      </div>
+    </div>
+    <div style="height:8px"></div>`;
+}
+
+function toggleAMDietary(opt) { AM.dietary.has(opt) ? AM.dietary.delete(opt) : AM.dietary.add(opt); renderAddMemberForm(); }
+function toggleAMAllergy(opt)  { AM.allergies.has(opt) ? AM.allergies.delete(opt) : AM.allergies.add(opt); renderAddMemberForm(); }
+function toggleAMHealth(opt)   { AM.health.has(opt) ? AM.health.delete(opt) : AM.health.add(opt); renderAddMemberForm(); }
+function setAMSpice(s) { AM.spice = AM.spice === s ? '' : s; renderAddMemberForm(); }
+function toggleAMCuisine(opt)  { AM.cuisines.has(opt) ? AM.cuisines.delete(opt) : AM.cuisines.add(opt); renderAddMemberForm(); }
+function addAMDisliked() {
+  const inp = document.getElementById('am-disliked-input');
+  const val = inp?.value.trim();
+  if (val && !AM.disliked.includes(val)) { AM.disliked.push(val); renderAddMemberForm(); }
+}
+function removeAMDisliked(i) { AM.disliked.splice(i, 1); renderAddMemberForm(); }
+
+function submitAddMember() {
+  const nameEl = document.getElementById('am-name');
+  const name = nameEl ? nameEl.value.trim() : '';
+  if (!name) return;
+  S.members.push(name);
+  S.selectedMembers.add(name);
+  closeAddMemberSheet();
+  renderProfile();
+  showToast(`${name} added`);
+}
+
+// ══════════════════════════════════
+//  DELETE MEMBER
+// ══════════════════════════════════
+let _pendingDeleteMemberIdx = null;
+
+function promptDeleteMember(idx) {
+  _pendingDeleteMemberIdx = idx;
+  const name = S.members[idx] || 'this member';
+  document.getElementById('delete-member-name').textContent = `Remove "${name}"?`;
+  openSheet('sheet-delete-member');
+}
+
+function confirmDeleteMember() {
+  closeSheet('sheet-delete-member');
+  if (_pendingDeleteMemberIdx == null) return;
+  const idx = _pendingDeleteMemberIdx;
+  _pendingDeleteMemberIdx = null;
+  openSwipeId = null; openSwipeDir = null;
+  const name = S.members[idx];
+  S.selectedMembers.delete(name);
+  S.members.splice(idx, 1);
+  renderProfile();
+  showToast('Member removed');
+}
+
+function cancelDeleteMember() {
+  _pendingDeleteMemberIdx = null;
+  closeSheet('sheet-delete-member');
+}
+
+// ══════════════════════════════════
+//  TRAILING-ONLY SWIPE ROWS (members)
+// ══════════════════════════════════
+function initTrailingOnlySwipeRow(id) {
+  const wrap = document.querySelector(`.swipe-row-wrap[data-swipe-id="${id}"]`);
+  if (!wrap) return;
+  const content = wrap.querySelector('.swipe-row-content');
+
+  function getBase() { return (openSwipeId === id && openSwipeDir === 'trailing') ? -TRAIL_W : 0; }
+  function snapTo(offset) {
+    content.style.transition = 'transform 0.22s cubic-bezier(.4,0,.2,1)';
+    content.style.transform = offset ? `translateX(${offset}px)` : '';
+    if (offset < 0)          { openSwipeId = id; openSwipeDir = 'trailing'; }
+    else if (openSwipeId === id) { openSwipeId = null; openSwipeDir = null; }
+  }
+
+  wrap.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (e.target.closest('.swipe-action-btn')) return;
+    if (openSwipeId && openSwipeId !== id) closeSwipeRow(openSwipeId);
+    _swipe = { id, startX: e.clientX, startY: e.clientY, base: getBase(), moved: false, cancelled: false };
+    wrap.setPointerCapture(e.pointerId);
+  });
+
+  wrap.addEventListener('pointermove', e => {
+    if (!_swipe || _swipe.id !== id || _swipe.cancelled) return;
+    const dx = e.clientX - _swipe.startX, dy = e.clientY - _swipe.startY;
+    if (!_swipe.moved && Math.abs(dy) > Math.abs(dx) && Math.abs(dx) < 8) { _swipe.cancelled = true; return; }
+    _swipe.moved = true;
+    const x = Math.max(-TRAIL_W, Math.min(0, _swipe.base + dx));
+    content.style.transition = 'none';
+    content.style.transform = x ? `translateX(${x}px)` : '';
+  });
+
+  wrap.addEventListener('pointerup', e => {
+    if (!_swipe || _swipe.id !== id) return;
+    const dx = e.clientX - _swipe.startX;
+    const { base, moved, cancelled } = _swipe;
+    _swipe = null;
+    if (!moved || cancelled) { if (openSwipeId === id) snapTo(0); return; }
+    const total = base + dx;
+    if (base === 0) snapTo(total < -SNAP_PX ? -TRAIL_W : 0);
+    else snapTo(dx > CLOSE_PX ? 0 : -TRAIL_W);
+  });
+
+  wrap.addEventListener('pointercancel', () => {
+    if (_swipe && _swipe.id === id) { _swipe = null; snapTo(getBase()); }
+  });
+}
+
+// ══════════════════════════════════
+//  BOOT
+// ══════════════════════════════════
+(function injectKeyframes() {
+  const style = document.createElement('style');
+  style.id = 'spin-kf';
+  style.textContent = '@keyframes spin{to{transform:rotate(360deg)}} @keyframes pop{0%{transform:scale(0.5);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}';
+  document.head.appendChild(style);
+})();
+renderOB();
+preloadRecipeImages();
+</script>
+</body>
+</html>
