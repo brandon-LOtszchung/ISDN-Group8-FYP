@@ -1,34 +1,50 @@
 // Views/Onboarding/OnboardingView.swift
 import SwiftUI
+import UIKit
 
 private enum OnboardingStep: Int, CaseIterable {
-    case name, cookingIntro, cooking, cookingFeedback,
-         budget, budgetFeedback, members, summary
+    case welcome, name, cooking, budget, members, summary
 }
 
 struct OnboardingView: View {
     @Environment(AppViewModel.self) private var appVM
     @Environment(ThemeManager.self) private var theme
 
-    @ScaledMetric private var emojiSize: CGFloat = 52
+    @ScaledMetric private var emojiSize: CGFloat = 56
 
-    @State private var step: OnboardingStep = .name
+    @State private var step: OnboardingStep = .welcome
+    @State private var navDirection = 1
     @State private var familyName = ""
     @State private var selectedSkill = ""
-    @State private var budgetAmount: Int = 50
+    @State private var budgetAmount: Int = 30
     @State private var members: [FamilyMember] = []
 
-    // Typewriter state
-    @State private var typewriterText = ""
-    @State private var typewriterDone = false
+    // Entrance animation
+    @State private var contentAppeared = false
+
+    // Inline cooking feedback
+    @State private var cookingFeedbackText = ""
+    @State private var cookingFeedbackVisible = false
+    @State private var advanceTask: Task<Void, Never>?
+
+    // Inline budget feedback
+    @State private var budgetFeedbackVisible = false
+
+    // Summary stagger
+    @State private var summaryRowIndex = -1
+
+    @State private var isFinishing = false
+    @State private var finishError: String?
 
     var body: some View {
         VStack(spacing: 0) {
-            // Back button row
+            // Back button row — hidden on welcome
             HStack {
                 if step.rawValue > 0 {
                     Button {
+                        advanceTask?.cancel()
                         if let prev = OnboardingStep(rawValue: step.rawValue - 1) {
+                            navDirection = -1
                             step = prev
                         }
                     } label: {
@@ -42,50 +58,109 @@ struct OnboardingView: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 16)
-            // Progress dots
-            progressDots
-            // Step content — paged with swipe support
-            TabView(selection: Binding(
-                get: { step.rawValue },
-                set: { newVal in
-                    if let s = OnboardingStep(rawValue: newVal) { step = s }
+            .opacity(step == .welcome ? 0 : 1)
+            .animation(.easeInOut(duration: 0.2), value: step == .welcome)
+
+            // Progress bar (hidden on welcome)
+            if step != .welcome {
+                progressBar
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .animation(.easeInOut(duration: 0.25), value: step == .welcome)
+            }
+
+            // Step content
+            ZStack {
+                ScrollView {
+                    stepContentFor(step)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 20)
+                        .padding(.bottom, 100)
                 }
-            )) {
-                ForEach(OnboardingStep.allCases, id: \.rawValue) { s in
-                    ScrollView {
-                        stepContentFor(s)
-                            .padding(.horizontal, 24)
-                            .padding(.top, 20)
-                    }
-                    .tag(s.rawValue)
+                .scrollDismissesKeyboard(.interactively)
+                .id(step.rawValue)
+                .transition(.asymmetric(
+                    insertion: .move(edge: navDirection > 0 ? .trailing : .leading).combined(with: .opacity),
+                    removal: .move(edge: navDirection > 0 ? .leading : .trailing).combined(with: .opacity)
+                ))
+            }
+            .animation(.spring(duration: 0.38, bounce: 0.08), value: step)
+        }
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 0) {
+                if let err = finishError {
+                    Text(err)
+                        .font(.spaceGrotesk(.regular, size: 13))
+                        .foregroundStyle(theme.colors.danger)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .padding(.top, 8)
+                }
+                continueButton
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+            }
+            .background(.ultraThinMaterial)
+        }
+        .background {
+            NeuBackground(screen: .onboarding(step: step.rawValue))
+                .environment(theme)
+                .id(step.rawValue)
+                .transition(.opacity)
+                .animation(.easeInOut(duration: 0.35), value: step.rawValue)
+        }
+        .onChange(of: step) { _, newStep in
+            resetEntrance()
+            cookingFeedbackVisible = false
+            cookingFeedbackText = ""
+            budgetFeedbackVisible = false
+            summaryRowIndex = -1
+            if newStep == .summary { startSummaryAnimation() }
+            if newStep == .cooking && !selectedSkill.isEmpty {
+                cookingFeedbackText = feedbackText(for: selectedSkill)
+                withAnimation(.spring(duration: 0.4).delay(0.35)) {
+                    cookingFeedbackVisible = true
                 }
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.easeInOut, value: step)
-            // Continue button
-            continueButton
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
-                .disabled(!shouldShowContinue)
         }
-        .background(theme.colors.background.ignoresSafeArea())
-        .onChange(of: step) { _, newStep in startTypewriter(for: newStep) }
-        .onAppear { startTypewriter(for: step) }
+        .onAppear {
+            withAnimation(.spring(duration: 0.55).delay(0.1)) {
+                contentAppeared = true
+            }
+        }
+        .sensoryFeedback(.impact(flexibility: .soft), trigger: step)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) { Spacer() }
+        }
     }
 
-    // MARK: - Progress Dots
+    // MARK: - Progress Bar
 
-    private var progressDots: some View {
-        HStack(spacing: 6) {
-            ForEach(0..<OnboardingStep.allCases.count, id: \.self) { i in
-                RoundedRectangle(cornerRadius: 3)
-                    .fill(i <= step.rawValue ? theme.colors.primary : theme.colors.border)
-                    .frame(width: i == step.rawValue ? 20 : 8, height: 6)
-                    .animation(.spring(), value: step)
+    private var progressBar: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(String(format: NSLocalizedString("onboarding.step_of", comment: ""), step.rawValue, OnboardingStep.allCases.count - 1))
+                .font(.spaceGrotesk(.regular, size: 12))
+                .foregroundStyle(theme.colors.textMuted)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(theme.colors.border.opacity(0.2))
+                        .frame(height: 6)
+                    RoundedRectangle(cornerRadius: 3)
+                        .fill(theme.colors.primary)
+                        .frame(width: geo.size.width * progress, height: 6)
+                        .animation(.spring(duration: 0.45), value: step)
+                }
             }
+            .frame(height: 6)
         }
-        .padding(.top, 12)
-        .padding(.bottom, 12)
+        .padding(.horizontal, 24)
+        .padding(.top, 8)
+        .padding(.bottom, 16)
+    }
+
+    private var progress: CGFloat {
+        let total = CGFloat(OnboardingStep.allCases.count - 1)
+        return max(0, CGFloat(step.rawValue) / total)
     }
 
     // MARK: - Step routing
@@ -93,185 +168,389 @@ struct OnboardingView: View {
     @ViewBuilder
     private func stepContentFor(_ s: OnboardingStep) -> some View {
         switch s {
-        case .name:            nameStep
-        case .cookingIntro:    typewriterStep(text: "Let's talk about how your family cooks.", emoji: "🍳")
-        case .cooking:         cookingStep
-        case .cookingFeedback: typewriterStep(text: feedbackText(for: selectedSkill), emoji: "⭐")
-        case .budget:          budgetStep
-        case .budgetFeedback:  typewriterStep(text: "Great! We'll find recipes that fit your budget.", emoji: "💰")
-        case .members:         membersStep
-        case .summary:         summaryStep
+        case .welcome:  welcomeStep
+        case .name:     nameStep
+        case .cooking:  cookingStep
+        case .budget:   budgetStep
+        case .members:  membersStep
+        case .summary:  summaryStep
         }
     }
 
-    @ViewBuilder
-    private var stepContent: some View {
-        stepContentFor(step)
+    // MARK: - Entrance helpers
+
+    private func resetEntrance() {
+        contentAppeared = false
+        withAnimation(.spring(duration: 0.5).delay(0.14)) {
+            contentAppeared = true
+        }
     }
 
-    // MARK: - Individual Steps
+    // MARK: - Welcome
+
+    private var welcomeStep: some View {
+        VStack(spacing: 24) {
+            Spacer().frame(height: 24)
+            Text("🧊")
+                .font(.system(size: 88))
+                .accessibilityHidden(true)
+                .opacity(contentAppeared ? 1 : 0)
+                .scaleEffect(contentAppeared ? 1 : 0.3)
+                .animation(.spring(duration: 0.7, bounce: 0.5), value: contentAppeared)
+            VStack(spacing: 10) {
+                Text("SmartFridge")
+                    .font(.spaceGrotesk(.bold, size: 38))
+                    .foregroundStyle(theme.colors.text)
+                    .opacity(contentAppeared ? 1 : 0)
+                    .offset(y: contentAppeared ? 0 : 22)
+                    .animation(.spring(duration: 0.5).delay(0.2), value: contentAppeared)
+                Text(String(localized: "onboarding.welcome.subtitle"))
+                    .font(.spaceGrotesk(.regular, size: 17))
+                    .foregroundStyle(theme.colors.textMuted)
+                    .multilineTextAlignment(.center)
+                    .opacity(contentAppeared ? 1 : 0)
+                    .offset(y: contentAppeared ? 0 : 16)
+                    .animation(.spring(duration: 0.5).delay(0.35), value: contentAppeared)
+            }
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Name
 
     private var nameStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("👨‍👩‍👧‍👦").font(.system(size: emojiSize)).accessibilityHidden(true)
-            Text(String(localized: "onboarding.family_name.title")).font(.title.bold())
+            Text("👨‍👩‍👧‍👦")
+                .font(.system(size: emojiSize))
+                .accessibilityHidden(true)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0))
+            Text(String(localized: "onboarding.family_name.title"))
+                .font(.spaceGrotesk(.bold, size: 24))
+                .foregroundStyle(theme.colors.text)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0.08))
             TextField(String(localized: "onboarding.family_name.hint"), text: $familyName)
-                .padding(10)
-                .background(Color(.secondarySystemBackground))
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                .font(.body)
+                .font(.spaceGrotesk(.regular, size: 16))
+                .neuTextField()
+                .modifier(Entrance(appeared: contentAppeared, delay: 0.16))
+                .onSubmit {
+                    if !familyName.trimmingCharacters(in: .whitespaces).isEmpty {
+                        navDirection = 1
+                        step = .cooking
+                    }
+                }
         }
     }
+
+    // MARK: - Cooking (inline feedback + auto-advance)
 
     private var cookingStep: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("🍽️").font(.system(size: emojiSize)).accessibilityHidden(true)
-            Text(String(localized: "onboarding.cooking.title")).font(.title.bold())
+            Text("🍽️")
+                .font(.system(size: emojiSize))
+                .accessibilityHidden(true)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0))
+            Text(String(localized: "onboarding.cooking.title"))
+                .font(.spaceGrotesk(.bold, size: 24))
+                .foregroundStyle(theme.colors.text)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0.08))
             FlowLayout(spacing: 8) {
                 ForEach(Constants.cookingSkillLevels, id: \.self) { skill in
-                    PillView(label: skill.capitalized, isSelected: selectedSkill == skill) {
+                    PillView(label: NSLocalizedString("cooking.skill.\(skill)", comment: ""), isSelected: selectedSkill == skill) {
+                        guard selectedSkill != skill else { return }
                         selectedSkill = skill
+                        triggerCookingFeedback(for: skill)
                     }
                 }
             }
-        }
-    }
+            .modifier(Entrance(appeared: contentAppeared, delay: 0.16))
 
-    private var budgetStep: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("💵").font(.system(size: emojiSize)).accessibilityHidden(true)
-            Text(String(localized: "onboarding.budget.title")).font(.title.bold())
-            BudgetSliderView(budgetAmount: $budgetAmount)
-        }
-    }
-
-    private var membersStep: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("👥").font(.system(size: emojiSize)).accessibilityHidden(true)
-            Text(String(localized: "onboarding.members.title")).font(.title.bold())
-            Text(String(localized: "onboarding.members.dietary_hint"))
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            ForEach(members.indices, id: \.self) { i in
-                MemberRowView(member: $members[i]) {
-                    members.remove(at: i)
-                }
+            if cookingFeedbackVisible {
+                inlineFeedbackBubble(text: cookingFeedbackText)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
             }
-            Button(String(localized: "onboarding.add_member")) {
-                members.append(FamilyMember(
-                    id: UUID(), familyId: Constants.defaultFamilyID,
-                    name: "", age: nil, dietaryRestrictions: [], allergies: [],
-                    healthConditions: [], preferences: MemberPreferences(
-                        spiceLevel: nil, favoriteCuisines: [], dislikedIngredients: []
-                    )
-                ))
-            }
-            .foregroundStyle(theme.colors.primary)
         }
+        .animation(.spring(duration: 0.4), value: cookingFeedbackVisible)
     }
 
-    private var summaryStep: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("🎉").font(.system(size: emojiSize)).accessibilityHidden(true)
-            Text(String(localized: "onboarding.summary.title")).font(.title.bold())
-            Group {
-                LabeledContent(String(localized: "onboarding.summary.family"), value: familyName)
-                LabeledContent(String(localized: "onboarding.summary.cooking_skill"), value: selectedSkill.capitalized)
-                LabeledContent(String(localized: "onboarding.summary.budget"),
-                               value: budgetTier(for: budgetAmount).label)
-                LabeledContent(String(localized: "onboarding.summary.members"), value: "\(members.count)")
-            }
-            .font(.body)
-        }
-    }
-
-    // MARK: - Typewriter step
-
-    private func typewriterStep(text: String, emoji: String) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(emoji).font(.system(size: emojiSize)).accessibilityHidden(true)
-            Text(typewriterText)
-                .font(.title2.bold())
-                .animation(nil)
-                .accessibilityLabel(text)
-        }
-    }
-
-    // MARK: - Typewriter logic
-
-    private func startTypewriter(for s: OnboardingStep) {
-        typewriterText = ""
-        typewriterDone = false
-        let targets: [OnboardingStep: String] = [
-            .cookingIntro:    "Let's talk about how your family cooks.",
-            .cookingFeedback: feedbackText(for: selectedSkill),
-            .budgetFeedback:  "Great! We'll find recipes that fit your budget."
-        ]
-        guard let target = targets[s] else {
-            typewriterDone = true
-            return
-        }
-        Task {
-            for char in target {
-                try? await Task.sleep(for: .milliseconds(30))
-                typewriterText.append(char)
-            }
-            typewriterDone = true
+    private func triggerCookingFeedback(for skill: String) {
+        advanceTask?.cancel()
+        cookingFeedbackText = feedbackText(for: skill)
+        withAnimation(.spring(duration: 0.4)) { cookingFeedbackVisible = true }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        advanceTask = Task {
+            try? await Task.sleep(for: .milliseconds(1500))
+            guard !Task.isCancelled else { return }
+            await MainActor.run { navDirection = 1; step = .budget }
         }
     }
 
     private func feedbackText(for skill: String) -> String {
         switch skill {
-        case "beginner":     return "No worries — we'll keep the recipes simple and easy to follow."
-        case "intermediate": return "Nice! You'll have plenty of variety to choose from."
-        case "advanced":     return "Impressive! Get ready for some complex and exciting dishes."
-        default:             return "Great choice!"
+        case "beginner":     return String(localized: "onboarding.cooking_feedback.beginner")
+        case "intermediate": return String(localized: "onboarding.cooking_feedback.intermediate")
+        case "advanced":     return String(localized: "onboarding.cooking_feedback.advanced")
+        default:             return String(localized: "onboarding.cooking_feedback.default")
         }
+    }
+
+    // MARK: - Budget (inline feedback on first slider interaction)
+
+    private var budgetStep: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("💵")
+                .font(.system(size: emojiSize))
+                .accessibilityHidden(true)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0))
+            Text(String(localized: "onboarding.budget.title"))
+                .font(.spaceGrotesk(.bold, size: 24))
+                .foregroundStyle(theme.colors.text)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0.08))
+            BudgetSliderView(budgetAmount: $budgetAmount)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0.16))
+                .onChange(of: budgetAmount) { _, _ in
+                    guard !budgetFeedbackVisible else { return }
+                    withAnimation(.spring(duration: 0.4)) { budgetFeedbackVisible = true }
+                }
+            if budgetFeedbackVisible {
+                inlineFeedbackBubble(text: String(localized: "onboarding.budget.feedback"))
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.spring(duration: 0.4), value: budgetFeedbackVisible)
+    }
+
+    // MARK: - Members
+
+    // MARK: - Members
+
+    private var membersStep: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("👥")
+                .font(.system(size: emojiSize))
+                .accessibilityHidden(true)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0))
+            Text(String(localized: "onboarding.members.title"))
+                .font(.spaceGrotesk(.bold, size: 24))
+                .foregroundStyle(theme.colors.text)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0.08))
+            Text(String(localized: "onboarding.members.dietary_hint"))
+                .font(.sgCaption())
+                .foregroundStyle(theme.colors.textMuted)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0.16))
+            memberRows
+            addMemberButton
+            if members.isEmpty { skipButton }
+        }
+        .animation(.spring(duration: 0.35), value: members.count)
+    }
+
+    @ViewBuilder
+    private var memberRows: some View {
+        ForEach($members) { $member in
+            MemberRowView(member: $member) {
+                withAnimation(.spring(duration: 0.3)) {
+                    members.removeAll { $0.id == member.id }
+                }
+            }
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    private var addMemberButton: some View {
+        Button(String(localized: "onboarding.add_member")) {
+            withAnimation(.spring(duration: 0.35)) {
+                members.append(FamilyMember(
+                    id: UUID(), familyId: UUID(), name: "",
+                    age: nil, dietaryRestrictions: [], allergies: [],
+                    healthConditions: [], spiceLevel: nil,
+                    favoriteCuisines: [], dislikedIngredients: []
+                ))
+            }
+        }
+        .font(.spaceGrotesk(.semibold, size: 15))
+        .foregroundStyle(theme.colors.primary)
+    }
+
+    private var skipButton: some View {
+        Button(String(localized: "onboarding.members.skip")) {
+            navDirection = 1; step = .summary
+        }
+        .font(.spaceGrotesk(.regular, size: 14))
+        .foregroundStyle(theme.colors.textMuted)
+        .frame(maxWidth: .infinity)
+        .modifier(Entrance(appeared: contentAppeared, delay: 0.24))
+    }
+
+    // MARK: - Summary
+
+    private var summaryStep: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("🎉")
+                .font(.system(size: emojiSize))
+                .accessibilityHidden(true)
+                .opacity(contentAppeared ? 1 : 0)
+                .scaleEffect(contentAppeared ? 1 : 0.4)
+                .animation(.spring(duration: 0.6, bounce: 0.5), value: contentAppeared)
+            Text(String(localized: "onboarding.summary.title"))
+                .font(.spaceGrotesk(.bold, size: 24))
+                .foregroundStyle(theme.colors.text)
+                .modifier(Entrance(appeared: contentAppeared, delay: 0.08))
+            VStack(spacing: 8) {
+                stagedRow(String(localized: "onboarding.summary.family"), familyName, 0)
+                stagedRow(String(localized: "onboarding.summary.cooking_skill"),
+                          NSLocalizedString("cooking.skill.\(selectedSkill)", comment: ""), 1)
+                stagedRow(String(localized: "onboarding.summary.budget"),
+                          budgetTier(for: budgetAmount).label, 2)
+                stagedRow(String(localized: "onboarding.summary.members"), "\(members.count)", 3)
+            }
+        }
+    }
+
+    private func stagedRow(_ label: String, _ value: String, _ index: Int) -> some View {
+        SummaryRow(label: label, value: value)
+            .opacity(summaryRowIndex >= index ? 1 : 0)
+            .offset(y: summaryRowIndex >= index ? 0 : 18)
+            .animation(.spring(duration: 0.45).delay(Double(index) * 0.09), value: summaryRowIndex)
+    }
+
+    private func startSummaryAnimation() {
+        for i in 0..<4 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2 + Double(i) * 0.1) {
+                withAnimation { summaryRowIndex = i }
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
+    }
+
+    // MARK: - Shared inline feedback bubble
+
+    private func inlineFeedbackBubble(text: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(theme.colors.primary)
+            Text(text)
+                .font(.spaceGrotesk(.medium, size: 15))
+                .foregroundStyle(theme.colors.text)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(theme.colors.primary.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(theme.colors.primary.opacity(0.35), lineWidth: 1.5))
     }
 
     // MARK: - Continue button
 
     private var shouldShowContinue: Bool {
         switch step {
-        case .name:            return !familyName.trimmingCharacters(in: .whitespaces).isEmpty
-        case .cookingIntro:    return typewriterDone
-        case .cooking:         return !selectedSkill.isEmpty
-        case .cookingFeedback: return typewriterDone
-        case .budget:          return true
-        case .budgetFeedback:  return typewriterDone
-        case .members:         return true
-        case .summary:         return true
+        case .welcome:  return true
+        case .name:     return !familyName.trimmingCharacters(in: .whitespaces).isEmpty
+        case .cooking:  return !selectedSkill.isEmpty
+        case .budget:   return true
+        case .members:  return true
+        case .summary:  return true
         }
     }
 
     private var continueButton: some View {
-        Button(step == .summary ? "Get Started" : String(localized: "onboarding.continue")) {
+        Button {
+            advanceTask?.cancel()
+            navDirection = 1
             if step == .summary { finish() }
             else if let next = OnboardingStep(rawValue: step.rawValue + 1) { step = next }
+        } label: {
+            if step == .summary && isFinishing {
+                ProgressView()
+                    .tint(Color(hex: "#1A1A1A"))
+                    .frame(height: 24)
+            } else {
+                Text(step == .summary
+                     ? String(localized: "onboarding.get_started")
+                     : String(localized: "onboarding.continue"))
+            }
         }
-        .font(.body.bold())
-        .frame(maxWidth: .infinity)
-        .buttonStyle(.borderedProminent)
-        .tint(theme.colors.primary)
-        .controlSize(.large)
+        .buttonStyle(NeuButtonStyle(backgroundColor: theme.colors.primary))
+        .disabled(!shouldShowContinue || (step == .summary && isFinishing))
     }
 
     // MARK: - Finish
 
     private func finish() {
+        let newFamilyId = UUID()
+        let userId = SupabaseService.shared.currentUserId
+        let updatedMembers = members
+            .filter { !$0.name.trimmingCharacters(in: .whitespaces).isEmpty }
+            .map { m in
+                FamilyMember(
+                    id: m.id, familyId: newFamilyId, name: m.name,
+                    age: m.age, dietaryRestrictions: m.dietaryRestrictions,
+                    allergies: m.allergies, healthConditions: m.healthConditions,
+                    spiceLevel: m.spiceLevel, favoriteCuisines: m.favoriteCuisines,
+                    dislikedIngredients: m.dislikedIngredients
+                )
+            }
         let family = Family(
-            id: Constants.defaultFamilyID,
-            name: familyName,
-            preferences: FamilyPreferences(
-                cookingSkillLevel: selectedSkill,
-                budgetRange: budgetTier(for: budgetAmount).value,
-                preferredLanguage: .en
-            ),
-            createdAt: Date(),
-            updatedAt: Date()
+            id: newFamilyId, name: familyName,
+            cookingSkillLevel: selectedSkill,
+            budgetRange: budgetTier(for: budgetAmount).value,
+            preferredLanguage: .en,
+            createdAt: Date(), updatedAt: Date(), userId: userId
         )
-        appVM.saveFamily(family, members: members)
-        appVM.completeOnboarding()
+        isFinishing = true
+        finishError = nil
+        Task {
+            do {
+                try await appVM.saveFamilyAsync(family, members: updatedMembers)
+                appVM.completeOnboarding()
+            } catch {
+                isFinishing = false
+                finishError = error.localizedDescription
+            }
+        }
+    }
+}
+
+// MARK: - Entrance modifier
+
+private struct Entrance: ViewModifier {
+    let appeared: Bool
+    let delay: Double
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(appeared ? 1 : 0)
+            .offset(y: appeared ? 0 : 20)
+            .animation(.spring(duration: 0.45).delay(delay), value: appeared)
+    }
+}
+
+// MARK: - Summary Row
+
+private struct SummaryRow: View {
+    let label: String
+    let value: String
+    @Environment(ThemeManager.self) private var theme
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.spaceGrotesk(.medium, size: 14))
+                .foregroundStyle(theme.colors.textMuted)
+            Spacer()
+            Text(value)
+                .font(.spaceGrotesk(.semibold, size: 15))
+                .foregroundStyle(theme.colors.text)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(theme.colors.surface)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
+        .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color(hex: "#1A1A1A"), lineWidth: 2))
+        .shadow(color: Color(hex: "#1A1A1A"), radius: 0, x: 3, y: 3)
     }
 }
 
@@ -284,10 +563,12 @@ private struct MemberRowView: View {
 
     var body: some View {
         HStack {
-            TextField("Name", text: $member.name)
+            TextField(String(localized: "profile.member.name"), text: $member.name)
+                .foregroundStyle(theme.colors.text)
                 .padding(10)
-                .background(Color(.secondarySystemBackground))
+                .background(theme.colors.surface)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color(hex: "#1A1A1A"), lineWidth: 1.5))
             Button(role: .destructive, action: onDelete) {
                 Image(systemName: "minus.circle.fill")
                     .foregroundStyle(theme.colors.danger)
@@ -295,4 +576,3 @@ private struct MemberRowView: View {
         }
     }
 }
-

@@ -4,10 +4,10 @@ import SwiftUI
 // MARK: - Tier Model (internal for testability)
 
 struct BudgetTier {
-    let value: String     // stored in FamilyPreferences.budgetRange
-    let label: String     // shown in UI
-    let color: Color      // SwiftUI color for price display
-    let uiColor: UIColor  // UIKit color for UISlider thumb
+    let value: String
+    var label: String { NSLocalizedString("onboarding.budget.tier.\(value)", comment: "") }
+    let color: Color
+    let uiColor: UIColor
 }
 
 /// Maps an HK$ integer amount to a BudgetTier.
@@ -22,17 +22,17 @@ func budgetTier(for amount: Int) -> BudgetTier {
 
 private extension BudgetTier {
     static let low = BudgetTier(
-        value: "low", label: "Budget-Friendly",
+        value: "low",
         color: Color(red: 0.298, green: 0.686, blue: 0.314),
         uiColor: UIColor(red: 0.298, green: 0.686, blue: 0.314, alpha: 1)
     )
     static let medium = BudgetTier(
-        value: "medium", label: "Moderate",
+        value: "medium",
         color: Color(red: 1.0, green: 0.596, blue: 0.0),
         uiColor: UIColor(red: 1.0, green: 0.596, blue: 0.0, alpha: 1)
     )
     static let high = BudgetTier(
-        value: "high", label: "Premium",
+        value: "high",
         color: Color(red: 0.957, green: 0.263, blue: 0.212),
         uiColor: UIColor(red: 0.957, green: 0.263, blue: 0.212, alpha: 1)
     )
@@ -133,14 +133,14 @@ struct BudgetSliderView: View {
         VStack(spacing: 16) {
             // Price display
             VStack(spacing: 4) {
-                Text("HK$\(budgetAmount)")
-                    .font(.system(size: 40, weight: .heavy))
+                Text("\(String(localized: "onboarding.budget.currency_prefix"))\(budgetAmount)")
+                    .font(.spaceGrotesk(.bold, size: 40))
                     .foregroundStyle(tier.color)
                 Text(tier.label)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.sgHeadline())
                     .foregroundStyle(tier.color)
                 Text(String(localized: "onboarding.budget.per_person"))
-                    .font(.caption)
+                    .font(.sgCaption())
                     .foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
@@ -174,17 +174,17 @@ struct BudgetSliderView: View {
                 // UISlider: native track hidden, custom coloured thumb
                 ZoneTrackSlider(amount: $budgetAmount, thumbColor: tier.uiColor)
                     .accessibilityLabel(String(localized: "onboarding.budget.per_person"))
-                    .accessibilityValue("HK$\(budgetAmount)")
+                    .accessibilityValue("\(String(localized: "onboarding.budget.currency_prefix"))\(budgetAmount)")
             }
             .frame(height: 44)   // standard touch-target height
 
             // Min / max labels
             HStack {
-                Text("<HK$\(Self.sliderMin)")
+                Text("<\(String(localized: "onboarding.budget.currency_prefix"))\(Self.sliderMin)")
                 Spacer()
-                Text(">HK$\(Self.sliderMax)")
+                Text(">\(String(localized: "onboarding.budget.currency_prefix"))\(Self.sliderMax)")
             }
-            .font(.caption)
+            .font(.sgCaption())
             .foregroundStyle(.secondary)
         }
     }
