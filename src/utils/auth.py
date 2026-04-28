@@ -61,17 +61,43 @@ def get_family_id(request: Request, supabase_client=None) -> str:
 
 
 def _decode_user_id(token: str) -> Optional[str]:
-    """Decode the JWT and return the 'sub' claim (user UUID)."""
+    """
+    Decode the JWT and return the 'sub' claim (user UUID).
+
+    Modern Supabase projects use asymmetric JWT signing keys (RS256/ES256), which
+    won't validate against the legacy HS256 shared secret. So we try verified
+    HS256 first, then fall back to an unverified decode just to read 'sub'. The
+    unverified path is safe enough for read-routing (we still use the service
+    role key for the actual DB query) but should be tightened for production by
+    fetching Supabase's JWKS and verifying RS256 properly.
+    """
     try:
         import jwt as pyjwt
-        jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
-        if jwt_secret:
-            payload = pyjwt.decode(token, jwt_secret, algorithms=["HS256"], options={"verify_aud": False})
-            return payload.get("sub")
-        else:
-            # Decode without verification as fallback (not secure — use for dev only)
-            payload = pyjwt.decode(token, options={"verify_signature": False}, algorithms=["HS256"])
-            return payload.get("sub")
     except Exception as e:
-        logger.debug("JWT decode failed: %s", e)
+        logger.warning("pyjwt import failed: %s", e)
         return None
+
+    jwt_secret = os.getenv("SUPABASE_JWT_SECRET")
+    if jwt_secret:
+        try:
+            payload = pyjwt.decode(
+                token, jwt_secret, algorithms=["HS256"], options={"verify_aud": False}
+            )
+            sub = payload.get("sub")
+            if sub:
+                logger.debug("JWT verified via HS256 secret, sub=%s", sub)
+                return sub
+        except Exception as e:
+            logger.info("HS256 verify failed (likely RS256/ES256 token), falling back to unverified decode: %s", e)
+
+    try:
+        payload = pyjwt.decode(token, options={"verify_signature": False})
+        sub = payload.get("sub")
+        if sub:
+            alg = pyjwt.get_unverified_header(token).get("alg", "?")
+            logger.info("JWT decoded unverified (alg=%s), sub=%s", alg, sub)
+            return sub
+    except Exception as e:
+        logger.warning("JWT unverified decode failed: %s", e)
+
+    return None

@@ -1,10 +1,13 @@
 import cv2
+import logging
 from pathlib import Path
 from typing import Dict, List, Tuple
 
 from .video_processor import VideoProcessor
 from .image_analyzer import ImageAnalyzer
 from .inventory_service import InventoryService
+
+logger = logging.getLogger(__name__)
 
 class VideoFlowService:
     def __init__(self, family_id: str):
@@ -41,17 +44,29 @@ class VideoFlowService:
         
         moment1_data = self.image_analyzer.analyze_hand(moment1_path, inventory_context)
         moment2_data = self.image_analyzer.analyze_hand(moment2_path, inventory_context)
-        
+
         moment1_items = moment1_data.get("items", [])
         moment2_items = moment2_data.get("items", [])
-        
+
+        logger.info(
+            "video_flow family=%s moment1_items=%s moment2_items=%s",
+            self.family_id, moment1_items, moment2_items,
+        )
+
         put_actions, taken_actions = self._compare_moments(moment1_items, moment2_items)
-        
+
+        logger.info(
+            "video_flow family=%s diff put=%s taken=%s",
+            self.family_id, put_actions, taken_actions,
+        )
+
         for action in put_actions:
-            self.inventory_service.apply_action("PUT", action['name'], action['category'], action['quantity'])
-        
+            ok = self.inventory_service.apply_action("PUT", action['name'], action['category'], action['quantity'])
+            logger.info("video_flow PUT result name=%s ok=%s", action['name'], ok)
+
         for action in taken_actions:
-            self.inventory_service.apply_action("TAKEN", action['name'], action['category'], action['quantity'])
+            ok = self.inventory_service.apply_action("TAKEN", action['name'], action['category'], action['quantity'])
+            logger.info("video_flow TAKEN result name=%s ok=%s", action['name'], ok)
         
         try:
             Path(moment1_path).unlink(missing_ok=True)
