@@ -69,6 +69,7 @@ async def initialize_inventory(
 
         image_paths = FileHandler.save_multiple_temp_files(images, prefix="fridge_")
         family_id = _resolve_family_id(request)
+        logger.info("initialize_inventory called: %d image(s), family_id=%s", len(images), family_id)
         service = InitializationService()
         items = service.analyze_fridge_images(image_paths, family_id=family_id)
 

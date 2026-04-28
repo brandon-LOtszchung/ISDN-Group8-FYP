@@ -135,12 +135,14 @@ class InitializationService:
             return []
 
         prompt = self._build_prompt()
+        logger.info("Calling Gemini with %d image(s) for family %s", len(images), family_id)
         text = ""
         try:
             response = self.client.models.generate_content(
                 model='gemini-3.1-pro-preview',
                 contents=[prompt] + images,
             )
+            logger.info("Gemini responded successfully")
             text = (response.text or "").strip()
             if text.startswith("```json"):
                 text = text.split("```json", 1)[1].split("```", 1)[0].strip()
