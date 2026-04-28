@@ -10,13 +10,16 @@ struct ScanPromptView: View {
     @ScaledMetric private var emojiSize: CGFloat = 60
 
     var body: some View {
+        VStack {
+            Spacer()
         VStack(spacing: 20) {
             Text("📷").font(.system(size: emojiSize)).accessibilityHidden(true)
             Text(String(localized: "inventory.scan_prompt.title"))
-                .font(.title2.bold())
+                .font(.spaceGrotesk(.bold, size: 22))
+                .foregroundStyle(theme.colors.text)
             Text(String(localized: "inventory.scan_prompt.subtitle"))
-                .font(.body)
-                .foregroundStyle(.secondary)
+                .font(.sgBody())
+                .foregroundStyle(theme.colors.textMuted)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
 
@@ -25,7 +28,7 @@ struct ScanPromptView: View {
                 showCamera = true
             } label: {
                 Text(String(localized: "inventory.scan_prompt.scan"))
-                    .font(.body.bold())
+                    .font(.spaceGrotesk(.semibold, size: 16))
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -37,10 +40,13 @@ struct ScanPromptView: View {
                 isPresented = false
             } label: {
                 Text(String(localized: "inventory.scan_prompt.empty"))
-                    .font(.body)
+                    .font(.sgBody())
                     .foregroundStyle(theme.colors.primary)
             }
         }
         .padding(24)
+            Spacer()
+        }
+        .frame(maxHeight: .infinity)
     }
 }

@@ -22,8 +22,12 @@ struct InventoryView: View {
     var body: some View {
         Group {
             if appVM.isLoading && appVM.inventory.isEmpty {
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                VStack {
+                    Spacer()
+                    LoadingPhaseView(config: .inventoryInit)
+                    Spacer()
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if appVM.inventory.isEmpty {
                 if !appVM.fridgeInitialized {
                     ScanPromptView(showCamera: $showCamera, isPresented: $showScanPromptInline)
@@ -31,12 +35,17 @@ struct InventoryView: View {
                     ContentUnavailableView(
                         String(localized: "inventory.empty"),
                         systemImage: "refrigerator",
-                        description: Text("Tap the camera icon to scan your fridge.")
+                        description: Text(String(localized: "inventory.camera_scan_hint"))
                     )
                 }
             } else {
                 inventoryList
             }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            NeuBackground(screen: .inventory)
+                .environment(theme)
         }
         .navigationTitle(String(localized: "inventory.title"))
         .searchable(text: $searchText, prompt: String(localized: "inventory.search"))
@@ -65,6 +74,12 @@ struct InventoryView: View {
             InventoryItemFormView(item: item)
         }
         .topBarToolbar()
+        .alert(String(localized: "common.error"), isPresented: Binding(
+            get: { appVM.error != nil },
+            set: { if !$0 { appVM.error = nil } }
+        )) {
+            Button(String(localized: "common.done")) { appVM.error = nil }
+        } message: { Text(appVM.error ?? "") }
     }
 
     private var inventoryList: some View {
@@ -85,6 +100,11 @@ struct InventoryView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background {
+            NeuBackground(screen: .inventory)
+                .environment(theme)
+        }
         .refreshable {
             await appVM.loadAll()
         }

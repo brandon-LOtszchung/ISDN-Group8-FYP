@@ -5,22 +5,15 @@ struct InventoryItemFormView: View {
     let item: InventoryItem?
 
     @Environment(AppViewModel.self) private var appVM
+    @Environment(ThemeManager.self) private var theme
     @Environment(\.dismiss) private var dismiss
 
     @State private var name: String = ""
     @State private var selectedCategory: String = ""
-    @State private var customCategory: String = ""
     @State private var quantity: Int = 1
 
-    private var customOption: String { String(localized: "inventory.category_custom") }
-
-    private var isCustomCategorySelected: Bool {
-        selectedCategory == customOption
-    }
-
     private var isSaveDisabled: Bool {
-        name.trimmingCharacters(in: .whitespaces).isEmpty ||
-        (isCustomCategorySelected && customCategory.trimmingCharacters(in: .whitespaces).isEmpty)
+        name.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     var body: some View {
@@ -35,11 +28,6 @@ struct InventoryItemFormView: View {
                         ForEach(Constants.inventoryCategories, id: \.self) { category in
                             Text(category).tag(category)
                         }
-                        Text(customOption).tag(customOption)
-                    }
-
-                    if isCustomCategorySelected {
-                        TextField(String(localized: "inventory.item_category"), text: $customCategory)
                     }
                 }
 
@@ -54,6 +42,8 @@ struct InventoryItemFormView: View {
                     }
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(theme.colors.background)
             .navigationTitle(item == nil
                 ? String(localized: "inventory.add_item")
                 : String(localized: "inventory.edit_item"))
@@ -74,13 +64,9 @@ struct InventoryItemFormView: View {
     private func configure() {
         if let item {
             name = item.name
-            let isKnown = Constants.inventoryCategories.contains(item.category)
-            if isKnown {
-                selectedCategory = item.category
-            } else {
-                selectedCategory = customOption
-                customCategory = item.category
-            }
+            selectedCategory = Constants.inventoryCategories.contains(item.category)
+                ? item.category
+                : (Constants.inventoryCategories.last ?? "Other")
             quantity = Int(item.quantity)
         } else {
             selectedCategory = Constants.inventoryCategories.first ?? ""
@@ -90,9 +76,7 @@ struct InventoryItemFormView: View {
 
     private func save() {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
-        let category = isCustomCategorySelected
-            ? customCategory.trimmingCharacters(in: .whitespaces)
-            : selectedCategory
+        let category = selectedCategory
 
         if let existing = item {
             var updated = existing
@@ -103,6 +87,7 @@ struct InventoryItemFormView: View {
         } else {
             let newItem = InventoryItem(
                 id: UUID(),
+                familyId: appVM.familyId ?? UUID(),
                 name: trimmedName,
                 category: category,
                 quantity: Double(quantity)

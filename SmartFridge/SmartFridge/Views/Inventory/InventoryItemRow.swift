@@ -23,14 +23,14 @@ struct InventoryItemRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(categoryEmoji).font(.title2)
+            Text(categoryEmoji).font(.system(size: 24))
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.name).font(.body.bold()).foregroundStyle(theme.colors.text)
-                Text(item.category).font(.caption).foregroundStyle(.secondary)
+                Text(item.name).font(.spaceGrotesk(.semibold, size: 16)).foregroundStyle(theme.colors.text)
+                Text(item.category).font(.sgCaption()).foregroundStyle(.secondary)
             }
             Spacer()
             Text("\(item.quantity, specifier: "%.0f")")
-                .font(.subheadline.bold())
+                .font(.spaceGrotesk(.semibold, size: 15))
                 .foregroundStyle(theme.colors.primary)
         }
         .padding(.vertical, 4)
