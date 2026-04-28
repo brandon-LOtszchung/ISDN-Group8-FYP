@@ -1,6 +1,5 @@
 import logging
 from typing import Any, Dict, List, Optional
-
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -12,21 +11,44 @@ from src.utils.text_normalizer import normalize_food_name
 
 logger = logging.getLogger(__name__)
 
+# ── HKD unit cost lookup (Change 6) ──────────────────────────────────────────
+# Used by add-to-shopping-list to populate estimated_unit_cost.
+# Values are HKD per 1 unit of each unit type.
+
+HKD_PER_UNIT: Dict[str, float] = {
+    "g":      0.05,
+    "kg":     50.0,
+    "ml":     0.02,
+    "L":      20.0,
+    "tsp":    0.30,
+    "tbsp":   0.80,
+    "cup":    3.0,
+    "pcs":    5.0,
+    "cloves": 0.50,
+    "slice":  1.0,
+    "bunch":  8.0,
+}
+
+
+def estimate_hkd_cost(unit: str) -> Optional[float]:
+    """Return HKD cost per 1 unit, or None if unit is unknown."""
+    return HKD_PER_UNIT.get(unit)
+
 
 class RecipeFlowService:
-    FAMILY_ID = "00000000-0000-0000-0000-000000000001"
+    DEFAULT_FAMILY_ID = "00000000-0000-0000-0000-000000000001"
 
-    def __init__(self):
-        self.inventory = InventoryService(family_id=self.FAMILY_ID)
-        self.members = MemberService(family_id=self.FAMILY_ID)
+    def __init__(self, family_id: str = "00000000-0000-0000-0000-000000000001"):
+        self.family_id = family_id
+        self.inventory = InventoryService(family_id=family_id)
+        self.members = MemberService(family_id=family_id)
         self.generator = RecipeGenerator()
-        self.repo = RecipeRepository(family_id=self.FAMILY_ID)
+        self.repo = RecipeRepository(family_id=family_id)
+
+    # ── Recommend ──────────────────────────────────────────────────────────
 
     def recommend_and_save(self, member_ids: List[str], cuisine_style: str) -> List[Dict[str, Any]]:
         members = self.members.get_members(member_ids)
-        if len(members) != len(set(member_ids)):
-            raise ValueError("One or more member_ids not found")
-
         inventory_items = self.inventory.get_inventory()
         inventory_context = self.inventory.format_inventory_for_prompt()
         constraints = self._format_member_constraints(members)
@@ -43,44 +65,84 @@ class RecipeFlowService:
             count=5,
         )
 
-        inv_names = {normalize_food_name(i.get("name", "")) for i in inventory_items if i.get("quantity", 0) and i.get("name")}
+        # Case-insensitive inventory name set for matching
+        inv_names = {
+            normalize_food_name(i.get("name", "")).lower()
+            for i in inventory_items
+            if i.get("quantity", 0) and i.get("name")
+        }
 
         cards: List[Dict[str, Any]] = []
         for r in raw_recipes[:5]:
             name = str(r.get("name", "")).strip()
-            ingredients = r.get("ingredients", []) if isinstance(r.get("ingredients"), list) else []
-            steps = r.get("steps", []) if isinstance(r.get("steps"), list) else []
+            if not name:
+                continue
 
-            ing_norm = []
-            missing = []
+            ingredients_raw = r.get("ingredients", [])
+            if not isinstance(ingredients_raw, list):
+                continue
+            steps_raw = r.get("steps", [])
+            if not isinstance(steps_raw, list):
+                steps_raw = []
+
+            raw_kcal = r.get("calories")
+            if not raw_kcal:
+                logger.warning("Recipe '%s' missing calories from Gemini — skipping", name)
+                continue
+            try:
+                calories: int = int(raw_kcal)
+            except (ValueError, TypeError):
+                logger.warning("Recipe '%s' non-integer calories '%s' — skipping", name, raw_kcal)
+                continue
+
+            # Change 4: build ingredients list (no alternatives inline)
+            # and collect alternatives into a top-level dict keyed by ingredient name
+            ingredients: List[Dict] = []
+            alternatives_map: Dict[str, List[str]] = {}
             matched = 0
             total = 0
-            for ing in ingredients:
+
+            for ing in ingredients_raw:
                 if not isinstance(ing, dict):
                     continue
                 ing_name = str(ing.get("name", "")).strip()
-                unit = str(ing.get("unit", "")).strip() or "unit"
-                qty = float(ing.get("quantity", 1) or 1)
-                required = bool(ing.get("required", True))
                 if not ing_name:
                     continue
-                total += 1 if required else 0
-                n = normalize_food_name(ing_name)
-                if required and n in inv_names:
-                    matched += 1
-                elif required:
-                    missing.append({"name": ing_name, "quantity": qty, "unit": unit, "alternatives": ing.get("alternatives")})
-                ing_norm.append({"name": ing_name, "quantity": qty, "unit": unit, "required": required})
+                unit = str(ing.get("unit", "")).strip() or "pcs"
+                qty = float(ing.get("quantity", 1) or 1)
+                required = bool(ing.get("required", True))
 
-            recipe_data = {
+                # Collect alternatives into top-level dict
+                alts = ing.get("alternatives") or []
+                if not isinstance(alts, list):
+                    alts = []
+                if alts:
+                    alternatives_map[ing_name] = alts
+
+                ingredients.append({
+                    "name": ing_name,
+                    "quantity": qty,
+                    "unit": unit,
+                    "required": required,
+                })
+
+                if required:
+                    total += 1
+                    n = normalize_food_name(ing_name).lower()
+                    if n in inv_names:
+                        matched += 1
+
+            # Change 4: recipe_data structure with top-level alternatives dict
+            recipe_data: Dict[str, Any] = {
                 "name": name,
                 "cuisine_style": cuisine_style,
+                "calories": calories,
                 "meal_time_hkt": meal_time,
-                "hkt_now_iso": hkt_now_iso,
                 "member_ids": member_ids,
-                "ingredients": ing_norm,
-                "steps": [str(s) for s in steps if str(s).strip()],
-                "missing_ingredients": missing,
+                "ingredients": ingredients,
+                "steps": [str(s) for s in steps_raw if str(s).strip()],
+                "alternatives": alternatives_map,
+                # missing_ingredients is NOT stored — recomputed live from inventory
             }
 
             saved_id = self.repo.insert_saved_recipe(
@@ -90,92 +152,200 @@ class RecipeFlowService:
                 recipe_data=recipe_data,
             )
 
-            cards.append(
-                {
-                    "saved_recipe_id": saved_id,
-                    "name": name,
-                    "cuisine_style": cuisine_style,
-                    "matched_count": matched,
-                    "total_count": total,
-                    "missing_count": max(0, total - matched),
-                }
-            )
+            cards.append({
+                "saved_recipe_id": saved_id,
+                "name": name,
+                "cuisine_style": cuisine_style,
+                "matched_count": matched,
+                "total_count": total,
+                "missing_count": max(0, total - matched),
+                "calories": calories,
+            })
 
-        cards.sort(key=lambda c: (c["matched_count"], -c["missing_count"]), reverse=True)
+        cards.sort(key=lambda c: c["missing_count"])
         return cards
 
+    # ── Detail ─────────────────────────────────────────────────────────────
+
     def get_saved_recipe_detail(self, saved_recipe_id: str) -> Optional[Dict[str, Any]]:
+        """
+        Change 5: Recompute matched_count and missing_ingredients from
+        the family's LIVE inventory instead of returning the snapshotted values.
+        """
         row = self.repo.get_saved_recipe(saved_recipe_id)
         if not row:
             return None
+
         data = row.get("recipe_data") or {}
+        ingredients = data.get("ingredients") or []
+
+        # Support both new (top-level dict) and old (per-ingredient list) formats
+        alternatives_map: Dict[str, List[str]] = {}
+        top_level_alts = data.get("alternatives")
+        if isinstance(top_level_alts, dict):
+            alternatives_map = top_level_alts
+        else:
+            # Backward compat: alternatives were stored inside each ingredient
+            for ing in ingredients:
+                alts = ing.get("alternatives")
+                if isinstance(alts, list) and alts:
+                    alternatives_map[ing.get("name", "")] = alts
+
+        # Recompute from live inventory
+        inventory_items = self.inventory.get_inventory()
+        inv_names = {
+            normalize_food_name(i.get("name", "")).lower()
+            for i in inventory_items
+            if i.get("quantity", 0) and i.get("name")
+        }
+
+        matched = 0
+        total = 0
+        missing_ingredients = []
+
+        clean_ingredients = []
+        for ing in ingredients:
+            if not isinstance(ing, dict):
+                continue
+            ing_name = str(ing.get("name", "")).strip()
+            if not ing_name:
+                continue
+            unit = str(ing.get("unit", "unit"))
+            qty = float(ing.get("quantity", 1) or 1)
+            required = bool(ing.get("required", True))
+
+            clean_ingredients.append({
+                "name": ing_name,
+                "quantity": qty,
+                "unit": unit,
+                "required": required,
+            })
+
+            if required:
+                total += 1
+                n = normalize_food_name(ing_name).lower()
+                if n in inv_names:
+                    matched += 1
+                else:
+                    missing_ingredients.append({
+                        "name": ing_name,
+                        "quantity": qty,
+                        "unit": unit,
+                        "alternatives": alternatives_map.get(ing_name) or [],
+                    })
+
         return {
             "saved_recipe_id": row["id"],
             "name": data.get("name", ""),
             "cuisine_style": row.get("cuisine_style") or data.get("cuisine_style") or "",
-            "matched_count": int(row.get("matched_count") or 0),
-            "total_count": int(row.get("total_count") or 0),
-            "ingredients": data.get("ingredients", []) or [],
-            "steps": data.get("steps", []) or [],
-            "missing_ingredients": data.get("missing_ingredients", []) or [],
+            "matched_count": matched,
+            "total_count": total,
+            "calories": data.get("calories"),
+            "ingredients": clean_ingredients,
+            "steps": data.get("steps") or [],
+            "missing_ingredients": missing_ingredients,
         }
 
+    # ── Shopping list ───────────────────────────────────────────────────────
+
     def add_missing_to_shopping_list(self, saved_recipe_id: str) -> Optional[List[Dict[str, Any]]]:
+        """
+        Change 6: Recompute missing from LIVE inventory (not stored snapshot).
+        Uses HKD_PER_UNIT lookup table for estimated_unit_cost.
+        Upserts on (family_id, name, recipe_name) to prevent duplicates.
+        """
         row = self.repo.get_saved_recipe(saved_recipe_id)
         if not row:
             return None
-        data = row.get("recipe_data") or {}
-        missing = data.get("missing_ingredients") or []
-        items = []
-        added = []
-        for m in missing:
-            if not isinstance(m, dict):
-                continue
-            name = str(m.get("name", "")).strip()
-            unit = str(m.get("unit", "")).strip() or "unit"
-            qty = float(m.get("quantity", 1) or 1)
-            alts = m.get("alternatives") or []
-            if not name:
-                continue
-            items.append(
-                {
-                    "family_id": self.FAMILY_ID,
-                    "name": name,
-                    "quantity": qty,
-                    "unit": unit,
-                    "alternatives": alts,
-                    "is_purchased": False,
-                }
-            )
-            added.append({"name": name, "quantity": qty, "unit": unit, "alternatives": alts})
 
-        self.repo.upsert_shopping_list_items(items)
+        data = row.get("recipe_data") or {}
+        recipe_name = data.get("name", "Unknown Recipe")
+        ingredients = data.get("ingredients") or []
+
+        # Alternatives map (top-level dict or per-ingredient fallback)
+        alternatives_map: Dict[str, List[str]] = {}
+        top_level_alts = data.get("alternatives")
+        if isinstance(top_level_alts, dict):
+            alternatives_map = top_level_alts
+        else:
+            for ing in ingredients:
+                alts = ing.get("alternatives")
+                if isinstance(alts, list) and alts:
+                    alternatives_map[ing.get("name", "")] = alts
+
+        # Recompute missing from live inventory
+        inventory_items = self.inventory.get_inventory()
+        inv_names = {
+            normalize_food_name(i.get("name", "")).lower()
+            for i in inventory_items
+            if i.get("quantity", 0) and i.get("name")
+        }
+
+        items_to_upsert = []
+        added = []
+
+        for ing in ingredients:
+            if not isinstance(ing, dict):
+                continue
+            ing_name = str(ing.get("name", "")).strip()
+            if not ing_name:
+                continue
+            required = bool(ing.get("required", True))
+            if not required:
+                continue   # only add required ingredients
+
+            n = normalize_food_name(ing_name).lower()
+            if n in inv_names:
+                continue   # already have it — skip
+
+            unit = str(ing.get("unit", "")).strip() or "pcs"
+            qty = float(ing.get("quantity", 1) or 1)
+            alts = alternatives_map.get(ing_name) or []
+            if not isinstance(alts, list):
+                alts = []
+
+            items_to_upsert.append({
+                "family_id": self.family_id,
+                "name": ing_name,
+                "quantity": qty,
+                "unit": unit,
+                "alternatives": alts,
+                "is_purchased": False,
+                "estimated_unit_cost": estimate_hkd_cost(unit),
+                "recipe_name": recipe_name,
+            })
+            added.append({"name": ing_name, "quantity": qty, "unit": unit, "alternatives": alts})
+
+        if items_to_upsert:
+            self.repo.upsert_shopping_list_items(items_to_upsert)
         return added
 
+    # ── Helpers ─────────────────────────────────────────────────────────────
+
     def _format_member_constraints(self, members: List[Dict[str, Any]]) -> str:
-        allergies = set()
-        restrictions = set()
+        allergies: set = set()
+        restrictions: set = set()
+        health: set = set()
         for m in members:
             for a in (m.get("allergies") or []):
                 allergies.add(str(a))
             for r in (m.get("dietary_restrictions") or []):
                 restrictions.add(str(r))
+            for h in (m.get("health_conditions") or []):
+                health.add(str(h))
         parts = []
         if restrictions:
             parts.append("DIETARY_RESTRICTIONS: " + ", ".join(sorted(restrictions)))
         if allergies:
             parts.append("ALLERGIES: " + ", ".join(sorted(allergies)))
-        if not parts:
-            return "None"
-        return "\n".join(parts)
+        if health:
+            parts.append("HEALTH_CONDITIONS: " + ", ".join(sorted(health)))
+        return "\n".join(parts) if parts else "None"
 
     def _infer_meal_time_hkt(self, hkt_now_iso: str) -> str:
         dt = datetime.fromisoformat(hkt_now_iso)
-        hour = dt.hour
-        if 5 <= hour < 11:
+        if 5 <= dt.hour < 11:
             return "breakfast"
-        if 11 <= hour < 17:
+        if 11 <= dt.hour < 17:
             return "lunch"
         return "dinner"
-
-

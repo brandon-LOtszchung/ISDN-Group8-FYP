@@ -1,6 +1,6 @@
 import os
 import json
-import google.generativeai as genai
+from google import genai
 from pathlib import Path
 from dotenv import load_dotenv
 from typing import Optional
@@ -19,8 +19,9 @@ class ImageAnalyzer:
     def __init__(self):
         load_dotenv()
         api_key = os.getenv('GEMINI_API_KEY')
-        genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-2.5-flash-image')
+        if not api_key:
+            raise ValueError("GEMINI_API_KEY environment variable is not set")
+        self.client = genai.Client(api_key=api_key)
     
     def analyze_hand(self, image_path: str, inventory_context: Optional[str] = None) -> dict:
         prompt = self._build_prompt(inventory_context)
@@ -30,7 +31,10 @@ class ImageAnalyzer:
         
         try:
             image = Image.open(image_path)
-            response = self.model.generate_content([prompt, image])
+            response = self.client.models.generate_content(
+                model='gemini-3-flash-preview',
+                contents=[prompt, image],
+            )
             
             result_text = response.text.strip()
             
@@ -40,7 +44,13 @@ class ImageAnalyzer:
                 result_text = result_text.split('```')[1].split('```')[0].strip()
             
             result = json.loads(result_text)
+            # Guard: ensure items is always a list
+            if not isinstance(result.get("items"), list):
+                result["items"] = []
             return result
+        except json.JSONDecodeError as e:
+            logger.error("Gemini returned invalid JSON: %s | raw (first 500): %.500s", e, result_text)
+            return {"items": []}
         except Exception as e:
             logger.exception("Error analyzing image: %s", e)
             return {"items": []}
@@ -80,7 +90,7 @@ class ImageAnalyzer:
         else:
             prompt += "1. For detected items:\n"
         
-        prompt += "   - Use simplest generic names (remove colors, brands, sizes)\n"
+        prompt += "   - Use the most specific common name possible (remove brand names, colors, and sizes — but keep the food type: 'Coca-Cola' → 'soda', 'Evian' → 'water', 'Heinz Ketchup' → 'ketchup', NOT 'beverage' or 'condiment')\n"
         prompt += "   - Use singular form: 'grapes' → 'grape', 'apples' → 'apple'\n"
         prompt += "   - Keep compound foods: 'orange juice', 'chocolate milk', 'chicken breast'\n"
         prompt += "   - Assign most appropriate category from the valid list\n\n"

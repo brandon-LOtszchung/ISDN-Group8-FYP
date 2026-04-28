@@ -45,9 +45,12 @@ class RecipeRepository(SupabaseService):
     def upsert_shopping_list_items(self, items: List[Dict[str, Any]]) -> None:
         if not items:
             return
+        # Conflict on (family_id, name, recipe_name) — prevents duplicates when
+        # the user taps "Add to Shopping" twice for the same recipe.
+        # The DB unique constraint must match: unique (family_id, name, recipe_name)
         self.client.table("shopping_list_items").upsert(
             items,
-            on_conflict="family_id,name,unit",
+            on_conflict="family_id,name,recipe_name",
             ignore_duplicates=False,
         ).execute()
 
