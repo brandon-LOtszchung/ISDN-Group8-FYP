@@ -2,7 +2,7 @@ import logging
 import uuid
 from typing import List
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from ..schemas import (
     AddToShoppingListBody,
@@ -49,12 +49,19 @@ async def recommend_recipes(payload: RecommendRecipesRequest):
 
 
 @router.get("/{saved_recipe_id}", response_model=RecipeDetailSchema)
-async def get_recipe(saved_recipe_id: str, request: Request):
+async def get_recipe(
+    saved_recipe_id: str,
+    request: Request,
+    family_id: str | None = Query(default=None),
+):
     _validate_uuid(saved_recipe_id)
     try:
-        supa = SupabaseService()
-        family_id = get_family_id(request, supa.client)
-        service = RecipeFlowService(family_id=family_id)
+        if family_id and family_id.strip():
+            resolved_family_id = family_id.strip()
+        else:
+            supa = SupabaseService()
+            resolved_family_id = get_family_id(request, supa.client)
+        service = RecipeFlowService(family_id=resolved_family_id)
         recipe = service.get_saved_recipe_detail(saved_recipe_id)
         if not recipe:
             raise HTTPException(status_code=404, detail=f"No recipe found for id: {saved_recipe_id}")

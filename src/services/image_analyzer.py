@@ -11,9 +11,8 @@ logger = logging.getLogger(__name__)
 
 class ImageAnalyzer:
     CATEGORIES = [
-        'vegetables', 'fruits', 'meat', 'seafood', 'dairy',
-        'grains', 'condiments', 'beverages', 'snacks',
-        'frozen', 'canned', 'other'
+        'Protein', 'Vegetable', 'Fruit', 'Dairy',
+        'Grain', 'Condiment', 'Beverage', 'Other',
     ]
     
     def __init__(self):
@@ -103,8 +102,8 @@ class ImageAnalyzer:
             prompt += "3. Return ONLY the JSON, no explanations or other text.\n\n"
         
         prompt += "=== EXAMPLES ===\n"
-        prompt += 'Holding 1 apple: {"items": [{"name": "apple", "quantity": 1, "category": "fruits"}]}\n'
-        prompt += 'Holding 2 eggs and 1 milk: {"items": [{"name": "egg", "quantity": 2, "category": "dairy"}, {"name": "milk", "quantity": 1, "category": "dairy"}]}\n'
+        prompt += 'Holding 1 apple: {"items": [{"name": "apple", "quantity": 1, "category": "Fruit"}]}\n'
+        prompt += 'Holding 2 eggs and 1 milk: {"items": [{"name": "egg", "quantity": 2, "category": "Protein"}, {"name": "milk", "quantity": 1, "category": "Dairy"}]}\n'
         prompt += 'Empty hand: {"items": []}\n'
         
         return prompt

@@ -25,21 +25,27 @@ def get_family_id(request: Request, supabase_client=None) -> str:
     """
     token = _extract_bearer(request)
     if not token:
+        logger.warning("family_id fallback: no Authorization bearer token on request %s %s", request.method, request.url.path)
         return FALLBACK_FAMILY_ID
 
     user_id = _decode_user_id(token)
     if not user_id:
+        logger.warning("family_id fallback: JWT could not be decoded or missing 'sub' claim")
         return FALLBACK_FAMILY_ID
 
     if supabase_client is None:
+        logger.warning("family_id fallback: supabase_client not provided for user %s", user_id)
         return FALLBACK_FAMILY_ID
 
     try:
         resp = supabase_client.table("families").select("id").eq("user_id", user_id).order("created_at", desc=True).limit(1).execute()
         if resp.data and len(resp.data) > 0:
-            return resp.data[0]["id"]
+            family_id = resp.data[0]["id"]
+            logger.info("family_id resolved for user %s -> %s", user_id, family_id)
+            return family_id
+        logger.warning("family_id fallback: no families row found for user %s", user_id)
     except Exception as e:
-        logger.warning("Could not look up family for user %s: %s", user_id, e)
+        logger.warning("family_id fallback: lookup error for user %s: %s", user_id, e)
 
     return FALLBACK_FAMILY_ID
 

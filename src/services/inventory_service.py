@@ -1,14 +1,14 @@
 from typing import List, Dict, Optional
 import logging
 from src.services.supabase_service import SupabaseService
+from src.services.initialization_service import normalize_category
 
 logger = logging.getLogger(__name__)
 
 class InventoryService(SupabaseService):
     CATEGORIES = [
-        'vegetables', 'fruits', 'meat', 'seafood', 'dairy',
-        'grains', 'condiments', 'beverages', 'snacks',
-        'frozen', 'canned', 'other'
+        'Protein', 'Vegetable', 'Fruit', 'Dairy',
+        'Grain', 'Condiment', 'Beverage', 'Other',
     ]
     
     def __init__(self, family_id: str = "00000000-0000-0000-0000-000000000001"):
@@ -48,11 +48,11 @@ class InventoryService(SupabaseService):
     def upsert_item(self, name: str, category: str, quantity_delta: float) -> bool:
         try:
             existing_item = self.get_item_by_name(name)
-            
+
             if existing_item:
                 new_quantity = float(existing_item['quantity']) + quantity_delta
                 new_quantity = max(0, new_quantity)
-                
+
                 self.client.table('inventory_items').update({
                     'quantity': new_quantity
                 }).eq('id', existing_item['id']).execute()
@@ -61,7 +61,7 @@ class InventoryService(SupabaseService):
                     self.client.table('inventory_items').insert({
                         'family_id': self.family_id,
                         'name': name,
-                        'category': category,
+                        'category': normalize_category(category),
                         'quantity': quantity_delta
                     }).execute()
                 else:
