@@ -8,8 +8,6 @@ struct CuisineOption: Identifiable {
 }
 
 enum Constants {
-    static let defaultFamilyID = UUID(uuidString: "00000000-0000-0000-0000-000000000001")!
-
     static let cuisineOptions: [CuisineOption] = [
         CuisineOption(id: "chinese",    value: "chinese",    label: "Chinese"),
         CuisineOption(id: "cantonese",  value: "cantonese",  label: "Cantonese"),

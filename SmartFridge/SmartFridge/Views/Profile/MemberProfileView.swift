@@ -69,11 +69,11 @@ struct MemberProfileView: View {
             Section(String(localized: "profile.member.preferences")) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: "profile.member.spice"))
-                        .font(.subheadline)
+                        .font(.sgBody())
                         .foregroundStyle(.secondary)
                     FlowLayout(spacing: 8) {
                         ForEach(Constants.spiceLevels, id: \.self) { level in
-                            PillView(label: level.capitalized, isSelected: spiceLevel == level) {
+                            PillView(label: NSLocalizedString("spice.\(level)", comment: ""), isSelected: spiceLevel == level) {
                                 spiceLevel = spiceLevel == level ? nil : level
                             }
                         }
@@ -83,7 +83,7 @@ struct MemberProfileView: View {
 
                 VStack(alignment: .leading, spacing: 8) {
                     Text(String(localized: "profile.member.cuisines"))
-                        .font(.subheadline)
+                        .font(.sgBody())
                         .foregroundStyle(.secondary)
                     FlowLayout(spacing: 8) {
                         ForEach(Constants.cuisineOptions) { cuisine in
@@ -116,6 +116,8 @@ struct MemberProfileView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .background(theme.colors.background)
         .navigationTitle(navigationTitle)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -155,9 +157,9 @@ struct MemberProfileView: View {
         dietaryRestrictions = Set(m.dietaryRestrictions)
         allergies = Set(m.allergies)
         healthConditions = Set(m.healthConditions)
-        spiceLevel = m.preferences.spiceLevel
-        favoriteCuisines = Set(m.preferences.favoriteCuisines)
-        dislikedIngredients = m.preferences.dislikedIngredients
+        spiceLevel = m.spiceLevel
+        favoriteCuisines = Set(m.favoriteCuisines)
+        dislikedIngredients = m.dislikedIngredients
     }
 
     private func toggleSet(_ set: inout Set<String>, value: String) {
@@ -173,11 +175,6 @@ struct MemberProfileView: View {
 
     private func save() {
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
-        let prefs = MemberPreferences(
-            spiceLevel: spiceLevel,
-            favoriteCuisines: Array(favoriteCuisines),
-            dislikedIngredients: dislikedIngredients
-        )
 
         if let id = memberId {
             // Edit mode
@@ -187,19 +184,24 @@ struct MemberProfileView: View {
             member.dietaryRestrictions = Array(dietaryRestrictions)
             member.allergies = Array(allergies)
             member.healthConditions = Array(healthConditions)
-            member.preferences = prefs
+            member.spiceLevel = spiceLevel
+            member.favoriteCuisines = Array(favoriteCuisines)
+            member.dislikedIngredients = dislikedIngredients
             appVM.updateMember(member)
         } else {
-            // Create mode
+            // Create mode — use family's ID if available, fallback to a placeholder
+            let fid = appVM.familyId ?? UUID()
             let member = FamilyMember(
                 id: UUID(),
-                familyId: Constants.defaultFamilyID,
+                familyId: fid,
                 name: trimmedName,
                 age: Int(ageText),
                 dietaryRestrictions: Array(dietaryRestrictions),
                 allergies: Array(allergies),
                 healthConditions: Array(healthConditions),
-                preferences: prefs
+                spiceLevel: spiceLevel,
+                favoriteCuisines: Array(favoriteCuisines),
+                dislikedIngredients: dislikedIngredients
             )
             appVM.addMember(member)
         }

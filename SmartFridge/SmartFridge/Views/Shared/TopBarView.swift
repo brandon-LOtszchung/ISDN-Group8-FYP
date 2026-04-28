@@ -1,6 +1,8 @@
 // Views/Shared/TopBarView.swift
 import SwiftUI
 
+private let privacyPolicyURL = URL(string: "https://brandon-lotsz.github.io/smartfridge-privacy/")!
+
 struct TopBarView: View {
     @Environment(ThemeManager.self) private var theme
     @Environment(LanguageManager.self) private var languageManager
@@ -8,15 +10,15 @@ struct TopBarView: View {
     var body: some View {
         HStack {
             Text("SmartFridge")
-                .font(.title2.bold())
-                .foregroundStyle(theme.colors.primary)
+                .font(.spaceGrotesk(.bold, size: 20))
+                .foregroundStyle(Color(hex: "#1A1A1A"))
             Spacer()
             // Theme toggle
             Button {
                 theme.setTheme(theme.theme == .warm ? .cool : .warm)
             } label: {
                 Image(systemName: theme.theme == .warm ? "sun.max.fill" : "snowflake")
-                    .foregroundStyle(theme.colors.primary)
+                    .foregroundStyle(Color(hex: "#1A1A1A"))
             }
             // Language picker
             Menu {
@@ -27,7 +29,7 @@ struct TopBarView: View {
                 }
             } label: {
                 Image(systemName: "globe")
-                    .foregroundStyle(theme.colors.primary)
+                    .foregroundStyle(Color(hex: "#1A1A1A"))
             }
         }
         .padding(.horizontal)
@@ -77,14 +79,22 @@ struct ProfileDrawerView: View {
 
     @State private var showAddMember = false
     @State private var memberToDelete: FamilyMember? = nil
+    @State private var showSignOutConfirm = false
 
     var body: some View {
         NavigationStack {
             List {
                 if let family = appVM.family {
                     Section(String(localized: "profile.family")) {
-                        Text(family.name).font(.headline)
+                        Text(family.name).font(.spaceGrotesk(.semibold, size: 17))
                     }
+                }
+                Section(String(localized: "profile.about")) {
+                    Link(destination: privacyPolicyURL) {
+                        Label(String(localized: "profile.privacy_policy"), systemImage: "hand.raised")
+                    }
+                    LabeledContent(String(localized: "profile.version"),
+                                   value: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0")
                 }
                 Section(String(localized: "profile.members")) {
                     ForEach(appVM.members) { member in
@@ -103,12 +113,35 @@ struct ProfileDrawerView: View {
             }
             .navigationTitle(String(localized: "profile.title"))
             .navigationBarTitleDisplayMode(.large)
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background {
+                NeuBackground(screen: .profile)
+                    .environment(theme)
+            }
+            .safeAreaInset(edge: .bottom) {
+                Button {
+                    showSignOutConfirm = true
+                } label: {
+                    Text(String(localized: "profile.sign_out"))
+                        .font(.spaceGrotesk(.semibold, size: 16))
+                        .foregroundStyle(theme.colors.danger)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(Color(.secondarySystemBackground))
+                }
+            }
+            .confirmationDialog(String(localized: "profile.sign_out_confirm"), isPresented: $showSignOutConfirm, titleVisibility: .visible) {
+                Button(String(localized: "profile.sign_out"), role: .destructive) { appVM.signOut() }
+                Button(String(localized: "common.cancel"), role: .cancel) {}
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showAddMember = true
                     } label: {
-                        Image(systemName: "plus")
+                        Label(String(localized: "profile.add_member"), systemImage: "person.badge.plus")
+                            .labelStyle(.titleAndIcon)
                     }
                 }
             }

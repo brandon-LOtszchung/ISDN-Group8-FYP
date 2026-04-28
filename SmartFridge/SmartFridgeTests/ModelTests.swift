@@ -83,7 +83,8 @@ final class ModelTests: XCTestCase {
         XCTAssertEqual(rec.calories, 350)
     }
 
-    func testFamilyMemberPreferencesNested() throws {
+    func testFamilyMemberDecodesFlat() throws {
+        // Flat schema matching the Supabase DB columns
         let json = """
         {
           "id": "00000000-0000-0000-0000-000000000003",
@@ -93,16 +94,14 @@ final class ModelTests: XCTestCase {
           "dietary_restrictions": ["Halal"],
           "allergies": [],
           "health_conditions": [],
-          "preferences": {
-            "spice_level": "mild",
-            "favorite_cuisines": ["Chinese"],
-            "disliked_ingredients": []
-          }
+          "spice_level": "mild",
+          "favorite_cuisines": ["Chinese"],
+          "disliked_ingredients": []
         }
         """.data(using: .utf8)!
         let member = try decoder.decode(FamilyMember.self, from: json)
         XCTAssertEqual(member.name, "Dad")
-        XCTAssertEqual(member.preferences.spiceLevel, "mild")
-        XCTAssertEqual(member.preferences.favoriteCuisines, ["Chinese"])
+        XCTAssertEqual(member.spiceLevel, "mild")
+        XCTAssertEqual(member.favoriteCuisines, ["Chinese"])
     }
 }

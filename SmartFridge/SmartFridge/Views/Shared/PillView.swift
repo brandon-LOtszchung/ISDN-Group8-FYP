@@ -11,17 +11,22 @@ struct PillView: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.subheadline.weight(.semibold))
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background(isSelected ? theme.colors.primary : Color(.systemBackground))
-                .foregroundStyle(isSelected ? .white : theme.colors.text)
-                .clipShape(Capsule())
+                .font(.spaceGrotesk(.semibold, size: 15))
+                .padding(.horizontal, 18)
+                .padding(.vertical, 10)
+                .background(isSelected ? theme.colors.primary : Color.white)
+                .foregroundStyle(Color(hex: "#1A1A1A"))
+                .clipShape(RoundedRectangle(cornerRadius: 6))
                 .overlay(
-                    Capsule()
-                        .strokeBorder(isSelected ? theme.colors.primary : theme.colors.border, lineWidth: 1.5)
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(Color(hex: "#1A1A1A"), lineWidth: isSelected ? 2 : 1.5)
+                )
+                .shadow(
+                    color: Color(hex: "#1A1A1A").opacity(isSelected ? 1 : 0),
+                    radius: 0, x: 2, y: 2
                 )
         }
         .buttonStyle(.plain)
+        .animation(.spring(duration: 0.15), value: isSelected)
     }
 }
