@@ -36,9 +36,9 @@ def estimate_hkd_cost(unit: str) -> Optional[float]:
 
 
 class RecipeFlowService:
-    DEFAULT_FAMILY_ID = "00000000-0000-0000-0000-000000000001"
+    DEFAULT_FAMILY_ID = "eef3fcba-7b07-4c18-82dc-50dfe60b97ac"
 
-    def __init__(self, family_id: str = "00000000-0000-0000-0000-000000000001"):
+    def __init__(self, family_id: str = "eef3fcba-7b07-4c18-82dc-50dfe60b97ac"):
         self.family_id = family_id
         self.inventory = InventoryService(family_id=family_id)
         self.members = MemberService(family_id=family_id)

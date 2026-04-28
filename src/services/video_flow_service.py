@@ -7,12 +7,11 @@ from .image_analyzer import ImageAnalyzer
 from .inventory_service import InventoryService
 
 class VideoFlowService:
-    FAMILY_ID = "00000000-0000-0000-0000-000000000001"
-    
-    def __init__(self):
+    def __init__(self, family_id: str):
+        self.family_id = family_id
         self.video_processor = VideoProcessor(red_line_ratio=0.8)
         self.image_analyzer = ImageAnalyzer()
-        self.inventory_service = InventoryService(family_id=self.FAMILY_ID)
+        self.inventory_service = InventoryService(family_id=family_id)
     
     def process_video(self, video_path: str) -> Dict:
         if not Path(video_path).exists():

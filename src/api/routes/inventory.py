@@ -1,12 +1,14 @@
 import logging
 import os
 import time
-from fastapi import APIRouter, Form, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, Request, UploadFile, File
 from typing import List
 
 from ..schemas import InventoryItemSchema, VideoProcessResponse
 from src.services.video_flow_service import VideoFlowService
 from src.services.initialization_service import InitializationService
+from src.services.supabase_service import SupabaseService
+from src.utils.auth import get_family_id
 from src.utils.file_handler import FileHandler
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
@@ -14,8 +16,13 @@ router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 logger = logging.getLogger("uvicorn.error")
 
 
+def _resolve_family_id(request: Request) -> str:
+    supa = SupabaseService()
+    return get_family_id(request, supa.client)
+
+
 @router.post("/process-video", response_model=VideoProcessResponse)
-async def process_video(video: UploadFile = File(...)):
+async def process_video(request: Request, video: UploadFile = File(...)):
     start_time = time.time()
     video_path = None
     try:
@@ -26,7 +33,8 @@ async def process_video(video: UploadFile = File(...)):
         if file_ext not in allowed_extensions:
             raise HTTPException(status_code=400, detail=f"Invalid file type. Allowed: {', '.join(allowed_extensions)}")
         video_path = FileHandler.save_temp_file(video, prefix="video_")
-        service = VideoFlowService()
+        family_id = _resolve_family_id(request)
+        service = VideoFlowService(family_id=family_id)
         result = service.process_video(video_path)
         processing_time = time.time() - start_time
         if not result.get("success"):
@@ -43,15 +51,13 @@ async def process_video(video: UploadFile = File(...)):
 
 @router.post("/initialize", response_model=List[InventoryItemSchema])
 async def initialize_inventory(
+    request: Request,
     images: List[UploadFile] = File(...),
-    family_id: str = Form(...),
 ):
     image_paths = []
     try:
         if not images:
             raise HTTPException(status_code=400, detail="At least one image is required.")
-        if not family_id:
-            raise HTTPException(status_code=400, detail="family_id is required.")
 
         allowed_extensions = [".jpg", ".jpeg", ".png", ".webp"]
         for img in images:
@@ -62,6 +68,7 @@ async def initialize_inventory(
                 raise HTTPException(status_code=400, detail=f"Invalid file type '{ext}'. Allowed: {', '.join(allowed_extensions)}")
 
         image_paths = FileHandler.save_multiple_temp_files(images, prefix="fridge_")
+        family_id = _resolve_family_id(request)
         service = InitializationService()
         items = service.analyze_fridge_images(image_paths, family_id=family_id)
 

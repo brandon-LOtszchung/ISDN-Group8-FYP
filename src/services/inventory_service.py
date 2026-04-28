@@ -11,7 +11,7 @@ class InventoryService(SupabaseService):
         'Grain', 'Condiment', 'Beverage', 'Other',
     ]
     
-    def __init__(self, family_id: str = "00000000-0000-0000-0000-000000000001"):
+    def __init__(self, family_id: str = "eef3fcba-7b07-4c18-82dc-50dfe60b97ac"):
         super().__init__(family_id=family_id)
     
     def get_inventory(self) -> List[Dict]:

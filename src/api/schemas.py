@@ -39,7 +39,6 @@ class InventoryItemSchema(BaseModel):
 # ── Recipes ──────────────────────────────────────────────────────────────────
 
 class RecommendRecipesRequest(BaseModel):
-    family_id: str
     member_ids: List[str]
     cuisine_style: str
 
@@ -77,7 +76,3 @@ class RecipeDetailSchema(BaseModel):
     steps: List[str]
     missing_ingredients: List[MissingIngredientSchema]
 
-# ── Shopping list ─────────────────────────────────────────────────────────────
-
-class AddToShoppingListBody(BaseModel):
-    family_id: str

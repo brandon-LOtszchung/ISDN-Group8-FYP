@@ -120,7 +120,7 @@ class InitializationService:
     def analyze_fridge_images(
         self,
         image_paths: List[str],
-        family_id: str = "00000000-0000-0000-0000-000000000001",
+        family_id: str = "eef3fcba-7b07-4c18-82dc-50dfe60b97ac",
     ) -> List[Dict]:
         """
         Analyze fridge photos with Gemini vision.

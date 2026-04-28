@@ -4,7 +4,7 @@ from supabase import create_client, Client
 
 
 class SupabaseService:
-    def __init__(self, family_id: str = "00000000-0000-0000-0000-000000000001"):
+    def __init__(self, family_id: str = "eef3fcba-7b07-4c18-82dc-50dfe60b97ac"):
         load_dotenv()
         supabase_url = os.getenv("SUPABASE_URL")
         # Service role key bypasses RLS — safe for backend-only use.
