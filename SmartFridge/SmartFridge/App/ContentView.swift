@@ -7,14 +7,26 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if appVM.hasCompletedOnboarding {
-                MainTabView()
-                    .task { await shoppingVM.load() }
-            } else {
+            if !appVM.isAuthResolved {
+                Color(hex: "#FEFAE0").ignoresSafeArea()
+            } else if appVM.currentUserId == nil {
+                LoginView()
+            } else if appVM.family == nil {
                 OnboardingView()
+            } else {
+                MainTabView()
+                    .task {
+                        if let fid = appVM.familyId {
+                            shoppingVM.familyId = fid
+                        }
+                        await shoppingVM.load()
+                    }
             }
         }
-        .animation(.easeInOut, value: appVM.hasCompletedOnboarding)
+        .preferredColorScheme(.light)
+        .animation(.easeInOut, value: appVM.isAuthResolved)
+        .animation(.easeInOut, value: appVM.currentUserId == nil)
+        .animation(.easeInOut, value: appVM.family == nil)
     }
 }
 
@@ -32,5 +44,6 @@ struct MainTabView: View {
             ProfileDrawerView()
                 .tabItem { Label(String(localized: "tab.profile"), systemImage: "person.circle") }
         }
+        .background(themeManager.colors.background)
     }
 }
