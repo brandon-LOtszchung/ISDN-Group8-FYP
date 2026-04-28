@@ -20,6 +20,22 @@
 "onboarding.summary.title"         = "You're all set!";
 "onboarding.continue"              = "Continue";
 "onboarding.add_member"            = "Add Member";
+"onboarding.members.skip"          = "Skip for now";
+"onboarding.budget.feedback"               = "Great! We'll find recipes that fit your budget.";
+"onboarding.cooking_feedback.beginner"     = "No worries — we'll keep the recipes simple and easy to follow.";
+"onboarding.cooking_feedback.intermediate" = "Nice! You'll have plenty of variety to choose from.";
+"onboarding.cooking_feedback.advanced"     = "Impressive! Get ready for some complex and exciting dishes.";
+"onboarding.cooking_feedback.default"      = "Great choice!";
+"onboarding.get_started"                   = "Get Started";
+"onboarding.welcome.subtitle"              = "Your family's kitchen, organized.";
+"onboarding.cooking_intro.message"         = "Let's talk about how your family cooks.";
+"onboarding.budget.currency_prefix"        = "HK$";
+"onboarding.budget.tier.low"               = "Budget-Friendly";
+"onboarding.budget.tier.medium"            = "Moderate";
+"onboarding.budget.tier.high"              = "Premium";
+"cooking.skill.beginner"                   = "Beginner";
+"cooking.skill.intermediate"               = "Intermediate";
+"cooking.skill.advanced"                   = "Advanced";
 
 // Inventory
 "inventory.title"                  = "My Fridge";
@@ -87,6 +103,11 @@
 "shopping.share"                   = "Share List";
 
 // Profile
+"profile.add_member"               = "Add Member";
+"profile.about"                    = "About";
+"profile.privacy_policy"           = "Privacy Policy";
+"profile.version"                  = "Version";
+"profile.sign_out"                 = "Sign Out";
 "profile.title"                    = "Profile";
 "profile.family"                   = "Family";
 "profile.members"                  = "Members";
@@ -115,3 +136,89 @@
 "common.done"                      = "Done";
 "common.save"                      = "Save";
 "common.delete"                    = "Delete";
+
+// Login
+"login.subtitle"            = "Your family's smart kitchen companion";
+"login.phone_number"        = "Phone Number";
+"login.hk_phone_hint"       = "Hong Kong phone number";
+"login.verification_code"   = "Verification Code";
+"login.otp_placeholder"     = "6-digit code";
+"login.sent_to"             = "Sent to %@";
+"login.send_code"           = "Send Code";
+"login.verify"              = "Verify";
+"login.resend_in"           = "Resend in %ds";
+"login.resend_code"         = "Resend code";
+"login.privacy_notice"      = "By continuing you agree to our Privacy Policy";
+"login.error.invalid_otp"   = "The code has expired or is invalid. Please request a new one.";
+"login.error.rate_limit"    = "Too many attempts. Please wait a moment and try again.";
+"login.error.network"       = "No internet connection. Please check your network.";
+"login.error.generic"       = "Something went wrong. Please try again.";
+
+// Shopping (additional)
+"shopping.empty"             = "No items";
+"shopping.empty.description" = "Add missing ingredients from a recipe.";
+
+// Inventory (additional)
+"inventory.camera_scan_hint" = "Tap the camera icon to scan your fridge.";
+
+// Recipe (additional)
+"recipe.share_text"          = "Check out this recipe: %@";
+
+// Camera (additional)
+"camera.family_error"        = "Unable to identify your family. Please sign out and back in.";
+
+// Profile (additional)
+"profile.sign_out_confirm"   = "Sign out of SmartFridge?";
+
+// Spice levels
+"spice.none"   = "No Spice";
+"spice.mild"   = "Mild";
+"spice.medium" = "Medium";
+"spice.hot"    = "Hot";
+
+// Shopping accessibility
+"shopping.status.purchased"   = "Purchased";
+"shopping.status.partial"     = "Partially purchased";
+"shopping.status.none"        = "Not purchased";
+"shopping.source.other"       = "Other";
+"onboarding.step_of" = "Step %d of %d";
+
+// Loading states
+"loading.inventory.title"    = "Loading your fridge...";
+"loading.recipes.title"      = "Finding recipe ideas...";
+"loading.detail.title"       = "Preparing your recipe...";
+
+// Loading phase labels
+"loading.phase.connecting"   = "Connecting";
+"loading.phase.fetching"     = "Fetching";
+"loading.phase.organizing"   = "Organizing";
+"loading.phase.scanning"     = "Scanning";
+"loading.phase.matching"     = "Matching";
+"loading.phase.scoring"      = "Scoring";
+"loading.phase.ingredients"  = "Ingredients";
+"loading.phase.fridge_check" = "Fridge Check";
+"loading.phase.building"     = "Building";
+
+// Loading tips — inventory
+"loading.inventory.tip.1"    = "Organizing by category helps reduce food waste at home.";
+"loading.inventory.tip.2"    = "Store dairy on the middle shelf for consistent cooling.";
+"loading.inventory.tip.3"    = "Check expiry dates regularly to avoid surprises.";
+
+// Loading tips — recipes
+"loading.recipes.tip.1"      = "Recipes with 80%+ match use mostly what you already have.";
+"loading.recipes.tip.2"      = "Cooking at home saves up to 60% compared to eating out.";
+"loading.recipes.tip.3"      = "More family members means more personalised recommendations.";
+
+// Loading — camera scan
+"loading.camera.title"       = "Scanning your fridge...";
+"loading.phase.uploading"    = "Uploading";
+"loading.phase.analyzing"    = "Analyzing";
+"loading.phase.adding"       = "Adding";
+"loading.camera.tip.1"       = "We'll detect all items visible in your photos.";
+"loading.camera.tip.2"       = "Add multiple photos to capture everything in your fridge.";
+"loading.camera.tip.3"       = "After scanning, you can edit or add more items manually.";
+
+// Loading tips — recipe detail
+"loading.detail.tip.1"       = "Read the full recipe before you start cooking.";
+"loading.detail.tip.2"       = "Prep all ingredients first — it makes cooking much smoother.";
+"loading.detail.tip.3"       = "Missing ingredients? Add them to your shopping list with one tap.";

@@ -20,6 +20,22 @@
 "onboarding.summary.title"         = "一切準備就緒！";
 "onboarding.continue"              = "繼續";
 "onboarding.add_member"            = "新增成員";
+"onboarding.members.skip"          = "稍後設定";
+"onboarding.budget.feedback"               = "好！我們將為您推薦符合預算的食譜。";
+"onboarding.cooking_feedback.beginner"     = "沒問題——我們會為您提供簡單易懂的食譜。";
+"onboarding.cooking_feedback.intermediate" = "很好！您將有豐富的食譜選擇。";
+"onboarding.cooking_feedback.advanced"     = "厲害！準備好迎接複雜而令人興奮的料理吧。";
+"onboarding.cooking_feedback.default"      = "很好的選擇！";
+"onboarding.get_started"                   = "開始使用";
+"onboarding.welcome.subtitle"              = "您家庭的廚房，井然有序。";
+"onboarding.cooking_intro.message"         = "讓我們聊聊您家庭的烹飪習慣。";
+"onboarding.budget.currency_prefix"        = "HK$";
+"onboarding.budget.tier.low"               = "經濟實惠";
+"onboarding.budget.tier.medium"            = "適中";
+"onboarding.budget.tier.high"              = "高端";
+"cooking.skill.beginner"                   = "初學者";
+"cooking.skill.intermediate"               = "中級";
+"cooking.skill.advanced"                   = "高級";
 
 // Inventory
 "inventory.title"                  = "我的雪櫃";
@@ -87,6 +103,11 @@
 "shopping.share"                   = "分享清單";
 
 // Profile
+"profile.add_member"               = "新增成員";
+"profile.about"                    = "關於";
+"profile.privacy_policy"           = "私隱政策";
+"profile.version"                  = "版本";
+"profile.sign_out"                 = "登出";
 "profile.title"                    = "個人資料";
 "profile.family"                   = "家庭";
 "profile.members"                  = "成員";
@@ -115,3 +136,89 @@
 "common.done"                      = "完成";
 "common.save"                      = "儲存";
 "common.delete"                    = "刪除";
+
+// Login
+"login.subtitle"            = "您家庭的智能廚房助手";
+"login.phone_number"        = "電話號碼";
+"login.hk_phone_hint"       = "香港電話號碼";
+"login.verification_code"   = "驗證碼";
+"login.otp_placeholder"     = "6位數驗證碼";
+"login.sent_to"             = "已發送至 %@";
+"login.send_code"           = "發送驗證碼";
+"login.verify"              = "驗證";
+"login.resend_in"           = "%ds 後重新發送";
+"login.resend_code"         = "重新發送驗證碼";
+"login.privacy_notice"      = "繼續即表示您同意我們的隱私政策";
+"login.error.invalid_otp"   = "驗證碼已過期或無效，請重新申請。";
+"login.error.rate_limit"    = "嘗試次數過多，請稍候再試。";
+"login.error.network"       = "無網絡連接，請檢查您的網絡。";
+"login.error.generic"       = "出現問題，請重試。";
+
+// Shopping (additional)
+"shopping.empty"             = "沒有項目";
+"shopping.empty.description" = "從食譜中添加缺少的食材。";
+
+// Inventory (additional)
+"inventory.camera_scan_hint" = "點擊相機圖示掃描您的雪櫃。";
+
+// Recipe (additional)
+"recipe.share_text"          = "看看這個食譜：%@";
+
+// Camera (additional)
+"camera.family_error"        = "無法識別您的家庭，請重新登出並登入。";
+
+// Profile (additional)
+"profile.sign_out_confirm"   = "登出 SmartFridge？";
+
+// Spice levels
+"spice.none"   = "不辣";
+"spice.mild"   = "微辣";
+"spice.medium" = "中辣";
+"spice.hot"    = "大辣";
+
+// Shopping accessibility
+"shopping.status.purchased"   = "已購買";
+"shopping.status.partial"     = "部分已購買";
+"shopping.status.none"        = "未購買";
+"shopping.source.other"       = "其他";
+"onboarding.step_of" = "第 %d 步，共 %d 步";
+
+// Loading states
+"loading.inventory.title"    = "正在載入冰箱...";
+"loading.recipes.title"      = "正在尋找食譜靈感...";
+"loading.detail.title"       = "正在準備食譜...";
+
+// Loading phase labels
+"loading.phase.connecting"   = "連接中";
+"loading.phase.fetching"     = "獲取中";
+"loading.phase.organizing"   = "整理中";
+"loading.phase.scanning"     = "掃描中";
+"loading.phase.matching"     = "配對中";
+"loading.phase.scoring"      = "評分中";
+"loading.phase.ingredients"  = "食材";
+"loading.phase.fridge_check" = "查冰箱";
+"loading.phase.building"     = "建立中";
+
+// Loading tips — inventory
+"loading.inventory.tip.1"    = "按類別整理有助於減少食物浪費。";
+"loading.inventory.tip.2"    = "乳製品放中層冷藏效果更穩定。";
+"loading.inventory.tip.3"    = "定期檢查到期日，避免食材過期。";
+
+// Loading tips — recipes
+"loading.recipes.tip.1"      = "配對度達 80% 以上的食譜大多使用您現有的食材。";
+"loading.recipes.tip.2"      = "在家煮飯比外出用餐節省高達 60% 的費用。";
+"loading.recipes.tip.3"      = "家庭成員越多，推薦越個人化。";
+
+// Loading — camera scan
+"loading.camera.title"       = "正在掃描您的雪櫃...";
+"loading.phase.uploading"    = "上傳中";
+"loading.phase.analyzing"    = "分析中";
+"loading.phase.adding"       = "新增中";
+"loading.camera.tip.1"       = "我們將偵測照片中所有可見的食材。";
+"loading.camera.tip.2"       = "可添加多張照片以拍攝雪櫃中的所有食材。";
+"loading.camera.tip.3"       = "掃描完成後，您可以手動編輯或新增食材。";
+
+// Loading tips — recipe detail
+"loading.detail.tip.1"       = "開始烹飪前，先完整閱讀食譜。";
+"loading.detail.tip.2"       = "預先準備好所有食材，烹飪更順暢。";
+"loading.detail.tip.3"       = "缺少食材？點一下即可加入購物清單。";

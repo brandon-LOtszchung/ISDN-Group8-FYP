@@ -20,6 +20,22 @@
 "onboarding.summary.title"         = "Handa na ang lahat!";
 "onboarding.continue"              = "Magpatuloy";
 "onboarding.add_member"            = "Magdagdag ng Miyembro";
+"onboarding.members.skip"          = "Laktawan muna";
+"onboarding.budget.feedback"               = "Napakagaling! Makakahanap kami ng mga recipe na angkop sa iyong badyet.";
+"onboarding.cooking_feedback.beginner"     = "Walang problema — mananatiling simple at madaling sundin ang mga recipe.";
+"onboarding.cooking_feedback.intermediate" = "Magaling! Maraming varieties na maaari kang pumili.";
+"onboarding.cooking_feedback.advanced"     = "Kahanga-hanga! Maghanda na para sa mga kumplikado at kapana-panabik na putahe.";
+"onboarding.cooking_feedback.default"      = "Napakagandang pagpili!";
+"onboarding.get_started"                   = "Magsimula";
+"onboarding.welcome.subtitle"              = "Ang kusina ng iyong pamilya, naayos na.";
+"onboarding.cooking_intro.message"         = "Pag-usapan natin kung paano nagluluto ang iyong pamilya.";
+"onboarding.budget.currency_prefix"        = "HK$";
+"onboarding.budget.tier.low"               = "Mura";
+"onboarding.budget.tier.medium"            = "Katamtaman";
+"onboarding.budget.tier.high"              = "Premium";
+"cooking.skill.beginner"                   = "Baguhan";
+"cooking.skill.intermediate"               = "Katamtaman";
+"cooking.skill.advanced"                   = "Bihasa";
 
 // Inventory
 "inventory.title"                  = "Aking Ref";
@@ -87,6 +103,11 @@
 "shopping.share"                   = "I-share ang Listahan";
 
 // Profile
+"profile.add_member"               = "Magdagdag ng Miyembro";
+"profile.about"                    = "Tungkol Sa";
+"profile.privacy_policy"           = "Patakaran sa Privacy";
+"profile.version"                  = "Bersyon";
+"profile.sign_out"                 = "Mag-sign Out";
 "profile.title"                    = "Profile";
 "profile.family"                   = "Pamilya";
 "profile.members"                  = "Mga Miyembro";
@@ -115,3 +136,89 @@
 "common.done"                      = "Tapos";
 "common.save"                      = "I-save";
 "common.delete"                    = "Tanggalin";
+
+// Login
+"login.subtitle"            = "Ang matalinong kasama sa kusina ng iyong pamilya";
+"login.phone_number"        = "Numero ng Telepono";
+"login.hk_phone_hint"       = "Numero ng telepono sa Hong Kong";
+"login.verification_code"   = "Code sa Pag-verify";
+"login.otp_placeholder"     = "6-digit na code";
+"login.sent_to"             = "Ipinadala sa %@";
+"login.send_code"           = "Ipadala ang Code";
+"login.verify"              = "I-verify";
+"login.resend_in"           = "Muling ipadala sa %ds";
+"login.resend_code"         = "Muling ipadala ang code";
+"login.privacy_notice"      = "Sa pagpapatuloy, sumasang-ayon ka sa aming Patakaran sa Privacy";
+"login.error.invalid_otp"   = "Ang code ay nag-expire na o hindi wasto. Mangyaring humingi ng bago.";
+"login.error.rate_limit"    = "Masyadong maraming pagtatangka. Mangyaring maghintay at subukan ulit.";
+"login.error.network"       = "Walang koneksyon sa internet. Mangyaring suriin ang iyong network.";
+"login.error.generic"       = "May nangyaring mali. Mangyaring subukan ulit.";
+
+// Shopping (additional)
+"shopping.empty"             = "Walang mga item";
+"shopping.empty.description" = "Magdagdag ng mga kulang na sangkap mula sa isang recipe.";
+
+// Inventory (additional)
+"inventory.camera_scan_hint" = "I-tap ang icon ng camera upang i-scan ang iyong ref.";
+
+// Recipe (additional)
+"recipe.share_text"          = "Tingnan ang recipe na ito: %@";
+
+// Camera (additional)
+"camera.family_error"        = "Hindi makilala ang iyong pamilya. Mangyaring mag-sign out at mag-sign in ulit.";
+
+// Profile (additional)
+"profile.sign_out_confirm"   = "Mag-sign out sa SmartFridge?";
+
+// Spice levels
+"spice.none"   = "Walang Anghang";
+"spice.mild"   = "Kaunting Anghang";
+"spice.medium" = "Katamtamang Anghang";
+"spice.hot"    = "Maanghang";
+
+// Shopping accessibility
+"shopping.status.purchased"   = "Nabili na";
+"shopping.status.partial"     = "Bahagi ay nabili na";
+"shopping.status.none"        = "Hindi pa nabibili";
+"shopping.source.other"       = "Iba pa";
+"onboarding.step_of" = "Hakbang %d ng %d";
+
+// Loading states
+"loading.inventory.title"    = "Nilo-load ang iyong ref...";
+"loading.recipes.title"      = "Naghahanap ng mga recipe...";
+"loading.detail.title"       = "Inihahanda ang iyong recipe...";
+
+// Loading phase labels
+"loading.phase.connecting"   = "Kumokonekta";
+"loading.phase.fetching"     = "Kinukuha";
+"loading.phase.organizing"   = "Inaayos";
+"loading.phase.scanning"     = "Sinescan";
+"loading.phase.matching"     = "Tinitingnan";
+"loading.phase.scoring"      = "Sinusuri";
+"loading.phase.ingredients"  = "Mga Sangkap";
+"loading.phase.fridge_check" = "Ref Check";
+"loading.phase.building"     = "Ginagawa";
+
+// Loading tips — inventory
+"loading.inventory.tip.1"    = "Ang pag-aayos ayon sa kategorya ay nakakatulong na mabawasan ang basura.";
+"loading.inventory.tip.2"    = "Ilagay ang mga produktong gatas sa gitnang istante para sa pare-parehong lamig.";
+"loading.inventory.tip.3"    = "Regular na tingnan ang petsa ng expiry para maiwasan ang mga sorpresa.";
+
+// Loading tips — recipes
+"loading.recipes.tip.1"      = "Ang mga recipe na may 80%+ na tugma ay karamihang gumagamit ng mayroon ka na.";
+"loading.recipes.tip.2"      = "Ang pagluluto sa bahay ay nakakatipid ng hanggang 60% kumpara sa labasan.";
+"loading.recipes.tip.3"      = "Mas maraming miyembro ng pamilya, mas personal na rekomendasyon.";
+
+// Loading — camera scan
+"loading.camera.title"       = "Ino-scan ang iyong ref...";
+"loading.phase.uploading"    = "Ina-upload";
+"loading.phase.analyzing"    = "Sinusuri";
+"loading.phase.adding"       = "Idinaragdag";
+"loading.camera.tip.1"       = "Makikita namin ang lahat ng item sa iyong mga larawan.";
+"loading.camera.tip.2"       = "Magdagdag ng maraming larawan para makuha ang lahat ng nasa ref.";
+"loading.camera.tip.3"       = "Pagkatapos ng pag-scan, maaari kang mag-edit o magdagdag ng mga item nang manu-mano.";
+
+// Loading tips — recipe detail
+"loading.detail.tip.1"       = "Basahin ang buong recipe bago magluto.";
+"loading.detail.tip.2"       = "Ihanda muna ang lahat ng sangkap para mas maayos ang pagluluto.";
+"loading.detail.tip.3"       = "Kulang ang sangkap? Idagdag sa shopping list sa isang tap.";

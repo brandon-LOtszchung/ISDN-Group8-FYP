@@ -20,6 +20,22 @@
 "onboarding.summary.title"         = "Semuanya siap!";
 "onboarding.continue"              = "Lanjut";
 "onboarding.add_member"            = "Tambah Anggota";
+"onboarding.members.skip"          = "Lewati untuk sekarang";
+"onboarding.budget.feedback"               = "Bagus! Kami akan menemukan resep yang sesuai dengan anggaran Anda.";
+"onboarding.cooking_feedback.beginner"     = "Tidak masalah — kami akan merekomendasikan resep sederhana yang mudah diikuti.";
+"onboarding.cooking_feedback.intermediate" = "Bagus! Anda akan punya banyak pilihan resep.";
+"onboarding.cooking_feedback.advanced"     = "Luar biasa! Bersiaplah untuk hidangan yang kompleks dan menggugah selera.";
+"onboarding.cooking_feedback.default"      = "Pilihan yang hebat!";
+"onboarding.get_started"                   = "Mulai";
+"onboarding.welcome.subtitle"              = "Dapur keluarga Anda, lebih terorganisir.";
+"onboarding.cooking_intro.message"         = "Mari kita bicara tentang cara memasak keluarga Anda.";
+"onboarding.budget.currency_prefix"        = "HK$";
+"onboarding.budget.tier.low"               = "Hemat";
+"onboarding.budget.tier.medium"            = "Sedang";
+"onboarding.budget.tier.high"              = "Premium";
+"cooking.skill.beginner"                   = "Pemula";
+"cooking.skill.intermediate"               = "Menengah";
+"cooking.skill.advanced"                   = "Mahir";
 
 // Inventory
 "inventory.title"                  = "Kulkas Saya";
@@ -87,6 +103,11 @@
 "shopping.share"                   = "Bagikan Daftar";
 
 // Profile
+"profile.add_member"               = "Tambah Anggota";
+"profile.about"                    = "Tentang";
+"profile.privacy_policy"           = "Kebijakan Privasi";
+"profile.version"                  = "Versi";
+"profile.sign_out"                 = "Keluar";
 "profile.title"                    = "Profil";
 "profile.family"                   = "Keluarga";
 "profile.members"                  = "Anggota";
@@ -115,3 +136,89 @@
 "common.done"                      = "Selesai";
 "common.save"                      = "Simpan";
 "common.delete"                    = "Hapus";
+
+// Login
+"login.subtitle"            = "Teman dapur pintar keluarga Anda";
+"login.phone_number"        = "Nomor Telepon";
+"login.hk_phone_hint"       = "Nomor telepon Hong Kong";
+"login.verification_code"   = "Kode Verifikasi";
+"login.otp_placeholder"     = "Kode 6 digit";
+"login.sent_to"             = "Dikirim ke %@";
+"login.send_code"           = "Kirim Kode";
+"login.verify"              = "Verifikasi";
+"login.resend_in"           = "Kirim ulang dalam %ds";
+"login.resend_code"         = "Kirim ulang kode";
+"login.privacy_notice"      = "Dengan melanjutkan, Anda menyetujui Kebijakan Privasi kami";
+"login.error.invalid_otp"   = "Kode telah kedaluwarsa atau tidak valid. Silakan minta yang baru.";
+"login.error.rate_limit"    = "Terlalu banyak percobaan. Silakan tunggu sebentar dan coba lagi.";
+"login.error.network"       = "Tidak ada koneksi internet. Silakan periksa jaringan Anda.";
+"login.error.generic"       = "Terjadi kesalahan. Silakan coba lagi.";
+
+// Shopping (additional)
+"shopping.empty"             = "Tidak ada item";
+"shopping.empty.description" = "Tambahkan bahan yang kurang dari sebuah resep.";
+
+// Inventory (additional)
+"inventory.camera_scan_hint" = "Ketuk ikon kamera untuk memindai kulkas Anda.";
+
+// Recipe (additional)
+"recipe.share_text"          = "Lihat resep ini: %@";
+
+// Camera (additional)
+"camera.family_error"        = "Tidak dapat mengidentifikasi keluarga Anda. Silakan keluar dan masuk kembali.";
+
+// Profile (additional)
+"profile.sign_out_confirm"   = "Keluar dari SmartFridge?";
+
+// Spice levels
+"spice.none"   = "Tidak Pedas";
+"spice.mild"   = "Sedikit Pedas";
+"spice.medium" = "Cukup Pedas";
+"spice.hot"    = "Pedas";
+
+// Shopping accessibility
+"shopping.status.purchased"   = "Sudah dibeli";
+"shopping.status.partial"     = "Sebagian sudah dibeli";
+"shopping.status.none"        = "Belum dibeli";
+"shopping.source.other"       = "Lainnya";
+"onboarding.step_of" = "Langkah %d dari %d";
+
+// Loading states
+"loading.inventory.title"    = "Memuat kulkas Anda...";
+"loading.recipes.title"      = "Mencari ide resep...";
+"loading.detail.title"       = "Menyiapkan resep Anda...";
+
+// Loading phase labels
+"loading.phase.connecting"   = "Menghubungkan";
+"loading.phase.fetching"     = "Mengambil";
+"loading.phase.organizing"   = "Mengatur";
+"loading.phase.scanning"     = "Memindai";
+"loading.phase.matching"     = "Mencocokkan";
+"loading.phase.scoring"      = "Menilai";
+"loading.phase.ingredients"  = "Bahan";
+"loading.phase.fridge_check" = "Cek Kulkas";
+"loading.phase.building"     = "Menyusun";
+
+// Loading tips — inventory
+"loading.inventory.tip.1"    = "Mengatur berdasarkan kategori membantu mengurangi pemborosan makanan.";
+"loading.inventory.tip.2"    = "Simpan produk susu di rak tengah untuk suhu yang konsisten.";
+"loading.inventory.tip.3"    = "Periksa tanggal kadaluwarsa secara rutin agar tidak ada kejutan.";
+
+// Loading tips — recipes
+"loading.recipes.tip.1"      = "Resep dengan kecocokan 80%+ sebagian besar menggunakan bahan yang sudah Anda miliki.";
+"loading.recipes.tip.2"      = "Memasak di rumah menghemat hingga 60% dibanding makan di luar.";
+"loading.recipes.tip.3"      = "Lebih banyak anggota keluarga berarti rekomendasi yang lebih personal.";
+
+// Loading — camera scan
+"loading.camera.title"       = "Memindai kulkas Anda...";
+"loading.phase.uploading"    = "Mengunggah";
+"loading.phase.analyzing"    = "Menganalisis";
+"loading.phase.adding"       = "Menambahkan";
+"loading.camera.tip.1"       = "Kami akan mendeteksi semua item yang terlihat di foto Anda.";
+"loading.camera.tip.2"       = "Tambahkan beberapa foto untuk menangkap semua isi kulkas Anda.";
+"loading.camera.tip.3"       = "Setelah pemindaian, Anda bisa mengedit atau menambahkan item secara manual.";
+
+// Loading tips — recipe detail
+"loading.detail.tip.1"       = "Baca seluruh resep sebelum mulai memasak.";
+"loading.detail.tip.2"       = "Siapkan semua bahan terlebih dahulu agar memasak lebih lancar.";
+"loading.detail.tip.3"       = "Bahan kurang? Tambahkan ke daftar belanja hanya dengan satu ketukan.";
