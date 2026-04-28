@@ -23,27 +23,28 @@ enum AppLanguage: String, Codable, CaseIterable, Identifiable {
 
 // MARK: - Family
 
-struct FamilyPreferences: Codable {
-    var cookingSkillLevel: String
-    var budgetRange: String
-    var preferredLanguage: AppLanguage
-}
-
 struct Family: Codable, Identifiable {
     let id: UUID
     var name: String
-    var preferences: FamilyPreferences
-    var createdAt: Date
-    var updatedAt: Date
+    var cookingSkillLevel: String
+    var budgetRange: String
+    var preferredLanguage: AppLanguage
+    var createdAt: Date?
+    var updatedAt: Date?
+    var userId: UUID?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name
+        case cookingSkillLevel = "cooking_skill_level"
+        case budgetRange       = "budget_range"
+        case preferredLanguage = "preferred_language"
+        case createdAt         = "created_at"
+        case updatedAt         = "updated_at"
+        case userId            = "user_id"
+    }
 }
 
 // MARK: - Family Member
-
-struct MemberPreferences: Codable {
-    var spiceLevel: String?
-    var favoriteCuisines: [String]
-    var dislikedIngredients: [String]
-}
 
 struct FamilyMember: Codable, Identifiable {
     let id: UUID
@@ -53,16 +54,76 @@ struct FamilyMember: Codable, Identifiable {
     var dietaryRestrictions: [String]
     var allergies: [String]
     var healthConditions: [String]
-    var preferences: MemberPreferences
+    var spiceLevel: String?
+    var favoriteCuisines: [String]
+    var dislikedIngredients: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, age, allergies
+        case familyId             = "family_id"
+        case dietaryRestrictions  = "dietary_restrictions"
+        case healthConditions     = "health_conditions"
+        case spiceLevel           = "spice_level"
+        case favoriteCuisines     = "favorite_cuisines"
+        case dislikedIngredients  = "disliked_ingredients"
+    }
 }
 
 // MARK: - Inventory
 
 struct InventoryItem: Codable, Identifiable {
     let id: UUID
+    var familyId: UUID
     var name: String
     var category: String
     var quantity: Double
+    var expiryDate: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, category, quantity
+        case familyId   = "family_id"
+        case expiryDate = "expiry_date"
+    }
+
+    init(id: UUID, familyId: UUID, name: String, category: String, quantity: Double, expiryDate: Date? = nil) {
+        self.id = id
+        self.familyId = familyId
+        self.name = name
+        self.category = category
+        self.quantity = quantity
+        self.expiryDate = expiryDate
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id       = try c.decode(UUID.self,   forKey: .id)
+        familyId = try c.decode(UUID.self,   forKey: .familyId)
+        name     = try c.decode(String.self, forKey: .name)
+        category = try c.decode(String.self, forKey: .category)
+
+        // PostgREST returns `numeric` columns as quoted strings ("3.00").
+        // Try Double first (backend API path), fall back to String → Double (Supabase path).
+        if let q = try? c.decode(Double.self, forKey: .quantity) {
+            quantity = q
+        } else {
+            let s = try c.decode(String.self, forKey: .quantity)
+            quantity = Double(s) ?? 0
+        }
+
+        // PostgREST returns `date` columns as "YYYY-MM-DD" (no time component),
+        // which the Supabase SDK's ISO8601 parser rejects.
+        // The backend returns full ISO8601 ("2026-05-04T00:00:00Z") which works fine.
+        if let date = try? c.decodeIfPresent(Date.self, forKey: .expiryDate) {
+            expiryDate = date
+        } else if let raw = try? c.decodeIfPresent(String.self, forKey: .expiryDate) {
+            let df = DateFormatter()
+            df.locale = Locale(identifier: "en_US_POSIX")
+            df.dateFormat = "yyyy-MM-dd"
+            expiryDate = df.date(from: raw)
+        } else {
+            expiryDate = nil
+        }
+    }
 }
 
 // MARK: - Recipes
