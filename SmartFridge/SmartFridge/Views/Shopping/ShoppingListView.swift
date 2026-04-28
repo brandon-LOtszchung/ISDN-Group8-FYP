@@ -30,7 +30,7 @@ struct ShoppingListView: View {
             }
             lines.append(row)
             for source in item.sources {
-                lines.append("   · \(source.recipeName ?? "Other"): \(Int(source.quantity)) \(source.unit)")
+                lines.append("   · \(source.recipeName ?? String(localized: "shopping.source.other")): \(Int(source.quantity)) \(source.unit)")
             }
         }
         return lines.joined(separator: "\n").trimmingCharacters(in: .newlines)
@@ -40,13 +40,18 @@ struct ShoppingListView: View {
         Group {
             if shoppingVM.items.isEmpty {
                 ContentUnavailableView(
-                    "No items",
+                    String(localized: "shopping.empty"),
                     systemImage: "cart",
-                    description: Text("Add missing ingredients from a recipe.")
+                    description: Text(String(localized: "shopping.empty.description"))
                 )
             } else {
                 shoppingList
             }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background {
+            NeuBackground(screen: .shopping)
+                .environment(theme)
         }
         .navigationTitle(String(localized: "shopping.title"))
         .toolbar {
@@ -77,6 +82,12 @@ struct ShoppingListView: View {
             Text(String(localized: "shopping.clear_bought_confirm.message"))
         }
         .topBarToolbar()
+        .alert(String(localized: "common.error"), isPresented: Binding(
+            get: { shoppingVM.error != nil },
+            set: { if !$0 { shoppingVM.error = nil } }
+        )) {
+            Button(String(localized: "common.done")) { shoppingVM.error = nil }
+        } message: { Text(shoppingVM.error ?? "") }
     }
 
     private var shoppingList: some View {
@@ -86,18 +97,18 @@ struct ShoppingListView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(String(localized: "shopping.total"))
-                            .font(.caption)
+                            .font(.sgCaption())
                             .foregroundStyle(.secondary)
                         Text(ShoppingListView.hkdFormatter.string(from: NSNumber(value: shoppingVM.totalEstimatedCost)) ?? "")
-                            .font(.title2.bold())
+                            .font(.spaceGrotesk(.bold, size: 22))
                             .foregroundStyle(theme.colors.primary)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(String(format: String(localized: "shopping.items"), shoppingVM.aggregatedItems.count))
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.sgCaption()).foregroundStyle(.secondary)
                         Text(String(format: String(localized: "shopping.bought"), shoppingVM.aggregatedPurchasedCount))
-                            .font(.caption).foregroundStyle(.secondary)
+                            .font(.sgCaption()).foregroundStyle(.secondary)
                     }
                 }
                 .padding(.vertical, 4)
@@ -120,6 +131,11 @@ struct ShoppingListView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background {
+            NeuBackground(screen: .shopping)
+                .environment(theme)
+        }
     }
 }
 
@@ -147,15 +163,15 @@ private struct AggregatedItemRow: View {
                     Text(item.name)
                         .strikethrough(item.isPurchased)
                         .foregroundStyle(item.isPurchased ? .secondary : theme.colors.text)
-                        .font(.body)
+                        .font(.sgBody())
                     Text("\(item.totalQuantity, specifier: "%.0f") \(item.unit)")
-                        .font(.caption)
+                        .font(.sgCaption())
                         .foregroundStyle(.secondary)
                     // Source recipes
                     ForEach(item.sources) { source in
-                        Text("· \(source.recipeName ?? "Other")  \(source.quantity, specifier: "%.0f") \(source.unit)")
+                        Text("· \(source.recipeName ?? String(localized: "shopping.source.other"))  \(source.quantity, specifier: "%.0f") \(source.unit)")
                             .font(.caption2)
-                            .foregroundStyle(.tertiary)
+                            .foregroundStyle(theme.colors.textMuted)
                     }
                 }
 
@@ -163,16 +179,17 @@ private struct AggregatedItemRow: View {
 
                 if let cost = item.estimatedUnitCost {
                     Text(ShoppingListView.hkdFormatter.string(from: NSNumber(value: cost)) ?? "—")
-                        .font(.subheadline.bold())
+                        .font(.spaceGrotesk(.semibold, size: 15))
                         .foregroundStyle(item.isPurchased ? .secondary : theme.colors.primary)
                 } else {
                     Text("—")
-                        .font(.subheadline.bold())
+                        .font(.spaceGrotesk(.semibold, size: 15))
                         .foregroundStyle(.secondary)
                 }
             }
         }
         .buttonStyle(.plain)
+        .animation(.spring(duration: 0.22), value: item.isPurchased)
         .accessibilityLabel(item.name)
         .accessibilityValue(accessibilityValue)
         .accessibilityHint(item.isPurchased
@@ -193,8 +210,8 @@ private struct AggregatedItemRow: View {
     }
 
     private var accessibilityValue: String {
-        if item.isPurchased { return "purchased" }
-        if item.isPartiallyPurchased { return "partially purchased" }
-        return "not purchased"
+        if item.isPurchased { return String(localized: "shopping.status.purchased") }
+        if item.isPartiallyPurchased { return String(localized: "shopping.status.partial") }
+        return String(localized: "shopping.status.none")
     }
 }

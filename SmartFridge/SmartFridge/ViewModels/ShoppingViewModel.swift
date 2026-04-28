@@ -24,6 +24,7 @@ struct AggregatedShoppingItem: Identifiable {
 @MainActor
 final class ShoppingViewModel {
     var items: [ShoppingListItem] = []
+    var familyId: UUID = UUID()
     var isLoading = false
     var error: String?
 
@@ -70,7 +71,7 @@ final class ShoppingViewModel {
         isLoading = true
         defer { isLoading = false }
         do {
-            items = try await supabase.fetchShoppingList(familyId: Constants.defaultFamilyID)
+            items = try await supabase.fetchShoppingList(familyId: familyId)
             subscribeToRealtime()
         } catch {
             self.error = error.localizedDescription
@@ -78,59 +79,84 @@ final class ShoppingViewModel {
     }
 
     func togglePurchased(_ item: ShoppingListItem) {
+        let snapshot = items
         guard let idx = items.firstIndex(where: { $0.id == item.id }) else { return }
         items[idx].isPurchased.toggle()
         let updated = items[idx]
         Task {
             do { try await supabase.updateShoppingItem(updated) }
-            catch { self.error = error.localizedDescription }
+            catch {
+                items = snapshot
+                self.error = error.localizedDescription
+            }
         }
     }
 
     /// Marks all underlying items for an aggregated entry purchased/unpurchased together.
     func toggleAggregated(_ aggregated: AggregatedShoppingItem) {
+        let snapshot = items
         let newPurchased = !aggregated.isPurchased
         for source in aggregated.sources {
             guard let idx = items.firstIndex(where: { $0.id == source.id }) else { continue }
             items[idx].isPurchased = newPurchased
-            let updated = items[idx]
-            Task {
-                do { try await supabase.updateShoppingItem(updated) }
-                catch { self.error = error.localizedDescription }
+        }
+        let updatedItems = aggregated.sources.compactMap { source -> ShoppingListItem? in
+            items.first(where: { $0.id == source.id })
+        }
+        Task {
+            do {
+                for updated in updatedItems {
+                    try await supabase.updateShoppingItem(updated)
+                }
+            } catch {
+                items = snapshot
+                self.error = error.localizedDescription
             }
         }
     }
 
     /// Removes all underlying items for an aggregated entry.
     func removeAggregated(_ aggregated: AggregatedShoppingItem) {
+        let snapshot = items
         let ids = aggregated.sources.map(\.id)
         items.removeAll { ids.contains($0.id) }
         Task {
             do { try await supabase.deleteShoppingListItems(ids: ids) }
-            catch { self.error = error.localizedDescription }
+            catch {
+                items = snapshot
+                self.error = error.localizedDescription
+            }
         }
     }
 
     func removeItem(id: UUID) {
+        let snapshot = items
         items.removeAll { $0.id == id }
         Task {
             do { try await supabase.deleteShoppingListItems(ids: [id]) }
-            catch { self.error = error.localizedDescription }
+            catch {
+                items = snapshot
+                self.error = error.localizedDescription
+            }
         }
     }
 
     func clearBought() {
+        let snapshot = items
         let ids = purchasedItemIDs
         items.removeAll { $0.isPurchased }
         Task {
             do { try await supabase.deleteShoppingListItems(ids: ids) }
-            catch { self.error = error.localizedDescription }
+            catch {
+                items = snapshot
+                self.error = error.localizedDescription
+            }
         }
     }
 
     private func subscribeToRealtime() {
         realtimeChannel = supabase.subscribeToShoppingList(
-            familyId: Constants.defaultFamilyID
+            familyId: familyId
         ) { [weak self] updated in
             Task { @MainActor [weak self] in
                 self?.items = updated
