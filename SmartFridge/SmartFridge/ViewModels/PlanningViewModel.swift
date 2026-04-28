@@ -30,14 +30,15 @@ final class PlanningViewModel {
         }
     }
 
-    func fetchRecommendations() async {
+    func fetchRecommendations(familyId: UUID) async {
         guard let cuisine = selectedCuisine, !selectedMemberIds.isEmpty else { return }
         isLoadingRecommendations = true
         defer { isLoadingRecommendations = false }
         do {
             recommendations = try await api.recommend(
                 memberIds: Array(selectedMemberIds),
-                cuisineStyle: cuisine
+                cuisineStyle: cuisine,
+                familyId: familyId
             ).sorted { $0.missingCount < $1.missingCount }
         } catch {
             self.error = error.localizedDescription
@@ -45,19 +46,19 @@ final class PlanningViewModel {
         hasFetched = true
     }
 
-    func fetchDetail(for recommendation: RecipeRecommendation) async {
+    func fetchDetail(for recommendation: RecipeRecommendation, familyId: UUID) async {
         isLoadingDetail = true
         defer { isLoadingDetail = false }
         do {
-            selectedDetail = try await api.fetchRecipe(id: recommendation.savedRecipeId)
+            selectedDetail = try await api.fetchRecipe(id: recommendation.savedRecipeId, familyId: familyId)
         } catch {
             self.error = error.localizedDescription
         }
     }
 
-    func addMissingToShoppingList(recipeId: String) async {
+    func addMissingToShoppingList(recipeId: String, familyId: UUID) async {
         do {
-            try await api.addToShoppingList(recipeId: recipeId)
+            try await api.addToShoppingList(recipeId: recipeId, familyId: familyId)
         } catch {
             self.error = error.localizedDescription
         }

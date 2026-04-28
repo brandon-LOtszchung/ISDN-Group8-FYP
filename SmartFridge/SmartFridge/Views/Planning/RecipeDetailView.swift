@@ -3,7 +3,8 @@ import SwiftUI
 
 struct RecipeDetailView: View {
     let recommendation: RecipeRecommendation
-    @Bindable var planningVM: PlanningViewModel
+    @Environment(PlanningViewModel.self) private var planningVM
+    @Environment(ShoppingViewModel.self) private var shoppingVM
     @Environment(AppViewModel.self) private var appVM
     @Environment(ThemeManager.self) private var theme
     @Environment(\.dismiss) private var dismiss
@@ -11,6 +12,7 @@ struct RecipeDetailView: View {
     @ScaledMetric private var heroEmojiSize: CGFloat = 60
     @State private var selectedTab = 0
     @State private var showSuccess = false
+    @State private var isAddingToShopping = false
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -28,7 +30,7 @@ struct RecipeDetailView: View {
                     .id("top")
 
                 VStack(alignment: .leading, spacing: 12) {
-                    Text(recommendation.name).font(.title2.bold())
+                    Text(recommendation.name).font(.spaceGrotesk(.bold, size: 22))
 
                     // Info pills
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -50,7 +52,8 @@ struct RecipeDetailView: View {
                     .pickerStyle(.segmented)
 
                     if planningVM.isLoadingDetail {
-                        ProgressView().frame(maxWidth: .infinity).padding(.top, 30)
+                        LoadingPhaseView(config: .recipeDetail)
+                            .padding(.top, 16)
                     } else if let detail = planningVM.selectedDetail {
                         if selectedTab == 0 {
                             ingredientsList(detail)
@@ -61,27 +64,38 @@ struct RecipeDetailView: View {
 
                     // Add missing to shopping list CTA
                     Button {
+                        guard !isAddingToShopping, let fid = appVM.familyId else { return }
+                        isAddingToShopping = true
                         Task {
+                            defer { isAddingToShopping = false }
                             let errorBefore = planningVM.error
-                            await planningVM.addMissingToShoppingList(recipeId: recommendation.savedRecipeId)
+                            await planningVM.addMissingToShoppingList(recipeId: recommendation.savedRecipeId, familyId: fid)
                             if planningVM.error == errorBefore {
+                                await shoppingVM.load()
                                 showSuccess = true
                                 try? await Task.sleep(for: .seconds(1))
                                 dismiss()
                             }
                         }
                     } label: {
-                        Text(String(localized: "recipe.add_to_shopping"))
-                            .font(.body.bold())
-                            .frame(maxWidth: .infinity)
+                        Group {
+                            if isAddingToShopping {
+                                ProgressView().tint(theme.colors.text)
+                            } else {
+                                Text(String(localized: "recipe.add_to_shopping"))
+                                    .font(.spaceGrotesk(.semibold, size: 16))
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(theme.colors.primary)
                     .controlSize(.large)
+                    .disabled(isAddingToShopping)
                     .overlay(alignment: .center) {
                         if showSuccess {
                             Label(String(localized: "recipe.added_to_shopping"), systemImage: "checkmark.circle.fill")
-                                .font(.subheadline.bold())
+                                .font(.spaceGrotesk(.semibold, size: 15))
                                 .padding(12)
                                 .background(.regularMaterial)
                                 .clipShape(Capsule())
@@ -97,6 +111,10 @@ struct RecipeDetailView: View {
             withAnimation { proxy.scrollTo("top", anchor: .top) }
         }
         } // ScrollViewReader
+        .background {
+            NeuBackground(screen: .planning)
+                .environment(theme)
+        }
         .navigationTitle(recommendation.name)
         .navigationBarTitleDisplayMode(.inline)
         .alert(String(localized: "common.error"), isPresented: Binding(
@@ -107,17 +125,54 @@ struct RecipeDetailView: View {
         } message: { Text(planningVM.error ?? "") }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                ShareLink(item: "Check out this recipe: \(recommendation.name)") {
+                ShareLink(item: shareText) {
                     Image(systemName: "square.and.arrow.up")
                 }
             }
         }
-        .task { await planningVM.fetchDetail(for: recommendation) }
+        .task {
+            guard let fid = appVM.familyId else { return }
+            await planningVM.fetchDetail(for: recommendation, familyId: fid)
+        }
+    }
+
+    private var shareText: String {
+        var lines: [String] = []
+        lines.append("🍽️ \(recommendation.name)")
+        lines.append("\(recommendation.cuisineStyle.capitalized) · \(recommendation.matchPercentage)% match")
+
+        if let detail = planningVM.selectedDetail {
+            let inventory = appVM.inventory
+
+            lines.append("")
+            lines.append("📋 Ingredients:")
+            for ing in detail.ingredients {
+                let inFridge = inventory.contains {
+                    $0.name.localizedCaseInsensitiveCompare(ing.name) == .orderedSame
+                }
+                let qty = ing.quantity.truncatingRemainder(dividingBy: 1) == 0
+                    ? String(format: "%.0f", ing.quantity)
+                    : String(format: "%.1f", ing.quantity)
+                lines.append("\(inFridge ? "✓" : "○") \(ing.name) – \(qty) \(ing.unit)")
+            }
+
+            if !detail.steps.isEmpty {
+                lines.append("")
+                lines.append("👨‍🍳 Steps:")
+                for (i, step) in detail.steps.enumerated() {
+                    lines.append("\(i + 1). \(step)")
+                }
+            }
+        }
+
+        lines.append("")
+        lines.append("Shared via SmartFridge 🧊")
+        return lines.joined(separator: "\n")
     }
 
     private func infoPill(_ text: String, icon: String) -> some View {
         Label(text, systemImage: icon)
-            .font(.caption.bold())
+            .font(.spaceGrotesk(.semibold, size: 12))
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(theme.colors.surfaceAlt)
@@ -128,10 +183,11 @@ struct RecipeDetailView: View {
 
     @ViewBuilder
     private func ingredientsList(_ detail: RecipeDetail) -> some View {
+        let inventory = appVM.inventory
         let sortedIngredients = detail.ingredients.sorted { lhs, rhs in
             func missingPct(_ ing: RecipeIngredient) -> Double {
                 guard ing.quantity > 0 else { return 0 }
-                let available = appVM.inventory
+                let available = inventory
                     .first { $0.name.localizedCaseInsensitiveCompare(ing.name) == .orderedSame }
                     .map(\.quantity) ?? 0
                 return max(0, ing.quantity - available) / ing.quantity
@@ -140,8 +196,7 @@ struct RecipeDetailView: View {
         }
         VStack(spacing: 0) {
             ForEach(sortedIngredients, id: \.name) { ing in
-                // An ingredient is "in fridge" when it appears in the local inventory
-                let inFridge = appVM.inventory.contains {
+                let inFridge = inventory.contains {
                     $0.name.localizedCaseInsensitiveCompare(ing.name) == .orderedSame
                 }
                 HStack {
@@ -149,16 +204,16 @@ struct RecipeDetailView: View {
                         .foregroundStyle(inFridge ? theme.colors.success : theme.colors.border)
                     Text(ing.name).foregroundStyle(theme.colors.text)
                     Spacer()
-                    Text("\(ing.quantity, specifier: "%.1f") \(ing.unit)")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    Text("\(ing.quantity.truncatingRemainder(dividingBy: 1) == 0 ? String(format: "%.0f", ing.quantity) : String(format: "%.1f", ing.quantity)) \(ing.unit)")
+                        .font(.sgCaption())
+                        .foregroundStyle(theme.colors.textMuted)
                     if !inFridge {
                         Text(String(localized: "recipe.need_to_buy"))
-                            .font(.caption.bold())
+                            .font(.spaceGrotesk(.semibold, size: 12))
                             .foregroundStyle(theme.colors.danger)
                     } else {
                         Text(String(localized: "recipe.in_fridge"))
-                            .font(.caption.bold())
+                            .font(.spaceGrotesk(.semibold, size: 12))
                             .foregroundStyle(theme.colors.success)
                     }
                 }
@@ -174,12 +229,12 @@ struct RecipeDetailView: View {
             ForEach(Array(detail.steps.enumerated()), id: \.offset) { i, step in
                 HStack(alignment: .top, spacing: 12) {
                     Text("\(i + 1)")
-                        .font(.caption.bold())
+                        .font(.spaceGrotesk(.bold, size: 12))
                         .frame(width: 24, height: 24)
                         .background(theme.colors.primary)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(theme.colors.text)
                         .clipShape(Circle())
-                    Text(step).font(.body).foregroundStyle(theme.colors.text)
+                    Text(step).font(.sgBody()).foregroundStyle(theme.colors.text)
                 }
             }
         }
