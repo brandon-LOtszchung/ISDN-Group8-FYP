@@ -5,16 +5,16 @@ from fastapi import APIRouter, UploadFile, File, HTTPException
 from typing import List
 
 from ..schemas import VideoProcessResponse, InitializeResponse
-from services.video_flow_service import VideoFlowService
-from services.initialization_service import InitializationService
-from services.inventory_service import InventoryService
-from utils.file_handler import FileHandler
+from src.services.video_flow_service import VideoFlowService
+from src.services.initialization_service import InitializationService
+from src.services.inventory_service import InventoryService
+from src.utils.file_handler import FileHandler
 
 router = APIRouter(prefix="/api/inventory", tags=["inventory"])
 
 FAMILY_ID = "00000000-0000-0000-0000-000000000001"
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 @router.post("/process-video", response_model=VideoProcessResponse)
 async def process_video(video: UploadFile = File(...)):
@@ -40,28 +40,34 @@ async def process_video(video: UploadFile = File(...)):
         result = video_service.process_video(video_path)
         
         if not result.get("success"):
-            return VideoProcessResponse(
+            resp = VideoProcessResponse(
                 success=False,
                 error=result.get("error", "Unknown error occurred"),
                 processing_time=time.time() - start_time
             )
-        
+            logger.info("process-video result: %s", resp.model_dump_json())
+            return resp
+
         processing_time = time.time() - start_time
-        
-        return VideoProcessResponse(
+
+        resp = VideoProcessResponse(
             success=True,
             actions=result.get("actions"),
             processing_time=processing_time
         )
-    
+        logger.info("process-video result: %s", resp.model_dump_json())
+        return resp
+
     except HTTPException:
         raise
     except Exception as e:
-        return VideoProcessResponse(
+        resp = VideoProcessResponse(
             success=False,
             error=f"Processing error: {str(e)}",
             processing_time=time.time() - start_time
         )
+        logger.info("process-video result: %s", resp.model_dump_json())
+        return resp
     
     finally:
         if video_path:
@@ -105,36 +111,42 @@ async def initialize_inventory(images: List[UploadFile] = File(...)):
         
         if not detected_items:
             processing_time = time.time() - start_time
-            return InitializeResponse(
+            resp = InitializeResponse(
                 success=True,
                 detected_items=[],
                 processing_time=processing_time,
                 warning="No items detected. Try taking clearer photos with better lighting."
             )
-        
+            logger.info("initialize result: %s", resp.model_dump_json())
+            return resp
+
         for item in detected_items:
             inventory_service.upsert_item(
                 name=item['name'],
                 category=item['category'],
                 quantity_delta=item['quantity']
             )
-        
+
         processing_time = time.time() - start_time
-        
-        return InitializeResponse(
+
+        resp = InitializeResponse(
             success=True,
             detected_items=detected_items,
             processing_time=processing_time
         )
-    
+        logger.info("initialize result: %s", resp.model_dump_json())
+        return resp
+
     except HTTPException:
         raise
     except Exception as e:
-        return InitializeResponse(
+        resp = InitializeResponse(
             success=False,
             error=f"Initialization error: {str(e)}",
             processing_time=time.time() - start_time
         )
+        logger.info("initialize result: %s", resp.model_dump_json())
+        return resp
     
     finally:
         if image_paths:

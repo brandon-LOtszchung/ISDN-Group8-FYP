@@ -1,7 +1,7 @@
 import logging
 from typing import Any, Dict, List, Optional
 
-from services.supabase_service import SupabaseService
+from src.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 

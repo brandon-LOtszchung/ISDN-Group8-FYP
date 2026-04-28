@@ -4,11 +4,11 @@ from typing import Any, Dict, List, Optional
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from services.inventory_service import InventoryService
-from services.member_service import MemberService
-from services.recipe_generator import RecipeGenerator
-from services.recipe_repository import RecipeRepository
-from utils.text_normalizer import normalize_food_name
+from src.services.inventory_service import InventoryService
+from src.services.member_service import MemberService
+from src.services.recipe_generator import RecipeGenerator
+from src.services.recipe_repository import RecipeRepository
+from src.utils.text_normalizer import normalize_food_name
 
 logger = logging.getLogger(__name__)
 

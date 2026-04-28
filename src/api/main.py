@@ -1,7 +1,10 @@
+import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import inventory
 from .routes import recipes
+
+logging.basicConfig(level=logging.INFO)
 
 app = FastAPI(
     title="Smart Fridge Inventory API",

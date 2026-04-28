@@ -1,6 +1,14 @@
 import time
+import uuid
 import logging
 from fastapi import APIRouter, HTTPException
+
+
+def _validate_uuid(value: str):
+    try:
+        uuid.UUID(value)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid recipe ID format")
 
 from ..schemas import (
     RecommendRecipesRequest,
@@ -8,7 +16,7 @@ from ..schemas import (
     GetRecipeResponse,
     AddToShoppingListResponse,
 )
-from services.recipe_flow_service import RecipeFlowService
+from src.services.recipe_flow_service import RecipeFlowService
 
 router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 
@@ -41,6 +49,7 @@ async def recommend_recipes(payload: RecommendRecipesRequest):
 @router.get("/{saved_recipe_id}", response_model=GetRecipeResponse)
 async def get_recipe(saved_recipe_id: str):
     try:
+        _validate_uuid(saved_recipe_id)
         service = RecipeFlowService()
         recipe = service.get_saved_recipe_detail(saved_recipe_id)
         if not recipe:
@@ -56,6 +65,7 @@ async def get_recipe(saved_recipe_id: str):
 @router.post("/{saved_recipe_id}/add-to-shopping-list", response_model=AddToShoppingListResponse)
 async def add_to_shopping_list(saved_recipe_id: str):
     try:
+        _validate_uuid(saved_recipe_id)
         service = RecipeFlowService()
         added = service.add_missing_to_shopping_list(saved_recipe_id)
         if added is None:
