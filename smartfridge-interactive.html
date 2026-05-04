@@ -829,10 +829,14 @@ function preloadRecipeImages() {
 
 const S = {
   obStep: 0,
-  familyName: '', skill: '', budget: 50, members: ['Mom', 'Dad'],
+  familyName: '', skill: '', budget: 50,
+  members: [
+    {id:1, name:'Mom', age:'', dietary:[], allergies:[], health:[], spice:'', cuisines:[], disliked:[]},
+    {id:2, name:'Dad', age:'', dietary:[], allergies:[], health:[], spice:'', cuisines:[], disliked:[]},
+  ],
   inventory: [],
   fridgeInitialized: false,
-  selectedMembers: new Set(),
+  selectedMembers: new Set([1, 2]),
   selectedCuisine: null,
   recipes: [],
   shopping: [],
@@ -1521,7 +1525,7 @@ function obNext() {
     renderOB();
   } else {
     // Done — launch app; show inline scan prompt in fridge tab
-    S.selectedMembers = new Set(S.members);
+    S.selectedMembers = new Set(S.members.map(m => m.id));
     goScreen('s-main');
     setFlow('fi-fridge');
     renderFridge(); // renders inline scan prompt since fridgeInitialized=false
@@ -1913,7 +1917,7 @@ function renderPlan() {
       <div class="sec-label">${t('planning.cooking_for')}</div>
       <div class="pill-scroller" id="member-pills">
         ${S.members.map(m => `
-          <span class="pill ${S.selectedMembers.has(m)?'on':''}" onclick="toggleMember('${esc(m)}')">${m}</span>
+          <span class="pill ${S.selectedMembers.has(m.id)?'on':''}" onclick="toggleMember(${m.id})">${m.name}</span>
         `).join('')}
       </div>
 
@@ -1938,9 +1942,9 @@ function renderPlan() {
 
 function esc(s) { return s.replace(/'/g,"\\'"); }
 
-function toggleMember(name) {
-  if (S.selectedMembers.has(name)) S.selectedMembers.delete(name);
-  else S.selectedMembers.add(name);
+function toggleMember(id) {
+  if (S.selectedMembers.has(id)) S.selectedMembers.delete(id);
+  else S.selectedMembers.add(id);
   renderPlan();
 }
 
