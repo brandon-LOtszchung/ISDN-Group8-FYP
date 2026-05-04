@@ -2367,7 +2367,7 @@ const MP = { index: -1, age: '', dietary: new Set(), allergies: new Set(), healt
 function renderProfile() {
   const el = document.getElementById('pane-profile');
   const memberRows = S.members.map((m, i) => `
-    <div class="swipe-row-wrap" data-swipe-id="mem-${i}">
+    <div class="swipe-row-wrap" data-swipe-id="mem-${m.id}">
       <div class="swipe-row-trailing">
         <button class="swipe-action-btn" style="background:#FF3B30" onclick="promptDeleteMember(${i})">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
@@ -2376,7 +2376,10 @@ function renderProfile() {
       </div>
       <div class="swipe-row-content row" onclick="showMemberProfile(${i})" style="cursor:pointer">
         <span class="row-em">👤</span>
-        <div class="row-info"><div class="row-title">${m || '(unnamed)'}</div></div>
+        <div class="row-info">
+          <div class="row-title">${m.name || '(unnamed)'}</div>
+          ${m.age ? `<div class="row-sub">Age: ${m.age}</div>` : ''}
+        </div>
         <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style="color:#C7C7CC"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
     </div>`).join('');
@@ -2403,7 +2406,7 @@ function renderProfile() {
       ${S.members.length > 0 ? `<div style="padding:8px 16px 20px;font-size:12px;color:var(--gray);text-align:center">${t('profile.swipe_hint')}</div>` : ''}
     </div>`;
 
-  S.members.forEach((_, i) => initTrailingOnlySwipeRow(`mem-${i}`));
+  S.members.forEach((m) => initTrailingOnlySwipeRow(`mem-${m.id}`));
 }
 
 function showMemberProfile(index) {
@@ -2619,10 +2622,22 @@ function removeAMDisliked(i) { AM.disliked.splice(i, 1); renderAddMemberForm(); 
 
 function submitAddMember() {
   const nameEl = document.getElementById('am-name');
+  const ageEl  = document.getElementById('am-age');
   const name = nameEl ? nameEl.value.trim() : '';
   if (!name) return;
-  S.members.push(name);
-  S.selectedMembers.add(name);
+  const newMember = {
+    id:        Date.now(),
+    name,
+    age:       ageEl ? ageEl.value.trim() : '',
+    dietary:   [...AM.dietary],
+    allergies: [...AM.allergies],
+    health:    [...AM.health],
+    spice:     AM.spice,
+    cuisines:  [...AM.cuisines],
+    disliked:  [...AM.disliked],
+  };
+  S.members.push(newMember);
+  S.selectedMembers.add(newMember.id);
   closeAddMemberSheet();
   renderProfile();
   showToast(`${name} added`);
@@ -2635,7 +2650,8 @@ let _pendingDeleteMemberIdx = null;
 
 function promptDeleteMember(idx) {
   _pendingDeleteMemberIdx = idx;
-  const name = S.members[idx] || 'this member';
+  const member = S.members[idx];
+  const name = member ? member.name : 'this member';
   document.getElementById('delete-member-name').textContent = `Remove "${name}"?`;
   openSheet('sheet-delete-member');
 }
@@ -2646,8 +2662,8 @@ function confirmDeleteMember() {
   const idx = _pendingDeleteMemberIdx;
   _pendingDeleteMemberIdx = null;
   openSwipeId = null; openSwipeDir = null;
-  const name = S.members[idx];
-  S.selectedMembers.delete(name);
+  const member = S.members[idx];
+  if (member) S.selectedMembers.delete(member.id);
   S.members.splice(idx, 1);
   renderProfile();
   showToast('Member removed');
