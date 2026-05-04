@@ -1539,8 +1539,8 @@ function renderMembers() {
   if (!el) return;
   el.innerHTML = S.members.map((m,i) => `
     <div class="mem-row">
-      <input class="mem-input" value="${m}" placeholder="Name"
-             oninput="S.members[${i}]=this.value" autocomplete="off">
+      <input class="mem-input" value="${m.name}" placeholder="Name"
+             oninput="S.members[${i}].name=this.value" autocomplete="off">
       <button class="mem-del" onclick="S.members.splice(${i},1);renderMembers()">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11H7v-2h10v2z"/></svg>
       </button>
@@ -1548,7 +1548,7 @@ function renderMembers() {
 }
 
 function addMember() {
-  S.members.push('');
+  S.members.push({id: Date.now(), name:'', age:'', dietary:[], allergies:[], health:[], spice:'', cuisines:[], disliked:[]});
   renderMembers();
   const inputs = document.querySelectorAll('.mem-input');
   if (inputs.length) inputs[inputs.length-1].focus();
