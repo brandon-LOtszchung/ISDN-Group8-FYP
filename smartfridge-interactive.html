@@ -2362,7 +2362,7 @@ const HEALTH_CONDITIONS = ['Diabetes','High Blood Pressure','Heart Disease','Kid
 const SPICE_LEVELS = ['None','Mild','Medium','Hot'];
 
 // Member profile state (editing)
-const MP = { index: -1, dietary: new Set(), allergies: new Set(), health: new Set(), spice: '', cuisines: new Set(), disliked: [] };
+const MP = { index: -1, age: '', dietary: new Set(), allergies: new Set(), health: new Set(), spice: '', cuisines: new Set(), disliked: [] };
 
 function renderProfile() {
   const el = document.getElementById('pane-profile');
@@ -2408,12 +2408,14 @@ function renderProfile() {
 
 function showMemberProfile(index) {
   MP.index = index;
-  MP.dietary = new Set();
-  MP.allergies = new Set();
-  MP.health = new Set();
-  MP.spice = '';
-  MP.cuisines = new Set();
-  MP.disliked = [];
+  const m = S.members[index];
+  MP.age       = m.age || '';
+  MP.dietary   = new Set(m.dietary);
+  MP.allergies = new Set(m.allergies);
+  MP.health    = new Set(m.health);
+  MP.spice     = m.spice || '';
+  MP.cuisines  = new Set(m.cuisines);
+  MP.disliked  = [...m.disliked];
   goScreen('s-member-profile');
   renderMemberProfile();
 }
@@ -2444,7 +2446,7 @@ function renderMemberProfile() {
         </div>
         <div class="row">
           <div class="row-info" style="flex:none;width:80px"><div class="row-title" style="font-size:14px;color:var(--gray)">${t('profile.member.age')}</div></div>
-          <input id="mp-age" type="number" placeholder="${t('profile.member.age_hint')}" style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" min="1" max="120">
+          <input id="mp-age" type="number" placeholder="${t('profile.member.age_hint')}" value="${MP.age}" style="flex:1;border:none;outline:none;font:16px/1 Inter,sans-serif;color:var(--text);text-align:right;background:transparent" min="1" max="120">
         </div>
       </div>
 
@@ -2506,7 +2508,20 @@ function removeMPDisliked(i) { MP.disliked.splice(i, 1); renderMemberProfile(); 
 
 function saveMemberProfile() {
   const nameEl = document.getElementById('mp-name');
-  if (nameEl && nameEl.value.trim()) S.members[MP.index] = nameEl.value.trim();
+  const ageEl  = document.getElementById('mp-age');
+  const newName = nameEl ? nameEl.value.trim() : '';
+  if (!newName) return;
+  S.members[MP.index] = {
+    ...S.members[MP.index],
+    name:      newName,
+    age:       ageEl ? ageEl.value.trim() : '',
+    dietary:   [...MP.dietary],
+    allergies: [...MP.allergies],
+    health:    [...MP.health],
+    spice:     MP.spice,
+    cuisines:  [...MP.cuisines],
+    disliked:  [...MP.disliked],
+  };
   showToast('Profile saved');
   backFromMemberProfile();
 }
