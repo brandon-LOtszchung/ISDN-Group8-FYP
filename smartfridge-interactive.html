@@ -1122,6 +1122,11 @@ const STRINGS = {
     'profile.member.spice': 'Spice Preference',
     'profile.member.add_title': 'New Member',
     'profile.member.delete_msg': 'This member and their preferences will be permanently removed.',
+    'profile.about': 'About',
+    'profile.privacy_policy': 'Privacy Policy',
+    'profile.version': 'Version',
+    'profile.sign_out': 'Sign Out',
+    'profile.sign_out_confirm': 'Are you sure you want to sign out?',
     'common.cancel': 'Cancel', 'common.save': 'Save', 'common.delete': 'Delete', 'common.back': 'Back',
     'lang.btn': '中文',
   },
@@ -1164,6 +1169,11 @@ const STRINGS = {
     'profile.member.spice': '辣度偏好',
     'profile.member.add_title': '新成員',
     'profile.member.delete_msg': '此成員及其偏好設定將被永久移除。',
+    'profile.about': '關於',
+    'profile.privacy_policy': '私隱政策',
+    'profile.version': '版本',
+    'profile.sign_out': '登出',
+    'profile.sign_out_confirm': '您確定要登出嗎？',
     'common.cancel': '取消', 'common.save': '儲存', 'common.delete': '刪除', 'common.back': '返回',
     'lang.btn': 'EN',
   },
@@ -2403,7 +2413,23 @@ function renderProfile() {
       <div class="inset">
         ${memberRows || `<div class="row"><span class="row-title" style="color:var(--gray)">${t('profile.no_members')}</span></div>`}
       </div>
-      ${S.members.length > 0 ? `<div style="padding:8px 16px 20px;font-size:12px;color:var(--gray);text-align:center">${t('profile.swipe_hint')}</div>` : ''}
+      ${S.members.length > 0 ? `<div style="padding:8px 16px 4px;font-size:12px;color:var(--gray);text-align:center">${t('profile.swipe_hint')}</div>` : ''}
+
+      <div class="sec-hdr">${t('profile.about')}</div>
+      <div class="inset">
+        <div class="row" style="cursor:pointer" onclick="window.open('https://brandon-lotsz.github.io/smartfridge-privacy/','_blank')">
+          <div class="row-info"><div class="row-title">${t('profile.privacy_policy')}</div></div>
+          <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style="color:#C7C7CC;flex-shrink:0"><path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="row">
+          <div class="row-info"><div class="row-title">${t('profile.version')}</div></div>
+          <span style="font-size:14px;color:var(--gray)">1.0</span>
+        </div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+    <div style="flex-shrink:0;padding:12px 16px 20px;border-top:0.5px solid rgba(0,0,0,0.1);background:rgba(250,250,250,0.94)">
+      <button class="btn btn-ghost" style="color:var(--danger);padding:14px" onclick="signOut()">${t('profile.sign_out')}</button>
     </div>`;
 
   S.members.forEach((m) => initTrailingOnlySwipeRow(`mem-${m.id}`));
@@ -2672,6 +2698,12 @@ function confirmDeleteMember() {
 function cancelDeleteMember() {
   _pendingDeleteMemberIdx = null;
   closeSheet('sheet-delete-member');
+}
+
+function signOut() {
+  if (confirm(t('profile.sign_out_confirm'))) {
+    showToast(t('profile.sign_out'));
+  }
 }
 
 // ══════════════════════════════════
