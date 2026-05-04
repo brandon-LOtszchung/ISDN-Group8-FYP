@@ -2450,7 +2450,7 @@ function showMemberProfile(index) {
 }
 
 function renderMemberProfile() {
-  const name = S.members[MP.index] || '(unnamed)';
+  const name = (S.members[MP.index] && S.members[MP.index].name) || '(unnamed)';
   const el = document.getElementById('member-profile-inner');
 
   const pillRow = (arr, activeSet, toggleFn) => arr.map(opt => {
