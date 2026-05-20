@@ -71,7 +71,7 @@ struct ProfileDrawerView: View {
 #if DEBUG
                     print("[ProfileDrawer] delete account confirmed — userId=\(appVM.currentUserId?.uuidString ?? "nil")")
 #endif
-                    appVM.signOut()
+                    appVM.deleteAccount()
                 }
                 Button(String(localized: "common.cancel"), role: .cancel) {}
             } message: {

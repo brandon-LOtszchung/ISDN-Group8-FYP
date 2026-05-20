@@ -60,10 +60,15 @@ struct LoginView: View {
                     }
 
                     if step == .phone {
-                        Text(String(localized: "login.privacy_notice"))
-                            .font(.spaceGrotesk(.regular, size: 12))
-                            .foregroundStyle(theme.colors.textMuted)
-                            .multilineTextAlignment(.center)
+                        VStack(spacing: 4) {
+                            Text(String(localized: "login.privacy_notice"))
+                                .font(.spaceGrotesk(.regular, size: 12))
+                                .foregroundStyle(theme.colors.textMuted)
+                                .multilineTextAlignment(.center)
+                            Link(String(localized: "profile.privacy_policy"), destination: URL(string: "https://brandon-lotsz.github.io/smartfridge-privacy/")!)
+                                .font(.spaceGrotesk(.medium, size: 12))
+                                .foregroundStyle(theme.colors.primary)
+                        }
                     }
                 }
                 .padding(.horizontal, 24)
