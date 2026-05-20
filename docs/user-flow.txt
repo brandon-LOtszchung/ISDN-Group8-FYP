@@ -1,0 +1,204 @@
+                                    
+  SmartFridge — Updated User Flow & Endpoint Tests                
+                                                                  
+  Last updated: 2026-05-05
+  What's new: camera-to-family pairing via cameras table;         
+  /process-video is now camera-driven instead of JWT-driven.      
+                                                                  
+  ---                                                             
+  End-to-end user flow (plain words)
+                                    
+  Setup (one-time)
+                                                                  
+  1. Sign in. User enters phone, gets SMS OTP, types it back.     
+  Supabase issues the JWT.                                        
+  2. Create the family. Wizard captures family name, cooking      
+  skill, budget, language → written to families (linked to the    
+  user via user_id).
+  3. Add household members. Per member: name, age, allergies,     
+  dietary restrictions, spice level, favourite cuisines → written 
+  to family_members.
+  4. Pair the fridge camera. (NEW) User reads the 4-digit code    
+  printed on the camera cover (e.g. 0001) and types it into the   
+  iOS "Pair Camera" screen. App calls POST /api/cameras/pair with
+  the code and JWT. Backend writes one row to cameras (id,        
+  family_id). Re-pairing always overwrites.
+  5. Initial fridge scan. User opens the fridge, snaps 1–3 photos
+  with their phone, app uploads to POST /api/inventory/initialize.
+   Backend asks Gemini what's in the fridge, normalises categories
+   + expiry dates, merges by name into inventory_items (no        
+  duplicates on re-scan).
+
+  Daily life (continuous)
+
+  6. Camera tracks fridge activity. A small camera mounted above  
+  the fridge records short clips when the door opens. The clip is
+  POSTed to /api/inventory/process-video with camera_id=0001 as a 
+  form field. Backend looks up the camera in the cameras table →
+  resolves the family → MediaPipe finds the moment the hand goes
+  in vs. comes out → Gemini compares items in the hand → backend
+  updates inventory_items quantities. When the last unit is taken,
+   the row is deleted (no zero-quantity rows). Realtime fires →
+  iOS UI updates live.
+
+  Cooking
+
+  7. Get recipe recommendations. User picks members + cuisine →   
+  POST /api/recipes/recommend → backend reads inventory + member
+  constraints, asks Gemini for 5 recipes, saves each to           
+  saved_recipes with stable IDs, returns cards sorted by
+  fewest-missing-ingredients first.
+  8. Open a recipe. GET 
+  /api/recipes/{saved_recipe_id}?family_id=... → backend re-checks
+   against current inventory and returns ingredients, steps,
+  missing items + alternatives.                                   
+  9. Add missing items to shopping list. POST 
+  /api/recipes/{id}/add-to-shopping-list → required missing       
+  ingredients land in shopping_list_items, deduplicated by
+  (family_id, name, recipe_name).                                 
+                  
+  Shopping & restocking
+
+  10. User checks off items in the iOS shopping list (direct      
+  Supabase update). Puts groceries away. Camera sees the hand
+  going in → inventory auto-increments. Tomorrow's recommendations
+   have more matches. Loop.
+
+  ---
+  What changed for the iOS team
+                                                                  
+  Only one new screen + endpoint call:
+                                                                  
+  ┌────────────────────────┬─────────────────────┬────────────┐
+  │        Concern         │      Endpoint       │ Direction  │   
+  ├────────────────────────┼─────────────────────┼────────────┤
+  │ Pair the user's fridge │ POST                │ iOS →      │
+  │  camera to their       │ /api/cameras/pair   │ backend    │
+  │ family                 │                     │            │   
+  └────────────────────────┴─────────────────────┴────────────┘
+                                                                  
+  No changes to: /initialize, /recipes/*, any Supabase direct     
+  calls, Realtime channels.
+                                                                  
+  Pair-camera contract
+
+  POST https://api.hongkongtech.org/api/cameras/pair              
+  - Headers: Authorization: Bearer <supabase_jwt>, Content-Type: 
+  application/json                                                
+  - Body: {"camera_id": "0001"}
+  - 200 → {"camera_id": "0001", "family_id": "uuid"}              
+  - 400 → empty camera_id                           
+  - 500 → server error                                            
+                      
+  Behavior: idempotent overwrite. Calling it again with a new code
+   drops the old binding.                                         
+                                                                  
+  ---                                                             
+  Test recipes (curl)
+                                                                  
+  Replace $JWT with a Supabase access token from a logged-in user,
+   and $VIDEO with a path to a .mp4 clip.                         
+                  
+  1. Pair a camera                                                
+                  
+  curl -i -X POST https://api.hongkongtech.org/api/cameras/pair \
+    -H "Authorization: Bearer $JWT" \                             
+    -H "Content-Type: application/json" \
+    -d '{"camera_id":"0001"}'                                     
+  Expected: 200 OK and JSON                                       
+  {"camera_id":"0001","family_id":"..."}.                         
+                                                                  
+  2. Re-pair (overwrite) with a different code                    
+                  
+  curl -i -X POST https://api.hongkongtech.org/api/cameras/pair \
+    -H "Authorization: Bearer $JWT" \                             
+    -H "Content-Type: application/json" \
+    -d '{"camera_id":"0042"}'                                     
+  Expected: 200 OK, family_id matches the user's family. The old  
+  "0001" binding for this family is gone. Confirm in DB:          
+  SELECT id, family_id FROM cameras WHERE family_id = '<your      
+  family uuid>';                                                  
+  Should show only 0042.
+
+  3. Reject empty camera_id                                       
+  
+  curl -i -X POST https://api.hongkongtech.org/api/cameras/pair \ 
+    -H "Authorization: Bearer $JWT" \
+    -H "Content-Type: application/json" \                         
+    -d '{"camera_id":"   "}'                                      
+  Expected: 400 with {"detail":"camera_id cannot be empty"}.
+                                                                  
+  4. Process a video with a paired camera
+                                                                  
+  curl -i -X POST 
+  https://api.hongkongtech.org/api/inventory/process-video \      
+    -F "video=@$VIDEO" \
+    -F "camera_id=0001"                                           
+  Expected: 200 OK, JSON with success: true and actions: {put: 
+  [...], taken: [...]}. The inventory_items rows for the Lo Family
+   (or whichever family the camera is bound to) update            
+  accordingly. No Authorization header required — camera is a     
+  device, not a user.                                        
+                     
+  5. Process a video with an unknown camera_id (falls back to Lo 
+  Family)                                                         
+  
+  curl -i -X POST                                                 
+  https://api.hongkongtech.org/api/inventory/process-video \
+    -F "video=@$VIDEO" \
+    -F "camera_id=9999"                                           
+  Expected: 200 OK. Server logs show camera_id=9999 not paired; 
+  falling back to Lo Family. Inventory updates land in Lo Family's
+   rows.                                                          
+                                                                  
+  6. Process a video with no camera_id at all
+                                                                  
+  curl -i -X POST
+  https://api.hongkongtech.org/api/inventory/process-video \      
+    -F "video=@$VIDEO"
+  Expected: 200 OK. Same Lo Family fallback as above.             
+                                                     
+  7. Verify the bootstrap row exists
+                                                                  
+  # Or via the Supabase SQL editor
+  SELECT * FROM cameras WHERE id = '0001';                        
+  Expected: one row mapping 0001 →
+  eef3fcba-7b07-4c18-82dc-50dfe60b97ac (Lo Family).               
+                  
+  ---                                                             
+  What's already deployed vs. pending
+                                                                  
+  ┌─────────────────────────┬─────────────────────────────────┐
+  │          Item           │             Status              │   
+  ├─────────────────────────┼─────────────────────────────────┤
+  │ cameras table + RLS     │ ✅ Migrated to Supabase         │
+  │ policies                │                                 │
+  ├─────────────────────────┼─────────────────────────────────┤   
+  │ Bootstrap row ('0001',  │ ✅ Inserted                     │   
+  │ Lo Family)              │                                 │   
+  ├─────────────────────────┼─────────────────────────────────┤   
+  │ POST /api/cameras/pair  │ ✅ Code in working tree (needs  │
+  │ endpoint                │ systemctl restart               │   
+  │                         │ fyp-api.service)                │
+  ├─────────────────────────┼─────────────────────────────────┤   
+  │ /process-video accepts  │ ✅ Code in working tree (same   │
+  │ camera_id form field    │ restart)                        │   
+  ├─────────────────────────┼─────────────────────────────────┤
+  │ inventory_items         │                                 │   
+  │ quantity-zero DELETE    │ ✅ Code in working tree         │   
+  │ fix                     │                                 │
+  ├─────────────────────────┼─────────────────────────────────┤   
+  │ /initialize             │ ✅ Code in working tree         │   
+  │ merge-by-name fix       │                                 │
+  ├─────────────────────────┼─────────────────────────────────┤   
+  │ Camera firmware sends   │ ✅ Updated in                   │   
+  │ camera_id=0001          │ camera_side_code.py (deploy to  │
+  │                         │ camera)                         │   
+  ├─────────────────────────┼─────────────────────────────────┤
+  │ iOS "Pair Camera"       │ ⏳ iOS team                     │
+  │ screen                  │                                 │   
+  └─────────────────────────┴─────────────────────────────────┘
+                                                                  
+  After the API restart and camera firmware push, the system is   
+  live with the new pairing model. Lo Family demo continues to
+  work because of the bootstrap row.      

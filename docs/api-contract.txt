@@ -1,0 +1,332 @@
+================================================================================
+SMART FRIDGE — API CONTRACT
+Last verified: 2026-05-04
+Server: FYP-droplet  (proxied via nginx → uvicorn 127.0.0.1:8000)
+iOS Base URL: Config.apiBaseURL  (Info.plist key API_BASE_URL)
+================================================================================
+
+AUTHENTICATION
+──────────────
+All endpoints require:
+  Header:  Authorization: Bearer <Supabase JWT>
+
+The server decodes the JWT to resolve the caller's family_id from the
+families table.  If no token is sent, the server falls back to the hardcoded
+Lo Family ID (dev/demo only — should be 401 in production).
+
+────────────────────────────────────────────────────────────────────────────────
+ENDPOINT 1 — Scan fridge photos
+────────────────────────────────────────────────────────────────────────────────
+POST /api/inventory/initialize
+
+PURPOSE
+  Upload one or more fridge photos.  Gemini Vision analyses them and returns
+  detected food items.  The iOS client then inserts each returned item into
+  Supabase via SupabaseService.addItem().
+
+REQUEST
+  Content-Type: multipart/form-data
+  Field name:   images   (repeat for each photo, 1–3 files)
+  Allowed types: .jpg  .jpeg  .png  .webp
+  Max dimension resized to 1024 px on iOS before upload
+
+  Example curl:
+    curl -X POST https://api.hongkongtech.org/api/inventory/initialize \
+      -H "Authorization: Bearer <JWT>" \
+      -F "images=@fridge1.jpg" \
+      -F "images=@fridge2.jpg"
+
+RESPONSE  200 OK
+  JSON array — each element is one detected inventory item.
+
+  [
+    {
+      "id":          "550e8400-e29b-41d4-a716-446655440000",  // UUID string
+      "family_id":   "eef3fcba-7b07-4c18-82dc-50dfe60b97ac", // resolved from JWT
+      "name":        "chicken breast",
+      "category":    "Protein",                               // one of 8 valid values (see below)
+      "quantity":    2.0,
+      "unit":        "pcs",                                   // may be "" if Gemini omits it
+      "expiry_date": "2026-05-08T00:00:00Z"                   // ISO8601 UTC, always present
+    },
+    ...
+  ]
+
+  Valid categories: Protein | Vegetable | Fruit | Dairy | Grain | Condiment | Beverage | Other
+
+iOS DECODE
+  Decoder: JSONDecoder with .convertFromSnakeCase + .iso8601 date strategy
+  Swift type: [InventoryItem]
+  Notes:
+    - id          decoded as UUID
+    - family_id   decoded as UUID
+    - quantity    decoded as Double (or String→Double fallback for PostgREST numeric)
+    - unit        decoded with decodeIfPresent, defaults to ""
+    - expiry_date decoded as Date? (ISO8601 or "YYYY-MM-DD" fallback)
+
+ERROR RESPONSES
+  400  { "detail": "At least one image is required." }
+  400  { "detail": "Invalid file type '...'. Allowed: .jpg .jpeg .png .webp" }
+  422  { "detail": "Could not identify any items in the provided images." }
+  500  { "detail": "Initialization error: ..." }
+
+────────────────────────────────────────────────────────────────────────────────
+ENDPOINT 2 — Get recipe recommendations
+────────────────────────────────────────────────────────────────────────────────
+POST /api/recipes/recommend
+
+PURPOSE
+  Given a list of family member IDs and a cuisine style, Gemini generates 5
+  recipes scored against the family's live inventory.  The recipes are saved
+  to the saved_recipes table and recipe cards are returned.
+
+REQUEST
+  Content-Type: application/json
+
+  {
+    "member_ids":    ["uuid-string", "uuid-string"],   // at least one required
+    "cuisine_style": "chinese"                          // non-empty string
+  }
+
+  Valid cuisine_style values (from iOS Constants.cuisineOptions):
+    chinese | cantonese | sichuan | western | italian |
+    japanese | korean | thai | vietnamese | indian | mexican | fusion
+
+  Example curl:
+    curl -X POST https://api.hongkongtech.org/api/recipes/recommend \
+      -H "Authorization: Bearer <JWT>" \
+      -H "Content-Type: application/json" \
+      -d '{"member_ids":["<member-uuid>"],"cuisine_style":"chinese"}'
+
+RESPONSE  200 OK
+  JSON flat array (NOT wrapped in { "recipes": [...] }).
+  Sorted by missing_count ascending (best match first).
+
+  [
+    {
+      "saved_recipe_id": "be98ef6d-6cfa-4011-83d3-7efad1541268",
+      "name":            "Five-Spice Tea Eggs with Rice",
+      "cuisine_style":   "chinese",
+      "matched_count":   1,
+      "total_count":     4,
+      "missing_count":   3,
+      "calories":        450
+    },
+    ...
+  ]
+
+iOS DECODE
+  Swift type: [RecipeRecommendation]  (decoded directly — no envelope wrapper)
+  Notes:
+    - calories decoded as Int? with decodeIfPresent (backend always returns it,
+      but iOS is lenient)
+
+ERROR RESPONSES
+  400  { "detail": "member_ids cannot be empty" }
+  400  { "detail": "cuisine_style cannot be empty" }
+  404  { "detail": "<message>" }          // e.g. member not found
+  500  { "detail": "Failed to generate recipe recommendations" }
+
+────────────────────────────────────────────────────────────────────────────────
+ENDPOINT 3 — Get recipe detail
+────────────────────────────────────────────────────────────────────────────────
+GET /api/recipes/{saved_recipe_id}
+
+PURPOSE
+  Returns the full detail for a saved recipe, with matched_count and
+  missing_ingredients recomputed from the family's LIVE inventory at request
+  time (not a stored snapshot).
+
+REQUEST
+  Path param: saved_recipe_id  (UUID string, e.g. from recommend response)
+  No query params.
+  No request body.
+
+  Example curl:
+    curl https://api.hongkongtech.org/api/recipes/be98ef6d-6cfa-4011-83d3-7efad1541268 \
+      -H "Authorization: Bearer <JWT>"
+
+RESPONSE  200 OK
+  JSON flat object (NOT wrapped in { "recipe": {...} }).
+
+  {
+    "saved_recipe_id": "4f04ce55-1d5b-4aa1-8da8-b4c6c8c3f183",
+    "name":            "Tea-Infused Steamed Fish",
+    "cuisine_style":   "chinese",
+    "matched_count":   1,
+    "total_count":     3,
+    "calories":        310,                  // null if old recipe lacks field
+    "ingredients": [
+      {
+        "name":     "white fish fillet",
+        "quantity": 250.0,
+        "unit":     "g",
+        "required": true
+      },
+      {
+        "name":     "sesame oil",
+        "quantity": 1.0,
+        "unit":     "tsp",
+        "required": false                    // optional garnish — not counted in total_count
+      }
+    ],
+    "steps": [
+      "Rinse the fish fillet and pat dry with paper towels.",
+      "..."
+    ],
+    "missing_ingredients": [
+      {
+        "name":         "white fish fillet",
+        "quantity":     250.0,
+        "unit":         "g",
+        "alternatives": ["salmon fillet", "cod fillet"]   // [] when none
+      }
+    ]
+  }
+
+  Notes:
+    - Only required=true ingredients appear in missing_ingredients
+    - matched_count + missing_count == total_count  (required ingredients only)
+    - calories may be null for recipes saved before the field was added
+
+iOS DECODE
+  Swift type: RecipeDetail  (decoded directly — no envelope wrapper)
+
+ERROR RESPONSES
+  400  { "detail": "Invalid recipe ID format" }   // non-UUID path param
+  404  { "detail": "No recipe found for id: ..." }
+  500  { "detail": "Failed to retrieve recipe" }
+
+────────────────────────────────────────────────────────────────────────────────
+ENDPOINT 4 — Add missing ingredients to shopping list
+────────────────────────────────────────────────────────────────────────────────
+POST /api/recipes/{saved_recipe_id}/add-to-shopping-list
+
+PURPOSE
+  Recomputes which required ingredients are missing from live inventory and
+  upserts them into shopping_list_items.  Deduplicates on (family_id, name,
+  recipe_name) — safe to call multiple times.
+
+REQUEST
+  No request body required.
+  Path param: saved_recipe_id  (UUID string)
+
+  Example curl:
+    curl -X POST \
+      https://api.hongkongtech.org/api/recipes/be98ef6d-6cfa-4011-83d3-7efad1541268/add-to-shopping-list \
+      -H "Authorization: Bearer <JWT>"
+
+RESPONSE  200 OK
+  {
+    "added_count": 2    // number of items upserted; 0 if fridge already has everything
+  }
+
+iOS BEHAVIOUR
+  Response body is ignored.  After this call succeeds, ShoppingViewModel.load()
+  is called to refresh the shopping list from Supabase, then the view dismisses.
+
+ERROR RESPONSES
+  400  { "detail": "Invalid recipe ID format" }
+  404  { "detail": "No recipe found for id: ..." }
+  500  { "detail": "Failed to add items to shopping list" }
+
+────────────────────────────────────────────────────────────────────────────────
+ENDPOINT 5 — Health check  (not called by iOS)
+────────────────────────────────────────────────────────────────────────────────
+GET /health
+
+RESPONSE  200 OK
+  { "status": "healthy" }
+
+────────────────────────────────────────────────────────────────────────────────
+ENDPOINT 6 — Video scan  (backend only, not used by iOS)
+────────────────────────────────────────────────────────────────────────────────
+POST /api/inventory/process-video
+
+  Accepts an MP4/MOV/AVI/MKV video and returns put/taken actions.
+  iOS does not call this endpoint — it uses photo-based initialize instead.
+
+================================================================================
+TESTING GUIDE
+================================================================================
+
+LIVE CURL TESTS (run on FYP-droplet or via nginx)
+──────────────────────────────────────────────────
+
+# Health
+curl https://api.hongkongtech.org/health
+
+# Recommend (no auth — uses fallback Lo Family)
+curl -X POST http://127.0.0.1:8000/api/recipes/recommend \
+  -H "Content-Type: application/json" \
+  -d '{"member_ids":["00000000-0000-0000-0000-000000000000"],"cuisine_style":"japanese"}'
+
+# Get recipe detail (replace ID with one from recommend response)
+curl http://127.0.0.1:8000/api/recipes/<saved_recipe_id>
+
+# Add to shopping list
+curl -X POST http://127.0.0.1:8000/api/recipes/<saved_recipe_id>/add-to-shopping-list
+
+# Scan photos (replace with real image paths)
+curl -X POST http://127.0.0.1:8000/api/inventory/initialize \
+  -F "images=@/tmp/fridge.jpg"
+
+# View FastAPI auto-generated docs (on droplet only)
+curl http://127.0.0.1:8000/docs    # Swagger UI
+curl http://127.0.0.1:8000/openapi.json
+
+
+THINGS TO MANUALLY VERIFY IN THE iOS APP
+──────────────────────────────────────────
+1. SCAN FLOW
+   - Tap camera icon → take/pick a fridge photo
+   - Success toast shows "X items detected"
+   - Open Inventory tab → items appear in the list
+   - Key check: items must persist after closing and reopening the app
+     (verifies the CameraPickerView addItem fix)
+
+2. RECIPE RECOMMENDATIONS
+   - Select ≥1 family member + a cuisine → tap "Get Ideas"
+   - Recipe cards appear with correct match % and calorie badge
+   - Tapping a card loads the detail view with ingredients + steps
+
+3. RECIPE DETAIL
+   - Ingredients labelled "In Fridge" or "Need to Buy" match actual inventory
+   - Steps tab shows numbered steps
+   - Share button generates readable text
+
+4. ADD TO SHOPPING LIST
+   - Tap "Add Missing to Shopping" on a recipe detail
+   - Shopping tab shows the new items with estimated HKD costs
+   - Calling again for the same recipe does NOT duplicate items
+
+5. SHOPPING LIST
+   - Toggle purchased ✓ persists after app restart (Supabase write)
+   - "Clear Bought" removes only purchased items
+   - Realtime: add an item via Supabase dashboard → it appears without refresh
+
+
+ALIGNMENT CHECKLIST — iOS ↔ Backend
+─────────────────────────────────────
+After all fixes applied, the following are confirmed aligned:
+
+  [✓] POST /api/inventory/initialize
+        Request:  multipart images field
+        Response: flat array with id, family_id, name, category, quantity, unit, expiry_date
+
+  [✓] POST /api/recipes/recommend
+        Request:  { member_ids, cuisine_style }  (no family_id)
+        Response: flat array  (no { recipes:[...] } wrapper)
+
+  [✓] GET /api/recipes/{id}
+        Request:  path param only  (no ?family_id= query)
+        Response: flat object  (no { recipe:{...} } wrapper)
+
+  [✓] POST /api/recipes/{id}/add-to-shopping-list
+        Request:  no body  (family resolved from JWT)
+        Response: { added_count }  (iOS ignores this)
+
+  [✓] iOS inserts scanned items into Supabase after /initialize response
+        (was broken before — items were silently discarded)
+
+================================================================================
