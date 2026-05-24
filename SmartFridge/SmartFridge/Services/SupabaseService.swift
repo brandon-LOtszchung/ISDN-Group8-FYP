@@ -68,6 +68,12 @@ final class SupabaseService {
         client.auth.currentUser?.id
     }
 
+    /// Synchronous access token from the cached session, for attaching auth
+    /// headers in non-async contexts. Returns nil when there is no active session.
+    var currentAccessToken: String? {
+        client.auth.currentSession?.accessToken
+    }
+
     func freshAccessToken() async throws -> String {
         let token = try await client.auth.session.accessToken
 #if DEBUG
@@ -215,7 +221,7 @@ final class SupabaseService {
 
     func addItem(_ item: InventoryItem) async throws {
 #if DEBUG
-        print("[Supabase] → addItem id=\(item.id) name='\(item.name)' category=\(item.category) qty=\(item.quantity) \(item.unit)")
+        print("[Supabase] → addItem id=\(item.id) name='\(item.name)' category=\(item.category) qty=\(item.quantity)")
 #endif
         try await client
             .from("inventory_items")
@@ -228,7 +234,7 @@ final class SupabaseService {
 
     func updateItem(_ item: InventoryItem) async throws {
 #if DEBUG
-        print("[Supabase] → updateItem id=\(item.id) name='\(item.name)' qty=\(item.quantity) \(item.unit)")
+        print("[Supabase] → updateItem id=\(item.id) name='\(item.name)' qty=\(item.quantity)")
 #endif
         try await client
             .from("inventory_items")

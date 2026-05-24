@@ -59,5 +59,16 @@ enum Constants {
         static let fridgeInitialized      = "smart-fridge-initialized"
         static let familyData             = "smart-fridge-family"
         static let inventory              = "smart-fridge-inventory"
+        static let pairedCameraId         = "smart-fridge-paired-camera"
+    }
+}
+
+// MARK: - App-wide constants
+
+enum AppConstants {
+    /// Standard animation durations, in seconds.
+    enum Animation {
+        static let phaseFade: Double = 0.3
+        static let slow: Double = 0.5
     }
 }

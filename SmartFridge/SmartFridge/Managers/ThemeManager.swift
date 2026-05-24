@@ -18,6 +18,7 @@ struct ThemeColors {
     let surfaceAlt: Color
     let backgroundSubtle: Color
     let shadow: Color
+    let tealAccent: Color
 }
 
 @Observable
@@ -53,7 +54,8 @@ final class ThemeManager {
                 surface:          Color(hex: "#FFFFFF"),
                 surfaceAlt:       Color(hex: "#FFF8F0"),
                 backgroundSubtle: Color(hex: "#FFF5C8"),
-                shadow:           Color(hex: "#1A1A1A")
+                shadow:           Color(hex: "#1A1A1A"),
+                tealAccent:       Color(hex: "#00C49A")
             )
         case .cool:
             return ThemeColors(
@@ -68,7 +70,8 @@ final class ThemeManager {
                 surface:          Color(hex: "#FFFFFF"),
                 surfaceAlt:       Color(hex: "#E8FFFE"),
                 backgroundSubtle: Color(hex: "#CCFBF1"),
-                shadow:           Color(hex: "#1A1A1A")
+                shadow:           Color(hex: "#1A1A1A"),
+                tealAccent:       Color(hex: "#00E5B5")
             )
         }
     }
@@ -160,6 +163,16 @@ extension Font {
     static func sgHeadline() -> Font { .spaceGrotesk(.semibold, size: 18) }
     static func sgBody()     -> Font { .spaceGrotesk(.regular, size: 16) }
     static func sgCaption()  -> Font { .spaceGrotesk(.light, size: 13) }
+
+    /// Pixelify Sans — pixel-art display font. Regular and Bold weights are bundled.
+    static func pixelify(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .custom(weight == .bold ? "PixelifySans-Bold" : "PixelifySans-Regular", size: size)
+    }
+
+    /// DotGothic16 — pixel-grid body font (single weight).
+    static func dotGothic(_ size: CGFloat) -> Font {
+        .custom("DotGothic16-Regular", size: size)
+    }
 }
 
 // MARK: - Color hex initialiser

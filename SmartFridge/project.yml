@@ -8,7 +8,10 @@ options:
 packages:
   Supabase:
     url: https://github.com/supabase-community/supabase-swift
-    majorVersion: "2.0.0"
+    # Floor is 2.31.0: SupabaseService.swift calls RealtimeChannelV2.subscribeWithError(),
+    # introduced in supabase-swift v2.31.0. A lower floor risks resolving to a version
+    # without that method ("has no member 'subscribeWithError'").
+    majorVersion: "2.31.0"
 
 targets:
   SmartFridge:

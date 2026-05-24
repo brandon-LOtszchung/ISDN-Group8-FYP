@@ -155,11 +155,13 @@ final class ShoppingViewModel {
     }
 
     private func subscribeToRealtime() {
-        realtimeChannel = supabase.subscribeToShoppingList(
-            familyId: familyId
-        ) { [weak self] updated in
-            Task { @MainActor [weak self] in
-                self?.items = updated
+        Task {
+            realtimeChannel = await supabase.subscribeToShoppingList(
+                familyId: familyId
+            ) { [weak self] updated in
+                Task { @MainActor [weak self] in
+                    self?.items = updated
+                }
             }
         }
     }

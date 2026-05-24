@@ -188,3 +188,28 @@ struct ShoppingListItem: Codable, Identifiable {
         case recipeName        = "recipe_name"
     }
 }
+
+// MARK: - Saved Recipes (persisted)
+
+/// Row in the `saved_recipes` table. The full recipe payload lives in the
+/// `recipe_data` JSONB column (not modelled here); these mirror the indexed
+/// scalar columns. Unmapped JSON keys are ignored on decode.
+struct SavedRecipe: Codable, Identifiable {
+    let id: UUID
+    var familyId: UUID
+    var isFavorite: Bool?
+    var cuisineStyle: String?
+    var matchedCount: Int
+    var totalCount: Int
+    var createdAt: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case familyId     = "family_id"
+        case isFavorite   = "is_favorite"
+        case cuisineStyle = "cuisine_style"
+        case matchedCount = "matched_count"
+        case totalCount   = "total_count"
+        case createdAt    = "created_at"
+    }
+}
