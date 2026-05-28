@@ -22,22 +22,38 @@ targets:
     info:
       path: SmartFridge/Info.plist
       properties:
+        API_BASE_URL: https://api.hongkongtech.org
+        CFBundleLocalizations:
+          - en
+          - fil
+          - id
+          - zh-Hant
         NSCameraUsageDescription: SmartFridge uses the camera to scan your fridge contents.
         NSPhotoLibraryUsageDescription: SmartFridge reads photos from your library to detect fridge contents.
-        SUPABASE_URL: https://dpgxcyktcptsnihpitjr.supabase.co
+        SUPABASE_URL: $(SUPABASE_URL)
         SUPABASE_ANON_KEY: $(SUPABASE_ANON_KEY)
-        API_BASE_URL: http://152.42.221.192:8000
-        UILaunchStoryboardName: LaunchScreen
+        UIAppFonts:
+          - PixelifySans-Regular.ttf
+          - PixelifySans-Bold.ttf
+          - DotGothic16-Regular.ttf
+          - BitcountGridDouble-Regular.ttf
+          - SpaceGrotesk-Light.ttf
+          - SpaceGrotesk-Regular.ttf
+          - SpaceGrotesk-Medium.ttf
+          - SpaceGrotesk-SemiBold.ttf
+          - SpaceGrotesk-Bold.ttf
+        UILaunchScreen: {}
+        UIRequiresFullScreen: true
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
-        NSAppTransportSecurity:
-          NSExceptionDomains:
-            152.42.221.192:
-              NSExceptionAllowsInsecureHTTPLoads: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.smartfridge.app
+        PRODUCT_BUNDLE_IDENTIFIER: com.group8isdn.smartfridge
         SWIFT_VERSION: "5.9"
+        DEVELOPMENT_TEAM: 74VR9HTLL9
+        CODE_SIGN_IDENTITY: "iPhone Developer"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        SUPABASE_URL: "https://dpgxcyktcptsnihpitjr.supabase.co"
         SUPABASE_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRwZ3hjeWt0Y3B0c25paHBpdGpyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3MjA3OTMsImV4cCI6MjA4OTI5Njc5M30.e9TOBfXerlt9DJreTNHdxDEiTyWsU-BTbZC0gqAl1RU"
     dependencies:
       - package: Supabase

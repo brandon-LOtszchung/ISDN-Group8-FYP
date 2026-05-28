@@ -42,6 +42,11 @@
 		<string>PixelifySans-Bold.ttf</string>
 		<string>DotGothic16-Regular.ttf</string>
 		<string>BitcountGridDouble-Regular.ttf</string>
+		<string>SpaceGrotesk-Light.ttf</string>
+		<string>SpaceGrotesk-Regular.ttf</string>
+		<string>SpaceGrotesk-Medium.ttf</string>
+		<string>SpaceGrotesk-SemiBold.ttf</string>
+		<string>SpaceGrotesk-Bold.ttf</string>
 	</array>
 	<key>UILaunchScreen</key>
 	<dict/>
